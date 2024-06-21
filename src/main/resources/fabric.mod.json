@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "guardian",
+  "version": "${version}",
+  "name": "Guardian",
+  "description": "",
+  "authors": [],
+  "contact": {
+    "repo": "https://github.com/jordan/Guardian"
+  },
+  "license": "GPL-3.0",
+  "icon": "assets/guardian/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "server": [
+      "com.tropicoss.guardian.Guardian"
+    ]
+  },
+  "mixins": [
+    "guardian.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
