@@ -9,9 +9,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class ConfigurationManager {
-    private String filePath;
+    private final String filePath;
     private JsonObject config;
-    private Gson gson;
+    private final Gson gson;
 
     public ConfigurationManager(String filePath) {
         this.filePath = filePath;
@@ -22,9 +22,24 @@ public class ConfigurationManager {
 
     private JsonObject getDefaultConfig() {
         JsonObject defaultConfig = new JsonObject();
-        defaultConfig.addProperty("botToken", "default_value1");
-        defaultConfig.addProperty("guildId", "default_value2");
-        defaultConfig.addProperty("setting3", "default_value3");
+
+        JsonObject botConfig = new JsonObject();
+        botConfig.addProperty("token", "default-bot-token");
+        botConfig.addProperty("guildId", "default-guild-id");
+        botConfig.addProperty("chatChannel", "chat-channel-id");
+
+        JsonObject serverConfig = new JsonObject();
+        serverConfig.addProperty("port", "4467");
+
+        JsonObject genericConfig = new JsonObject();
+        genericConfig.addProperty("serverName", "your-server-name");
+        genericConfig.addProperty("mode", "client");
+
+
+        defaultConfig.add("bot", botConfig);
+        defaultConfig.add("server", serverConfig);
+        defaultConfig.add("generic", genericConfig);
+
         return defaultConfig;
     }
 
@@ -53,7 +68,8 @@ public class ConfigurationManager {
         loadConfig();
     }
 
-    public String getSetting(String key) {
-        return config.has(key) ? config.get(key).getAsString() : "Setting not found";
+    public String getSetting(String section, String key) {
+        JsonObject sectionObject = config.getAsJsonObject(section);
+        return (sectionObject != null && sectionObject.has(key)) ? sectionObject.get(key).getAsString() : "Setting not found";
     }
 }

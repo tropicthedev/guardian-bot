@@ -14,14 +14,14 @@ public class UserAdapter extends ListenerAdapter {
         User author = event.getAuthor();
         Message message = event.getMessage();
 
-        System.out.println(author.getAsTag() + ": " + message.getContentDisplay());
+        System.out.printf("%s: %s%n", String.format("%#s", author), message.getContentDisplay());
     }
 
     @Override
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         User user = event.getUser();
 
-        //TODO: Check if they are a returning memeber to notify admins
+        //TODO: Check if they are a returning member to notify admins
     }
 
     @Override

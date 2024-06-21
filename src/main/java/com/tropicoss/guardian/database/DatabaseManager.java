@@ -118,6 +118,8 @@ public class DatabaseManager {
         """;
 
         try {
+            CONNECTION.setAutoCommit(false);
+
             Statement stmt = CONNECTION.createStatement();
 
             stmt.execute(sqlCreateMemberTable);
