@@ -22,23 +22,12 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 
 public class Guardian implements DedicatedServerModInitializer {
-    private static final Path CONFIG_DIRECTORY = FabricLoader.getInstance().getConfigDir().resolve("guardian");
-    public static Logger LOGGER = LoggerFactory.getLogger("Guardian");
-
-    public static ConfigurationManager CONFIG_MANAGER = new ConfigurationManager(CONFIG_DIRECTORY.resolve("config.json").toString());
-    private static final DatabaseManager databaseManager;
-
     public static Server SOCKET_SERVER;
     public static Client SOCKET_CLIENT;
     public static MinecraftServer MINECRAFT_SERVER;
-
-    static {
-        try {
-            databaseManager = new DatabaseManager(CONFIG_DIRECTORY.resolve("elder.db").toString());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    public static Logger LOGGER = LoggerFactory.getLogger("Guardian");
+    private static final Path CONFIG_DIRECTORY = FabricLoader.getInstance().getConfigDir().resolve("guardian");
+    public static ConfigurationManager CONFIG_MANAGER = new ConfigurationManager(CONFIG_DIRECTORY.resolve("config.json").toString());
 
     @Override
     public void onInitializeServer() {
@@ -50,9 +39,10 @@ public class Guardian implements DedicatedServerModInitializer {
                 if (!isCreated) {
                     throw new Exception("Could not create Guardian config directory");
                 }
-            }
+                DatabaseManager databaseManager = new DatabaseManager(CONFIG_DIRECTORY.resolve("elder.db").toString());
 
-            databaseManager.createDatabases();
+                databaseManager.createDatabases();
+            }
 
             ServerLifecycleCallback serverLifecycleCallback = new ServerLifecycleCallback();
 
@@ -64,7 +54,6 @@ public class Guardian implements DedicatedServerModInitializer {
 
             EntityDeathCallback entityDeathCallback = new EntityDeathCallback();
 
-
             ServerLifecycleEvents.SERVER_STARTING.register(serverLifecycleCallback);
 
             ServerLifecycleEvents.SERVER_STARTED.register(serverLifecycleCallback);
@@ -73,11 +62,9 @@ public class Guardian implements DedicatedServerModInitializer {
 
             ServerLifecycleEvents.SERVER_STOPPED.register(serverLifecycleCallback);
 
-
             ServerPlayConnectionEvents.JOIN.register(serverPlayerConnectionCallback);
 
             ServerPlayConnectionEvents.DISCONNECT.register(serverPlayerConnectionCallback);
-
 
             ServerMessageEvents.CHAT_MESSAGE.register(serverMessageCallback);
 

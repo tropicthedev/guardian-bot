@@ -2,6 +2,7 @@ package com.tropicoss.guardian.discord;
 
 import com.google.gson.JsonObject;
 import com.tropicoss.guardian.discord.commands.OnboardingCommand;
+import com.tropicoss.guardian.discord.events.ChatAdapter;
 import com.tropicoss.guardian.discord.events.UserAdapter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -51,7 +52,7 @@ public class Bot {
                     .setChunkingFilter(ChunkingFilter.ALL)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
-                    .addEventListeners(new OnboardingCommand(), new UserAdapter())
+                    .addEventListeners(new OnboardingCommand(), new UserAdapter(), new ChatAdapter())
                     .build()
                     .awaitReady();
 

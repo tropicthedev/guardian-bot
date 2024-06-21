@@ -30,11 +30,11 @@ public class ConfigurationManager {
 
         JsonObject serverConfig = new JsonObject();
         serverConfig.addProperty("port", "4467");
+        serverConfig.addProperty("host", "localhost");
 
         JsonObject genericConfig = new JsonObject();
+        genericConfig.addProperty("mode", "standalone");
         genericConfig.addProperty("serverName", "your-server-name");
-        genericConfig.addProperty("mode", "client");
-
 
         defaultConfig.add("bot", botConfig);
         defaultConfig.add("server", serverConfig);

@@ -14,7 +14,7 @@ public class UserAdapter extends ListenerAdapter {
         User author = event.getAuthor();
         Message message = event.getMessage();
 
-        System.out.printf("%s: %s%n", String.format("%#s", author), message.getContentDisplay());
+        //TODO: Check if they are a returning member to notify admins
     }
 
     @Override
