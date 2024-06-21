@@ -23,11 +23,17 @@ public class ChatAdapter extends ListenerAdapter {
             String member = Objects.requireNonNull(event.getGuild().getMember(event.getAuthor()))
                     .getEffectiveName();
 
-            DiscordMessage msg = new DiscordMessage(event.getMessage().getContentRaw(), member);
+            DiscordMessage msg;
+
+            if ((long) event.getMessage().getAttachments().size() > 0)
+            {
+                msg = new DiscordMessage("Sent an Attachment: " + event.getMessage().getAttachments().getFirst().getUrl(), member);
+            } else {
+                msg = new DiscordMessage(event.getMessage().getContentRaw(), member);
+            }
 
             LOGGER.info(msg.toConsoleString());
 
-            // Send message to all players. Broadcast adds the colors to the console sadly.
             MINECRAFT_SERVER.getPlayerManager().getPlayerList().forEach(player -> player.sendMessage(msg.toChatText(), false));
 
             String json =  new Gson().toJson(msg);
