@@ -1,6 +1,7 @@
 package com.tropicoss.guardian.discord;
 
 import com.google.gson.JsonObject;
+import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.discord.commands.OnboardingCommand;
 import com.tropicoss.guardian.discord.events.ChatAdapter;
 import com.tropicoss.guardian.discord.events.UserAdapter;
@@ -33,25 +34,17 @@ import org.slf4j.LoggerFactory;
 public class Bot {
     private static final Logger LOGGER = LoggerFactory.getLogger(Bot.class);
 
-    private static final Bot instance;
+    private static Bot BOT_INSTANCE;
 
-    static {
-        try {
-            instance = new Bot();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private final JDA BOT;
-    private final TextChannel CHANNEL;
+    private final JDA bot;
+    private final TextChannel textChannel;
     private final String iconUrl = "https://cdn2.iconfinder.com/data/icons/whcompare-isometric-web-hosting-servers/50/value-server-512.png";
-    private Webhook WEBHOOK = null;
+    private Webhook webhook = null;
 
 
     private Bot() throws InterruptedException {
         try {
-            BOT = JDABuilder.createDefault(CONFIG_MANAGER.getSetting("bot", "token"))
+            bot = JDABuilder.createDefault(getConfigManager().getSetting("bot", "token"))
                     .setChunkingFilter(ChunkingFilter.ALL)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
@@ -59,19 +52,19 @@ public class Bot {
                     .build()
                     .awaitReady();
 
-            CHANNEL = BOT.getTextChannelById(CONFIG_MANAGER.getSetting("bot", "chatChannel"));
+            textChannel = bot.getTextChannelById(getConfigManager().getSetting("bot", "chatChannel"));
 
-            for (Webhook webhook : CHANNEL.getGuild().retrieveWebhooks().complete()) {
+            for (Webhook webhook : textChannel.getGuild().retrieveWebhooks().complete()) {
                 if ("Alfred".equals(webhook.getName())) {
-                    WEBHOOK = webhook;
+                    this.webhook = webhook;
                 }
             }
 
-            if (WEBHOOK == null) {
-                WEBHOOK = CHANNEL.createWebhook("Alfred").complete();
+            if (webhook == null) {
+                webhook = textChannel.createWebhook("Alfred").complete();
             }
 
-            Guild guild = BOT.getGuildById(CONFIG_MANAGER.getSetting("bot","guildId"));
+            Guild guild = bot.getGuildById(getConfigManager().getSetting("bot","guildId"));
 
             if (guild != null) {
                 guild.upsertCommand(
@@ -95,15 +88,27 @@ public class Bot {
         }
     }
 
-    public static Bot getInstance() {
-        return instance;
+    private static ConfigurationManager getConfigManager() {
+        return CONFIG_MANAGER;
+    }
+
+    public static Bot getBotInstance() {
+        if(null == BOT_INSTANCE) {
+            try {
+                BOT_INSTANCE = new Bot();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return BOT_INSTANCE;
     }
 
     public void shutdown() throws InterruptedException {
 
-        BOT.shutdown();
+        bot.shutdown();
 
-        BOT.awaitShutdown();
+        bot.awaitShutdown();
     }
 
     public void sendWebhook(String message, PlayerInfoFetcher.Profile profile, String serverName) {
@@ -115,7 +120,7 @@ public class Bot {
             body.addProperty("avatar_url", profile.data.player.avatar);
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(WEBHOOK.getUrl()))
+                    .uri(URI.create(webhook.getUrl()))
                     .header("Content-Type", "application/json")
                     .method("POST", HttpRequest.BodyPublishers.ofString(body.toString()))
                     .build();
@@ -127,7 +132,7 @@ public class Bot {
     }
 
     public void sendServerStartingMessage(String serverName) {
-        CHANNEL
+        textChannel
                 .sendMessageEmbeds(
                         new EmbedBuilder()
                                 .setAuthor(serverName, null, iconUrl)
@@ -142,7 +147,7 @@ public class Bot {
     public void sendServerStartedMessage(String serverName, Long uptime) {
         String description = String.format("Server started in %sS 🕛", uptime / 1000);
 
-        CHANNEL
+        textChannel
                 .sendMessageEmbeds(
                         new EmbedBuilder()
                                 .setAuthor(serverName, null, iconUrl)
@@ -155,7 +160,7 @@ public class Bot {
     }
 
     public void sendServerStoppingMessage(String serverName) {
-        CHANNEL
+        textChannel
                 .sendMessageEmbeds(
                         new EmbedBuilder()
                                 .setAuthor(serverName, null, "https://cdn2.iconfinder.com/data/icons/whcompare-isometric-web-hosting-servers/50/value-server-512.png")
@@ -168,7 +173,7 @@ public class Bot {
     }
 
     public void sendServerStoppedMessage(String serverName) {
-        CHANNEL
+        textChannel
                 .sendMessageEmbeds(
                         new EmbedBuilder()
                                 .setAuthor(serverName, null, "https://cdn2.iconfinder.com/data/icons/whcompare-isometric-web-hosting-servers/50/value-server-512.png")
@@ -184,7 +189,7 @@ public class Bot {
 
         String nameMCProfile = String.format("https://namemc.com/profile/%s", profile.data.player.username);
 
-        CHANNEL.sendMessageEmbeds(
+        textChannel.sendMessageEmbeds(
                 new EmbedBuilder()
                         .setAuthor(profile.data.player.username, nameMCProfile, profile.data.player.avatar)
                         .setTitle("Joined the server")
@@ -198,7 +203,7 @@ public class Bot {
     public void sendLeaveMessage(PlayerInfoFetcher.Profile profile, String serverName) {
         String nameMCProfile = String.format("https://namemc.com/profile/%s", profile.data.player.username);
 
-        CHANNEL.sendMessageEmbeds(
+        textChannel.sendMessageEmbeds(
                 new EmbedBuilder()
                         .setAuthor(profile.data.player.username, nameMCProfile, profile.data.player.avatar)
                         .setTitle("Left the server")
@@ -212,7 +217,7 @@ public class Bot {
     public void sendAchievementMessage(PlayerInfoFetcher.Profile profile, String serverName, String title, String description) {
         String nameMCProfile = String.format("https://namemc.com/profile/%s", profile.data.player.username);
 
-        CHANNEL.sendMessageEmbeds(
+        textChannel.sendMessageEmbeds(
                 new EmbedBuilder()
                         .setAuthor(profile.data.player.username, nameMCProfile, profile.data.player.avatar)
                         .setTitle("Got An Advancement")
@@ -229,7 +234,7 @@ public class Bot {
 
         String description = String.format("%s\n%s", message, coordinates);
 
-        CHANNEL.sendMessageEmbeds(
+        textChannel.sendMessageEmbeds(
                 new EmbedBuilder()
                         .setAuthor(origin, null ,iconUrl)
                         .setDescription(description)

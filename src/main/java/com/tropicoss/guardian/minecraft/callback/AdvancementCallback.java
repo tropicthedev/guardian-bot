@@ -26,12 +26,12 @@ public class AdvancementCallback implements AdvancementEvent {
             case "server" -> {
                 SOCKET_SERVER.broadcast(json);
 
-                Bot.getInstance().sendAchievementMessage(advancementMessage.getProfile(), advancementMessage.origin, advancementMessage.title, advancementMessage.description);
+                Bot.getBotInstance().sendAchievementMessage(advancementMessage.getProfile(), advancementMessage.origin, advancementMessage.title, advancementMessage.description);
             }
 
             case "client" -> SOCKET_CLIENT.send(json);
 
-            case "standalone" -> Bot.getInstance().sendAchievementMessage(advancementMessage.getProfile(), advancementMessage.origin, advancementMessage.title, advancementMessage.description);
+            case "standalone" -> Bot.getBotInstance().sendAchievementMessage(advancementMessage.getProfile(), advancementMessage.origin, advancementMessage.title, advancementMessage.description);
         }
     }
 }

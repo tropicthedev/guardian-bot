@@ -33,7 +33,7 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
             long uptime = rb.getUptime();
 
             switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
-                case "server", "standalone" -> Bot.getInstance().sendServerStartedMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), uptime);
+                case "server", "standalone" -> Bot.getBotInstance().sendServerStartedMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), uptime);
 
                 case "client" -> {
 
@@ -58,7 +58,7 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
         try {
             switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
                 case "server" -> {
-                    Bot.getInstance().sendServerStartingMessage(CONFIG_MANAGER.getSetting("generic", "mode"));
+                    Bot.getBotInstance().sendServerStartingMessage(CONFIG_MANAGER.getSetting("generic", "mode"));
 
                     SOCKET_SERVER = new Server(new InetSocketAddress(Integer.parseInt(CONFIG_MANAGER.getSetting("server", "port"))));
 
@@ -90,7 +90,7 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
                 }
 
                 case "standalone" -> {
-                    Bot.getInstance().sendServerStartingMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+                    Bot.getBotInstance().sendServerStartingMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
 
                     LOGGER.info("Running in Standalone Mode");
                 }
@@ -110,14 +110,14 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
 
             switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
                 case "server" -> {
-                    Bot.getInstance().sendServerStoppingMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+                    Bot.getBotInstance().sendServerStoppingMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
 
                     SOCKET_SERVER.broadcast(json);
                 }
 
                 case "client" -> SOCKET_CLIENT.send(json);
 
-                case "standalone" -> Bot.getInstance().sendServerStoppingMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+                case "standalone" -> Bot.getBotInstance().sendServerStoppingMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
@@ -134,9 +134,9 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
             switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
                 case "server" -> {
                     try {
-                        Bot.getInstance().sendServerStoppedMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+                        Bot.getBotInstance().sendServerStoppedMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
 
-                        Bot.getInstance().shutdown();
+                        Bot.getBotInstance().shutdown();
 
                         SOCKET_SERVER.broadcast(json);
 
@@ -154,9 +154,9 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
                 }
 
                 case "standalone" -> {
-                    Bot.getInstance().sendServerStoppedMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+                    Bot.getBotInstance().sendServerStoppedMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
 
-                    Bot.getInstance().shutdown();
+                    Bot.getBotInstance().shutdown();
                 }
             }
         }catch (InterruptedException e) {

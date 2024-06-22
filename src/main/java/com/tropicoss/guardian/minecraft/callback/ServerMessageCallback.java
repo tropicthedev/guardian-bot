@@ -23,12 +23,12 @@ public class ServerMessageCallback implements ServerMessageEvents.ChatMessage, S
 
            switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
                case "server" -> {
-                   Bot.getInstance().sendWebhook(message.getContent().getString(), msg.getProfile(),CONFIG_MANAGER.getSetting("generic", "serverName"));
+                   Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(),CONFIG_MANAGER.getSetting("generic", "serverName"));
 
                    SOCKET_SERVER.broadcast(json);
                }
 
-               case "standalone" -> Bot.getInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), CONFIG_MANAGER.getSetting("generic", "serverName"));
+               case "standalone" -> Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), CONFIG_MANAGER.getSetting("generic", "serverName"));
 
                case "client" -> SOCKET_CLIENT.send(json);
            }

@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.discord.Bot;
-import com.tropicoss.guardian.networking.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -169,7 +168,7 @@ public class MessageHandler {
 
     private Bot getBot() {
         if(null == botInstance) {
-            this.botInstance = Bot.getInstance();
+            this.botInstance = Bot.getBotInstance();
         }
         return botInstance;
     }

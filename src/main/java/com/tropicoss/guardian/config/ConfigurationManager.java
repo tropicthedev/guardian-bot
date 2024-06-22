@@ -16,7 +16,7 @@ public class ConfigurationManager {
         this.filePath = filePath;
     }
 
-    public ConfigurationManager(Reader reader) {
+    public ConfigurationManager(final Reader reader) {
         this();
         this.reader = reader;
     }

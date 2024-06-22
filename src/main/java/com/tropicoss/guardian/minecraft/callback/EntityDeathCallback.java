@@ -35,12 +35,12 @@ public final class EntityDeathCallback implements PlayerDeathEvents, EntityDeath
             case "server" -> {
                 SOCKET_SERVER.broadcast(json);
 
-                Bot.getInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
+                Bot.getBotInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
             }
 
             case "client" -> SOCKET_CLIENT.send(json);
 
-            case "standalone" -> Bot.getInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
+            case "standalone" -> Bot.getBotInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
         }
     }
 
@@ -65,12 +65,12 @@ public final class EntityDeathCallback implements PlayerDeathEvents, EntityDeath
             case "server" -> {
                 SOCKET_SERVER.broadcast(json);
 
-                Bot.getInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
+                Bot.getBotInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
             }
 
             case "client" -> SOCKET_CLIENT.send(json);
 
-            case "standalone" -> Bot.getInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
+            case "standalone" -> Bot.getBotInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
         }
     }
 }

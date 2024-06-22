@@ -27,7 +27,7 @@ public class ServerPlayerConnectionCallback implements ServerPlayConnectionEvent
         switch(CONFIG_MANAGER.getSetting("generic", "mode")) {
             case "server" -> {
                 if (profile != null) {
-                    Bot.getInstance().sendLeaveMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
+                    Bot.getBotInstance().sendLeaveMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
                 }
 
                 SOCKET_SERVER.broadcast(json);
@@ -37,7 +37,7 @@ public class ServerPlayerConnectionCallback implements ServerPlayConnectionEvent
 
             case "standalone" -> {
                 if (profile != null) {
-                    Bot.getInstance().sendLeaveMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
+                    Bot.getBotInstance().sendLeaveMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
                 }
             }
         }
@@ -54,7 +54,7 @@ public class ServerPlayerConnectionCallback implements ServerPlayConnectionEvent
         switch(CONFIG_MANAGER.getSetting("generic", "mode")) {
             case "server" -> {
                 if (profile != null) {
-                    Bot.getInstance().sendJoinMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
+                    Bot.getBotInstance().sendJoinMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
                 }
 
                 SOCKET_SERVER.broadcast(json);
@@ -64,7 +64,7 @@ public class ServerPlayerConnectionCallback implements ServerPlayConnectionEvent
 
             case "standalone" -> {
                 if (profile != null) {
-                    Bot.getInstance().sendJoinMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
+                    Bot.getBotInstance().sendJoinMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
                 }
             }
         }
