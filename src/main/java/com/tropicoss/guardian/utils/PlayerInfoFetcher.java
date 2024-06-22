@@ -36,10 +36,10 @@ public class PlayerInfoFetcher {
 
                 return gson.fromJson(response.toString(), Profile.class);
             } else {
-                LOGGER.error("HTTP request failed with response code: " + responseCode);
+                LOGGER.error("HTTP request failed with response code: {}", responseCode);
             }
         } catch (IOException e) {
-            LOGGER.error("Error fetching player info: " + e.getMessage());
+            LOGGER.error("Error fetching player info: {}", e.getMessage());
         }
         return null;
     }

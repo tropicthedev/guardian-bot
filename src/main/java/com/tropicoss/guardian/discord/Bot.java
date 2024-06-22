@@ -24,11 +24,14 @@ import java.net.http.HttpResponse;
 import java.time.Instant;
 
 import static com.tropicoss.guardian.Guardian.CONFIG_MANAGER;
-import static com.tropicoss.guardian.Guardian.LOGGER;
+
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class Bot {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Bot.class);
 
     private static final Bot instance;
 

@@ -3,14 +3,29 @@ package com.tropicoss.guardian.networking.messaging;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.discord.Bot;
+import com.tropicoss.guardian.networking.Server;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
 import static com.tropicoss.guardian.Guardian.*;
 
 public class MessageHandler {
-    private final boolean SERVER = Objects.equals(CONFIG_MANAGER.getSetting("generic", "mode"), "server");
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageHandler.class);
+    private final ConfigurationManager configurationManger;
+    private Bot botInstance;
+
+    public MessageHandler(ConfigurationManager configurationManager) {
+        this.configurationManger = configurationManager;
+    }
+
+    private boolean isServer() {
+        return Objects.equals(configurationManger.getSetting("generic", "mode"), "server");
+    }
+
     public void handleMessage(String message) {
         try { Gson gson =  new Gson();
 
@@ -81,8 +96,8 @@ public class MessageHandler {
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
 
-        if(SERVER) {
-            Bot.getInstance().sendWebhook(msg.content, msg.getProfile(), msg.origin);
+        if(isServer()) {
+            getBot().sendWebhook(msg.content, msg.getProfile(), msg.origin);
         }
     }
 
@@ -94,8 +109,8 @@ public class MessageHandler {
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
 
-        if(SERVER) {
-            Bot.getInstance().sendServerStartingMessage(msg.origin);
+        if(isServer()) {
+            getBot().sendServerStartingMessage(msg.origin);
 
         }
     }
@@ -108,13 +123,12 @@ public class MessageHandler {
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
 
-        if(SERVER) {
-            Bot.getInstance().sendServerStartedMessage(msg.origin, msg.uptime);
+        if(isServer()) {
+            getBot().sendServerStartedMessage(msg.origin, msg.uptime);
         }
     }
 
     private void handleStoppingMessage(StoppingMessage msg) {
-
         LOGGER.info(msg.toConsoleString());
 
         MINECRAFT_SERVER
@@ -122,8 +136,8 @@ public class MessageHandler {
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
 
-        if(SERVER) {
-            Bot.getInstance().sendServerStoppingMessage(msg.server);
+        if(isServer()) {
+            getBot().sendServerStoppingMessage(msg.server);
         }
     }
 
@@ -135,12 +149,12 @@ public class MessageHandler {
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
 
-        if(SERVER) {
-            Bot.getInstance().sendServerStoppedMessage(msg.server);
+        if(isServer()) {
+            getBot().sendServerStoppedMessage(msg.server);
         }
     }
 
-    private void handleLoginMessage(LoginMessage msg) {
+    void handleLoginMessage(LoginMessage msg) {
         LOGGER.info(msg.toConsoleString());
 
         MINECRAFT_SERVER
@@ -148,9 +162,20 @@ public class MessageHandler {
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
 
-        if(SERVER) {
-            Bot.getInstance().sendJoinMessage(msg.getProfile(), msg.origin);
+        if(isServer()) {
+            getBot().sendJoinMessage(msg.getProfile(), msg.origin);
         }
+    }
+
+    private Bot getBot() {
+        if(null == botInstance) {
+            this.botInstance = Bot.getInstance();
+        }
+        return botInstance;
+    }
+
+    void setBot(Bot bot) {
+        this.botInstance = bot;
     }
 
     private void handleLogoutMessage(LogoutMessage msg) {
@@ -161,8 +186,8 @@ public class MessageHandler {
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
 
-        if(SERVER) {
-            Bot.getInstance().sendLeaveMessage(msg.getProfile(), msg.origin);
+        if(isServer()) {
+            getBot().sendLeaveMessage(msg.getProfile(), msg.origin);
         }
     }
 
@@ -174,8 +199,8 @@ public class MessageHandler {
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
 
-        if(!SERVER) {
-            Bot.getInstance().sendAchievementMessage(msg.getProfile(), msg.origin, msg.title, msg.description);
+        if(!isServer()) {
+            getBot().sendAchievementMessage(msg.getProfile(), msg.origin, msg.title, msg.description);
         }
     }
 
@@ -187,8 +212,8 @@ public class MessageHandler {
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
 
-        if(SERVER) {
-            Bot.getInstance().sendDeathMessage(msg.origin, msg.message, msg.coordinates);
+        if(isServer()) {
+            getBot().sendDeathMessage(msg.origin, msg.message, msg.coordinates);
         }
     }
 }

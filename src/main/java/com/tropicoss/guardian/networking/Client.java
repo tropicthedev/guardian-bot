@@ -3,10 +3,13 @@ package com.tropicoss.guardian.networking;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.networking.messaging.MessageHandler;
+import net.fabricmc.loader.api.FabricLoader;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
+import java.io.FileNotFoundException;
 import java.net.URI;
 
 import static com.tropicoss.guardian.Guardian.LOGGER;
@@ -25,10 +28,16 @@ public class Client extends WebSocketClient {
 
     @Override
     public void onMessage(String message) {
+        try {
+            ConfigurationManager configurationManager = new ConfigurationManager(FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("config.json").toString());
 
-        MessageHandler messageHandler = new MessageHandler();
+            MessageHandler messageHandler = new MessageHandler(configurationManager);
 
-        messageHandler.handleMessage(message);
+            messageHandler.handleMessage(message);
+
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

@@ -18,6 +18,7 @@ import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 
@@ -25,9 +26,17 @@ public class Guardian implements DedicatedServerModInitializer {
     public static Server SOCKET_SERVER;
     public static Client SOCKET_CLIENT;
     public static MinecraftServer MINECRAFT_SERVER;
-    public static Logger LOGGER = LoggerFactory.getLogger("Guardian");
+    public static final Logger LOGGER = LoggerFactory.getLogger(Guardian.class);
     private static final Path CONFIG_DIRECTORY = FabricLoader.getInstance().getConfigDir().resolve("guardian");
-    public static ConfigurationManager CONFIG_MANAGER = new ConfigurationManager(CONFIG_DIRECTORY.resolve("config.json").toString());
+    public static ConfigurationManager CONFIG_MANAGER;
+
+    static {
+        try {
+            CONFIG_MANAGER = new ConfigurationManager(CONFIG_DIRECTORY.resolve("config.json").toString());
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public void onInitializeServer() {
@@ -39,6 +48,7 @@ public class Guardian implements DedicatedServerModInitializer {
                 if (!isCreated) {
                     throw new Exception("Could not create Guardian config directory");
                 }
+
                 DatabaseManager databaseManager = new DatabaseManager(CONFIG_DIRECTORY.resolve("elder.db").toString());
 
                 databaseManager.createDatabases();

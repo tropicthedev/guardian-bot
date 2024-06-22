@@ -3,21 +3,36 @@ package com.tropicoss.guardian.config;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 
 public class ConfigurationManager {
-    private final String filePath;
+    private Reader reader;
+    private String filePath;
     private JsonObject config;
     private final Gson gson;
 
-    public ConfigurationManager(String filePath) {
+    public ConfigurationManager(String filePath) throws FileNotFoundException {
+        this(getReaderFromPath(filePath));
         this.filePath = filePath;
+    }
+
+    public ConfigurationManager(Reader reader) {
+        this();
+        this.reader = reader;
+    }
+
+    private ConfigurationManager() {
         this.gson = new Gson();
         this.config = getDefaultConfig();
-        loadConfig();
+    }
+
+    private static Reader getReaderFromPath(String filePath) throws FileNotFoundException {
+        File file = new File(filePath);
+        if(file.exists()) {
+            return new FileReader(file);
+        }
+
+        return null;
     }
 
     private JsonObject getDefaultConfig() {
@@ -43,25 +58,14 @@ public class ConfigurationManager {
         return defaultConfig;
     }
 
-    private void loadConfig() {
-        File configFile = new File(filePath);
-        if (!configFile.exists()) {
-            createDefaultConfigFile();
-        } else {
-            try (FileReader reader = new FileReader(filePath)) {
-                this.config = gson.fromJson(reader, JsonObject.class);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+    public void loadConfig() {
+      this.config = gson.fromJson(reader, JsonObject.class);
     }
 
-    private void createDefaultConfigFile() {
-        try (FileWriter file = new FileWriter(filePath)) {
-            file.write(gson.toJson(config));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void createDefaultConfigFile() throws IOException {
+        FileWriter file = new FileWriter(filePath);
+
+        file.write(gson.toJson(config));
     }
 
     public void reloadConfig() {
