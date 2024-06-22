@@ -1,23 +1,23 @@
 package com.tropicoss.guardian.networking.messaging;
 
 import com.tropicoss.guardian.Guardian;
+import com.tropicoss.guardian.config.ConfigurationManager;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.text.Text;
 
-import static com.tropicoss.guardian.Guardian.CONFIG_MANAGER;
+import java.io.FileNotFoundException;
 
 public class EntityDeathMessage implements WebsocketMessage{
 
     private final String type = "death";
-
     public String message;
-
     public String coordinates;
+    public final String origin;
 
-    public final String origin = CONFIG_MANAGER.getSetting("generic", "serverName");
-
-    public EntityDeathMessage(String message, String coordinates) {
+    public EntityDeathMessage(String message, String coordinates, String origin) {
         this.message = message;
         this.coordinates = coordinates;
+        this.origin = origin;
     }
 
     @Override

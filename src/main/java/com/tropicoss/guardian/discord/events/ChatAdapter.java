@@ -11,14 +11,21 @@ import java.util.Objects;
 import static com.tropicoss.guardian.Guardian.*;
 
 public class ChatAdapter extends ListenerAdapter {
-    private final boolean SERVER = Objects.equals(CONFIG_MANAGER.getSetting("generic", "mode"), "server");
+
+    private final String mode;
+    private final String botChannel;
+
+    public ChatAdapter(String mode, String botChannel) {
+        this.mode = mode;
+        this.botChannel = botChannel;
+    }
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         try {
             if (event.getAuthor().isBot()) return;
 
-            if (!event.getChannel().getId().equals(CONFIG_MANAGER.getSetting("bot", "chatChannel"))) return;
+            if (!event.getChannel().getId().equals(this.botChannel)) return;
 
             String member = Objects.requireNonNull(event.getGuild().getMember(event.getAuthor()))
                     .getEffectiveName();
@@ -38,11 +45,15 @@ public class ChatAdapter extends ListenerAdapter {
 
             String json =  new Gson().toJson(msg);
 
-            if (SERVER) {
+            if (isServer()) {
                 SOCKET_SERVER.broadcast(json);
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
+    }
+
+    private boolean isServer() {
+        return Objects.equals(this.mode, "server");
     }
 }

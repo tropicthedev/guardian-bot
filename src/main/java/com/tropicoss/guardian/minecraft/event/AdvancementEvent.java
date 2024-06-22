@@ -6,6 +6,8 @@ import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import java.io.FileNotFoundException;
+
 @FunctionalInterface
 public interface AdvancementEvent {
 
@@ -16,5 +18,5 @@ public interface AdvancementEvent {
                 }
             });
 
-    void onGrantCriterion(ServerPlayerEntity player, AdvancementEntry advancement, String criterion);
+    void onGrantCriterion(ServerPlayerEntity player, AdvancementEntry advancement, String criterion) throws FileNotFoundException;
 }

@@ -19,10 +19,14 @@ import java.net.URI;
 
 import static com.tropicoss.guardian.Guardian.*;
 
-public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStarting,
+public class ServerLifecycleCallback extends ServerEventCallback implements ServerLifecycleEvents.ServerStarting,
         ServerLifecycleEvents.ServerStarted,
         ServerLifecycleEvents.ServerStopping,
         ServerLifecycleEvents.ServerStopped {
+
+    public ServerLifecycleCallback(String host, String serverName, String mode, String port) {
+        super(host, serverName, mode, port);
+    }
 
     @Override
     public void onServerStarted(MinecraftServer server) {
@@ -32,12 +36,12 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
 
             long uptime = rb.getUptime();
 
-            switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
-                case "server", "standalone" -> Bot.getBotInstance().sendServerStartedMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), uptime);
+            switch (getMode()) {
+                case "server", "standalone" -> Bot.getBotInstance().sendServerStartedMessage(getServerName(), uptime);
 
                 case "client" -> {
 
-                    StartedMessage message = new StartedMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), uptime);
+                    StartedMessage message = new StartedMessage(getServerName(), uptime);
 
                     String json = new Gson().toJson(message);
 
@@ -56,11 +60,11 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
         MINECRAFT_SERVER = server;
 
         try {
-            switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
+            switch (getMode()) {
                 case "server" -> {
-                    Bot.getBotInstance().sendServerStartingMessage(CONFIG_MANAGER.getSetting("generic", "mode"));
+                    Bot.getBotInstance().sendServerStartingMessage(getMode());
 
-                    SOCKET_SERVER = new Server(new InetSocketAddress(Integer.parseInt(CONFIG_MANAGER.getSetting("server", "port"))));
+                    SOCKET_SERVER = new Server(new InetSocketAddress(Integer.parseInt(getPort())));
 
                     SOCKET_SERVER.start();
 
@@ -70,7 +74,7 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
                 case "client" -> {
                     Commands.register();
 
-                    String uri = String.format("ws://%s:%s", CONFIG_MANAGER.getSetting("server", "host"), CONFIG_MANAGER.getSetting("server", "port"));
+                    String uri = String.format("ws://%s:%s", getHost(), getPort());
 
                     SOCKET_CLIENT = new Client(URI.create(uri));
 
@@ -80,7 +84,7 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
                         LOGGER.error("There was an error connecting to Alfred Server is it running ?");
                     }
 
-                    StartingMessage message = new StartingMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+                    StartingMessage message = new StartingMessage(getServerName());
 
                     String json = new Gson().toJson(message);
 
@@ -90,7 +94,7 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
                 }
 
                 case "standalone" -> {
-                    Bot.getBotInstance().sendServerStartingMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+                    Bot.getBotInstance().sendServerStartingMessage(getServerName());
 
                     LOGGER.info("Running in Standalone Mode");
                 }
@@ -104,20 +108,20 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
     public void onServerStopping(MinecraftServer server) {
 
         try {
-            StoppingMessage message = new StoppingMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+            StoppingMessage message = new StoppingMessage(getServerName());
 
             String json = new Gson().toJson(message);
 
-            switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
+            switch (getMode()) {
                 case "server" -> {
-                    Bot.getBotInstance().sendServerStoppingMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+                    Bot.getBotInstance().sendServerStoppingMessage(getServerName());
 
                     SOCKET_SERVER.broadcast(json);
                 }
 
                 case "client" -> SOCKET_CLIENT.send(json);
 
-                case "standalone" -> Bot.getBotInstance().sendServerStoppingMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+                case "standalone" -> Bot.getBotInstance().sendServerStoppingMessage(getServerName());
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
@@ -126,15 +130,15 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
 
     @Override
     public void onServerStopped(MinecraftServer server) {
-        StoppedMessage message = new StoppedMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+        StoppedMessage message = new StoppedMessage(getServerName());
 
         String json = new Gson().toJson(message);
 
         try {
-            switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
+            switch (getMode()) {
                 case "server" -> {
                     try {
-                        Bot.getBotInstance().sendServerStoppedMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+                        Bot.getBotInstance().sendServerStoppedMessage(getServerName());
 
                         Bot.getBotInstance().shutdown();
 
@@ -154,7 +158,7 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
                 }
 
                 case "standalone" -> {
-                    Bot.getBotInstance().sendServerStoppedMessage(CONFIG_MANAGER.getSetting("generic", "serverName"));
+                    Bot.getBotInstance().sendServerStoppedMessage(getServerName());
 
                     Bot.getBotInstance().shutdown();
                 }
@@ -165,4 +169,5 @@ public class ServerLifecycleCallback implements ServerLifecycleEvents.ServerStar
             LOGGER.error(e.getMessage());
         }
     }
+
 }

@@ -12,6 +12,8 @@ import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.PlayerAdvancementTracker;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import java.io.FileNotFoundException;
+
 @Mixin(PlayerAdvancementTracker.class)
 public abstract class PlayerAdvancementTrackerMixin {
     @Shadow
@@ -19,8 +21,7 @@ public abstract class PlayerAdvancementTrackerMixin {
 
     @Inject(method = "grantCriterion", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancement/"
             + "AdvancementRewards;apply(Lnet/minecraft/server/network/ServerPlayerEntity;)V"))
-    public void grantCriterion(AdvancementEntry advancement, String criterionName, CallbackInfoReturnable<Boolean> cir)
-    {
+    public void grantCriterion(AdvancementEntry advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) throws FileNotFoundException {
         AdvancementEvent.EVENT.invoker().onGrantCriterion(owner, advancement, criterionName);
     }
 }

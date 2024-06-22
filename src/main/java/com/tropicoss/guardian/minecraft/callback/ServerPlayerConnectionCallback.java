@@ -12,22 +12,26 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 
 import static com.tropicoss.guardian.Guardian.*;
 
-public class ServerPlayerConnectionCallback implements ServerPlayConnectionEvents.Join, ServerPlayConnectionEvents.Disconnect {
+public class ServerPlayerConnectionCallback extends ServerEventCallback implements ServerPlayConnectionEvents.Join, ServerPlayConnectionEvents.Disconnect {
 
     private final Gson gson = new Gson();
 
+    public ServerPlayerConnectionCallback(String host, String serverName, String mode, String port) {
+        super(host, serverName, mode, port);
+    }
+
     @Override
     public void onPlayDisconnect(ServerPlayNetworkHandler handler, MinecraftServer server) {
-        LogoutMessage logoutMessage = new LogoutMessage(CONFIG_MANAGER.getSetting("generic", "serverNane"), handler.player.getUuidAsString());
+        LogoutMessage logoutMessage = new LogoutMessage(getServerName(), handler.player.getUuidAsString());
 
         PlayerInfoFetcher.Profile profile = PlayerInfoFetcher.getProfile(handler.player.getUuidAsString());
 
         String json = gson.toJson(logoutMessage);
 
-        switch(CONFIG_MANAGER.getSetting("generic", "mode")) {
+        switch(getMode()) {
             case "server" -> {
                 if (profile != null) {
-                    Bot.getBotInstance().sendLeaveMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
+                    Bot.getBotInstance().sendLeaveMessage(profile, getServerName());
                 }
 
                 SOCKET_SERVER.broadcast(json);
@@ -37,7 +41,7 @@ public class ServerPlayerConnectionCallback implements ServerPlayConnectionEvent
 
             case "standalone" -> {
                 if (profile != null) {
-                    Bot.getBotInstance().sendLeaveMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
+                    Bot.getBotInstance().sendLeaveMessage(profile, getServerName());
                 }
             }
         }
@@ -45,16 +49,16 @@ public class ServerPlayerConnectionCallback implements ServerPlayConnectionEvent
 
     @Override
     public void onPlayReady(ServerPlayNetworkHandler handler, PacketSender sender, MinecraftServer server) {
-        LoginMessage loginMessage = new LoginMessage(CONFIG_MANAGER.getSetting("generic", "serverNane"), handler.player.getUuidAsString());
+        LoginMessage loginMessage = new LoginMessage(getServerName(), handler.player.getUuidAsString());
 
         PlayerInfoFetcher.Profile profile = PlayerInfoFetcher.getProfile(handler.player.getUuidAsString());
 
         String json = gson.toJson(loginMessage);
 
-        switch(CONFIG_MANAGER.getSetting("generic", "mode")) {
+        switch(getMode()) {
             case "server" -> {
                 if (profile != null) {
-                    Bot.getBotInstance().sendJoinMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
+                    Bot.getBotInstance().sendJoinMessage(profile, getServerName());
                 }
 
                 SOCKET_SERVER.broadcast(json);
@@ -64,7 +68,7 @@ public class ServerPlayerConnectionCallback implements ServerPlayConnectionEvent
 
             case "standalone" -> {
                 if (profile != null) {
-                    Bot.getBotInstance().sendJoinMessage(profile, CONFIG_MANAGER.getSetting("generic", "serverNane"));
+                    Bot.getBotInstance().sendJoinMessage(profile, getServerName());
                 }
             }
         }

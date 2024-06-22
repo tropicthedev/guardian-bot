@@ -13,13 +13,14 @@ import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
 import java.net.InetSocketAddress;
 
-import static com.tropicoss.guardian.Guardian.CONFIG_MANAGER;
-
 public class Server extends WebSocketServer {
     private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
+    private final ConfigurationManager configurationManager;
 
-    public Server(InetSocketAddress address) {
+    public Server(InetSocketAddress address) throws FileNotFoundException {
         super(address);
+        String filePath = FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("config.json").toString();
+        this.configurationManager = new ConfigurationManager(filePath);
     }
 
     @Override
@@ -53,6 +54,6 @@ public class Server extends WebSocketServer {
     @Override
     public void onStart() {
         LOGGER.info("Socket Server Started");
-        LOGGER.info("Listening on port {}", CONFIG_MANAGER.getSetting("server", "port"));
+        LOGGER.info("Listening on port {}", configurationManager.getSetting("server", "port"));
     }
 }

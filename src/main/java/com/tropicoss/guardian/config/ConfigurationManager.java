@@ -68,9 +68,9 @@ public class ConfigurationManager {
         file.write(gson.toJson(config));
     }
 
-    public void reloadConfig() {
-        loadConfig();
-    }
+//    public void reloadConfig() {
+//        loadConfig();
+//    }
 
     public String getSetting(String section, String key) {
         JsonObject sectionObject = config.getAsJsonObject(section);

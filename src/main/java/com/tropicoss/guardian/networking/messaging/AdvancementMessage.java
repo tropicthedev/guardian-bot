@@ -1,10 +1,8 @@
 package com.tropicoss.guardian.networking.messaging;
 
-import com.tropicoss.guardian.Guardian;
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.text.Text;
-
-import static com.tropicoss.guardian.Guardian.CONFIG_MANAGER;
 
 public class AdvancementMessage implements WebsocketMessage{
 
@@ -15,12 +13,14 @@ public class AdvancementMessage implements WebsocketMessage{
 
     public String uuid;
 
-    public final String origin = CONFIG_MANAGER.getSetting("generic", "serverName");
+    public final String origin;
 
-    public AdvancementMessage(String title, String description, String uuid) {
+    public AdvancementMessage(String title, String description, String uuid, String origin) {
         this.title = title;
         this.description = description;
         this.uuid = uuid;
+        String filePath = FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("config.json").toString();
+        this.origin = origin;
     }
 
     public PlayerInfoFetcher.Profile getProfile() {

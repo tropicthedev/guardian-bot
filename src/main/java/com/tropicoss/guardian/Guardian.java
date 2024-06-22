@@ -3,6 +3,7 @@ package com.tropicoss.guardian;
 
 import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.database.DatabaseManager;
+import com.tropicoss.guardian.discord.Bot;
 import com.tropicoss.guardian.minecraft.callback.*;
 import com.tropicoss.guardian.minecraft.event.PlayerDeathEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
@@ -20,49 +21,63 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
-import java.sql.SQLException;
 
 public class Guardian implements DedicatedServerModInitializer {
     public static Server SOCKET_SERVER;
     public static Client SOCKET_CLIENT;
     public static MinecraftServer MINECRAFT_SERVER;
     public static final Logger LOGGER = LoggerFactory.getLogger(Guardian.class);
-    private static final Path CONFIG_DIRECTORY = FabricLoader.getInstance().getConfigDir().resolve("guardian");
-    public static ConfigurationManager CONFIG_MANAGER;
-
-    static {
-        try {
-            CONFIG_MANAGER = new ConfigurationManager(CONFIG_DIRECTORY.resolve("config.json").toString());
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    public ConfigurationManager configurationManager;
 
     @Override
     public void onInitializeServer() {
         try {
 
-            if (!FabricLoader.getInstance().getConfigDir().resolve("guardian").toFile().exists()) {
-                boolean isCreated = FabricLoader.getInstance().getConfigDir().resolve("guardian").toFile().mkdir();
+            Path guardianConfigPath = FabricLoader.getInstance().getConfigDir().resolve("guardian");
+            if (!guardianConfigPath.toFile().exists()) {
 
+                boolean isCreated = guardianConfigPath.toFile().mkdir();
+                configurationManager = new ConfigurationManager(guardianConfigPath.resolve("config.json").toString());
+
+                configurationManager.loadConfig();
                 if (!isCreated) {
                     throw new Exception("Could not create Guardian config directory");
                 }
 
-                DatabaseManager databaseManager = new DatabaseManager(CONFIG_DIRECTORY.resolve("elder.db").toString());
+                DatabaseManager databaseManager = new DatabaseManager(guardianConfigPath.resolve("elder.db").toString());
 
                 databaseManager.createDatabases();
             }
 
-            ServerLifecycleCallback serverLifecycleCallback = new ServerLifecycleCallback();
+            ServerLifecycleCallback serverLifecycleCallback = new ServerLifecycleCallback(
+                    configurationManager.getSetting("server","host"),
+                    configurationManager.getSetting("generic", "serverName"),
+                    configurationManager.getSetting("generic", "mode"),
+                    configurationManager.getSetting("server","port")
+            );
 
-            ServerPlayerConnectionCallback serverPlayerConnectionCallback = new ServerPlayerConnectionCallback();
+            ServerPlayerConnectionCallback serverPlayerConnectionCallback = new ServerPlayerConnectionCallback(
+                    configurationManager.getSetting("server","host"),
+                    configurationManager.getSetting("generic", "serverName"),
+                    configurationManager.getSetting("generic", "mode"),
+                    configurationManager.getSetting("server","port")
+            );
 
-            ServerMessageCallback serverMessageCallback = new ServerMessageCallback();
+            ServerMessageCallback serverMessageCallback = new ServerMessageCallback(
+                    configurationManager.getSetting("server","host"),
+                    configurationManager.getSetting("generic", "serverName"),
+                    configurationManager.getSetting("generic", "mode"),
+                    configurationManager.getSetting("server","port"));
 
             AdvancementCallback advancementCallback = new AdvancementCallback();
 
-            EntityDeathCallback entityDeathCallback = new EntityDeathCallback();
+            EntityDeathCallback entityDeathCallback = new EntityDeathCallback(
+                    configurationManager.getSetting("server","host"),
+                    configurationManager.getSetting("generic", "serverName"),
+                    configurationManager.getSetting("generic", "mode"),
+                    configurationManager.getSetting("server","port"),
+                    Bot.getBotInstance()
+            );
 
             ServerLifecycleEvents.SERVER_STARTING.register(serverLifecycleCallback);
 

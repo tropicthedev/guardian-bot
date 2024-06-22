@@ -1,6 +1,7 @@
 package com.tropicoss.guardian.minecraft.callback;
 
 import com.google.gson.Gson;
+import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.discord.Bot;
 import com.tropicoss.guardian.minecraft.event.EntityDeathEvents;
 import com.tropicoss.guardian.minecraft.event.PlayerDeathEvents;
@@ -13,8 +14,14 @@ import net.minecraft.world.World;
 
 import static com.tropicoss.guardian.Guardian.*;
 
-public final class EntityDeathCallback implements PlayerDeathEvents, EntityDeathEvents
-{
+public final class EntityDeathCallback extends ServerEventCallback implements PlayerDeathEvents, EntityDeathEvents {
+    private final Bot bot;
+
+
+    public EntityDeathCallback(String host, String serverName, String mode, String port, Bot bot) {
+        super(host, serverName, mode, port);
+        this.bot = bot;
+    }
 
     @Override
     public void onPlayerDeath(ServerPlayerEntity player, DamageSource source) {
@@ -27,20 +34,20 @@ public final class EntityDeathCallback implements PlayerDeathEvents, EntityDeath
         // Type Casting to Int to remove decimal points
         String coordinates = String.format("*%s at %s, %s, %s*", dimension.replaceAll(".*:", ""), (int) player.getX(), (int) player.getY(), (int) player.getZ());
 
-        EntityDeathMessage entityDeathMessage = new EntityDeathMessage(message, coordinates);
+        EntityDeathMessage entityDeathMessage = new EntityDeathMessage(message, coordinates, this.getServerName());
 
         String json = new Gson().toJson(entityDeathMessage);
 
-        switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
+        switch (this.getMode()) {
             case "server" -> {
                 SOCKET_SERVER.broadcast(json);
 
-                Bot.getBotInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
+                this.bot.sendDeathMessage(this.getServerName(), message, coordinates);
             }
 
             case "client" -> SOCKET_CLIENT.send(json);
 
-            case "standalone" -> Bot.getBotInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
+            case "standalone" ->  this.bot.sendDeathMessage(this.getServerName(), message, coordinates);
         }
     }
 
@@ -57,20 +64,20 @@ public final class EntityDeathCallback implements PlayerDeathEvents, EntityDeath
 
         String coordinates = String.format("*%s at %s, %s, %s*", dimension.replaceAll(".*:", ""), (int) entity.getX(), (int) entity.getY(), (int) entity.getZ());
 
-        EntityDeathMessage entityDeathMessage = new EntityDeathMessage(message, coordinates);
+        EntityDeathMessage entityDeathMessage = new EntityDeathMessage(message, coordinates, getServerName());
 
         String json = new Gson().toJson(entityDeathMessage);
 
-        switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
+        switch (this.getMode()) {
             case "server" -> {
                 SOCKET_SERVER.broadcast(json);
 
-                Bot.getBotInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
+                this.bot.sendDeathMessage(this.getServerName(), message, coordinates);
             }
 
             case "client" -> SOCKET_CLIENT.send(json);
 
-            case "standalone" -> Bot.getBotInstance().sendDeathMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), message, coordinates);
+            case "standalone" ->  this.bot.sendDeathMessage(this.getServerName(), message, coordinates);
         }
     }
 }

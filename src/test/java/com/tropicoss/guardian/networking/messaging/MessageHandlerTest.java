@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.UUID;
 
 public class MessageHandlerTest {
@@ -35,7 +37,10 @@ public class MessageHandlerTest {
         LoginMessage message = new LoginMessage("server", UUID.randomUUID().toString());
 
         // In the config manager set the config option that indicates that's a server
-        ConfigurationManager configurationManager = new ConfigurationManager(String.valueOf(ClassLoader.getSystemResourceAsStream("config.json")));
+        InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream("config.json");
+        InputStreamReader streamReader = new InputStreamReader(resourceAsStream);
+
+        ConfigurationManager configurationManager = new ConfigurationManager(streamReader);
         // instantiate a message handler object
         MessageHandler messageHandler = new MessageHandler(configurationManager);
 

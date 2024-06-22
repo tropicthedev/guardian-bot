@@ -24,8 +24,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Instant;
 
-import static com.tropicoss.guardian.Guardian.CONFIG_MANAGER;
-
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,16 +37,23 @@ public class Bot {
     private final JDA bot;
     private final TextChannel textChannel;
     private final String iconUrl = "https://cdn2.iconfinder.com/data/icons/whcompare-isometric-web-hosting-servers/50/value-server-512.png";
+    private final ConfigurationManager configurationManager;
     private Webhook webhook = null;
 
-
     private Bot() throws InterruptedException {
+        this(null);
+    }
+
+    private Bot(ConfigurationManager configurationManager) throws InterruptedException {
+        this.configurationManager = configurationManager;
         try {
             bot = JDABuilder.createDefault(getConfigManager().getSetting("bot", "token"))
                     .setChunkingFilter(ChunkingFilter.ALL)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
-                    .addEventListeners(new OnboardingCommand(), new UserAdapter(), new ChatAdapter())
+                    .addEventListeners(new OnboardingCommand(), new UserAdapter(), new ChatAdapter(
+                            this.configurationManager.getSetting("generic", "mode"),
+                            this.configurationManager.getSetting("bot", "chatChannel")))
                     .build()
                     .awaitReady();
 
@@ -88,13 +93,14 @@ public class Bot {
         }
     }
 
-    private static ConfigurationManager getConfigManager() {
-        return CONFIG_MANAGER;
+    private ConfigurationManager getConfigManager() {
+        return configurationManager;
     }
 
     public static Bot getBotInstance() {
         if(null == BOT_INSTANCE) {
             try {
+                // TODO: Refactor to not use Guardian Config Manager
                 BOT_INSTANCE = new Bot();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);

@@ -11,24 +11,28 @@ import net.minecraft.server.network.ServerPlayerEntity;
 
 import static com.tropicoss.guardian.Guardian.*;
 
-public class ServerMessageCallback implements ServerMessageEvents.ChatMessage, ServerMessageEvents.CommandMessage {
+public class ServerMessageCallback  extends ServerEventCallback implements ServerMessageEvents.ChatMessage, ServerMessageEvents.CommandMessage{
+
+    public ServerMessageCallback(String host, String serverName, String mode, String port) {
+        super(host, serverName, mode, port);
+    }
 
     @Override
     public void onChatMessage(SignedMessage message, ServerPlayerEntity sender, MessageType.Parameters params) {
 
        try {
-           ChatMessage msg = new ChatMessage(CONFIG_MANAGER.getSetting("generic", "serverName"), sender.getUuid().toString(), message.getContent().getString());
+           ChatMessage msg = new ChatMessage(getServerName(), sender.getUuid().toString(), message.getContent().getString());
 
            String json = new Gson().toJson(msg);
 
-           switch (CONFIG_MANAGER.getSetting("generic", "mode")) {
+           switch (getMode()) {
                case "server" -> {
-                   Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(),CONFIG_MANAGER.getSetting("generic", "serverName"));
+                   Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(),getServerName());
 
                    SOCKET_SERVER.broadcast(json);
                }
 
-               case "standalone" -> Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), CONFIG_MANAGER.getSetting("generic", "serverName"));
+               case "standalone" -> Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), getServerName());
 
                case "client" -> SOCKET_CLIENT.send(json);
            }
