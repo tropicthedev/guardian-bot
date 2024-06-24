@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.tropicoss.guardian.networking.messaging.DiscordMessage;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.minecraft.server.MinecraftServer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -14,10 +15,12 @@ public class ChatAdapter extends ListenerAdapter {
 
     private final String mode;
     private final String botChannel;
+    private final MinecraftServer minecraftServer;
 
-    public ChatAdapter(String mode, String botChannel) {
+    public ChatAdapter(String mode, String botChannel, MinecraftServer minecraftServer) {
         this.mode = mode;
         this.botChannel = botChannel;
+        this.minecraftServer = minecraftServer;
     }
 
     @Override
@@ -41,7 +44,7 @@ public class ChatAdapter extends ListenerAdapter {
 
             LOGGER.info(msg.toConsoleString());
 
-            MINECRAFT_SERVER.getPlayerManager().getPlayerList().forEach(player -> player.sendMessage(msg.toChatText(), false));
+            minecraftServer.getPlayerManager().getPlayerList().forEach(player -> player.sendMessage(msg.toChatText(), false));
 
             String json =  new Gson().toJson(msg);
 

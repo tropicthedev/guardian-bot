@@ -25,7 +25,7 @@ import java.nio.file.Path;
 public class Guardian implements DedicatedServerModInitializer {
     public static Server SOCKET_SERVER;
     public static Client SOCKET_CLIENT;
-    public static MinecraftServer MINECRAFT_SERVER;
+    private MinecraftServer minecraftServer;
     public static final Logger LOGGER = LoggerFactory.getLogger(Guardian.class);
     public ConfigurationManager configurationManager;
 
@@ -37,9 +37,7 @@ public class Guardian implements DedicatedServerModInitializer {
             if (!guardianConfigPath.toFile().exists()) {
 
                 boolean isCreated = guardianConfigPath.toFile().mkdir();
-                configurationManager = new ConfigurationManager(guardianConfigPath.resolve("config.json").toString());
 
-                configurationManager.loadConfig();
                 if (!isCreated) {
                     throw new Exception("Could not create Guardian config directory");
                 }
@@ -48,6 +46,10 @@ public class Guardian implements DedicatedServerModInitializer {
 
                 databaseManager.createDatabases();
             }
+
+            configurationManager = new ConfigurationManager(guardianConfigPath.resolve("config.json").toString());
+
+            configurationManager.loadConfig();
 
             ServerLifecycleCallback serverLifecycleCallback = new ServerLifecycleCallback(
                     configurationManager.getSetting("server","host"),
@@ -67,7 +69,8 @@ public class Guardian implements DedicatedServerModInitializer {
                     configurationManager.getSetting("server","host"),
                     configurationManager.getSetting("generic", "serverName"),
                     configurationManager.getSetting("generic", "mode"),
-                    configurationManager.getSetting("server","port"));
+                    configurationManager.getSetting("server","port")
+            );
 
             AdvancementCallback advancementCallback = new AdvancementCallback();
 

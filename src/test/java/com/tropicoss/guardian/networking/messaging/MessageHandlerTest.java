@@ -32,25 +32,27 @@ public class MessageHandlerTest {
     // Should not send player login message to discord if it is not a server
     @Test
     public void shouldNotSendLoginMessageToDiscord() throws InterruptedException, FileNotFoundException {
-
-
-        LoginMessage message = new LoginMessage("server", UUID.randomUUID().toString());
+        // Uses Notch for Testing
+        LoginMessage message = new LoginMessage("server", "069a79f4-44e9-4726-a5be-fca90e38aaf5");
 
         // In the config manager set the config option that indicates that's a server
         InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream("config.json");
         InputStreamReader streamReader = new InputStreamReader(resourceAsStream);
 
+        // instantiate the minecraft server in guardian
+        MinecraftServer minecraftServer = Mockito.mock(MinecraftServer.class);
+
         ConfigurationManager configurationManager = new ConfigurationManager(streamReader);
+        configurationManager.loadConfig();
+
         // instantiate a message handler object
-        MessageHandler messageHandler = new MessageHandler(configurationManager);
+        MessageHandler messageHandler = new MessageHandler(configurationManager, minecraftServer);
 
         // Create a mock bot object
         Bot bot =  Mockito.mock(Bot.class);
 
         messageHandler.setBot(bot);
 
-        // instantiate the minecraft server in guardian
-        MinecraftServer minecraftServer = Mockito.mock(MinecraftServer.class);
         // Call the Message Handler (LoginMessage)
         messageHandler.handleLoginMessage(message);
     }

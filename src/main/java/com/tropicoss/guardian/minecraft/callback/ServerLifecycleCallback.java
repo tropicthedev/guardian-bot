@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 
 import com.tropicoss.guardian.discord.Bot;
 import com.tropicoss.guardian.networking.Server;
+import com.tropicoss.guardian.services.MinecraftServerService;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.MinecraftServer;
 import  com.tropicoss.guardian.networking.messaging.StartingMessage;
@@ -57,7 +58,7 @@ public class ServerLifecycleCallback extends ServerEventCallback implements Serv
 
     @Override
     public void onServerStarting(MinecraftServer server) {
-        MINECRAFT_SERVER = server;
+        MinecraftServerService.setServerInstance(server);
 
         try {
             switch (getMode()) {

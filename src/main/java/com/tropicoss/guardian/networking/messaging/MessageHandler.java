@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.discord.Bot;
+import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,10 +16,12 @@ import static com.tropicoss.guardian.Guardian.*;
 public class MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageHandler.class);
     private final ConfigurationManager configurationManger;
+    private final MinecraftServer minecraftServer;
     private Bot botInstance;
 
-    public MessageHandler(ConfigurationManager configurationManager) {
+    public MessageHandler(ConfigurationManager configurationManager, MinecraftServer minecraftServer) {
         this.configurationManger = configurationManager;
+        this.minecraftServer = minecraftServer;
     }
 
     private boolean isServer() {
@@ -80,7 +83,7 @@ public class MessageHandler {
     private void handleDiscordMessage(DiscordMessage msg) {
         LOGGER.info(msg.toConsoleString());
 
-        MINECRAFT_SERVER
+        minecraftServer
                 .getPlayerManager()
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
@@ -90,7 +93,7 @@ public class MessageHandler {
 
         LOGGER.info(msg.toConsoleString());
 
-        MINECRAFT_SERVER
+        minecraftServer
                 .getPlayerManager()
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
@@ -103,7 +106,7 @@ public class MessageHandler {
     private void handleStartingMessage(StartingMessage msg) {
         LOGGER.info(msg.toConsoleString());
 
-        MINECRAFT_SERVER
+        minecraftServer
                 .getPlayerManager()
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
@@ -117,7 +120,7 @@ public class MessageHandler {
     private void handleStartedMessage(StartedMessage msg) {
         LOGGER.info(msg.toConsoleString());
 
-        MINECRAFT_SERVER
+        minecraftServer
                 .getPlayerManager()
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
@@ -130,7 +133,7 @@ public class MessageHandler {
     private void handleStoppingMessage(StoppingMessage msg) {
         LOGGER.info(msg.toConsoleString());
 
-        MINECRAFT_SERVER
+        minecraftServer
                 .getPlayerManager()
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
@@ -143,7 +146,7 @@ public class MessageHandler {
     private void handleStoppedMessage(StoppedMessage msg) {
         LOGGER.info(msg.toConsoleString());
 
-        MINECRAFT_SERVER
+        minecraftServer
                 .getPlayerManager()
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
@@ -156,7 +159,7 @@ public class MessageHandler {
     void handleLoginMessage(LoginMessage msg) {
         LOGGER.info(msg.toConsoleString());
 
-        MINECRAFT_SERVER
+        minecraftServer
                 .getPlayerManager()
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
@@ -180,7 +183,7 @@ public class MessageHandler {
     private void handleLogoutMessage(LogoutMessage msg) {
         LOGGER.info(msg.toConsoleString());
 
-        MINECRAFT_SERVER
+        minecraftServer
                 .getPlayerManager()
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
@@ -193,7 +196,7 @@ public class MessageHandler {
     private void handleAdvancementMessage(AdvancementMessage msg) {
         LOGGER.info(msg.toConsoleString());
 
-        MINECRAFT_SERVER
+        minecraftServer
                 .getPlayerManager()
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
@@ -206,7 +209,7 @@ public class MessageHandler {
     private void handleDeathMessage(EntityDeathMessage msg) {
         LOGGER.info(msg.toConsoleString());
 
-        MINECRAFT_SERVER
+        minecraftServer
                 .getPlayerManager()
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));

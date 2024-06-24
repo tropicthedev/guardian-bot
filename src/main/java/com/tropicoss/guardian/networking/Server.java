@@ -3,6 +3,7 @@ package com.tropicoss.guardian.networking;
 import com.tropicoss.guardian.Guardian;
 import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.networking.messaging.MessageHandler;
+import com.tropicoss.guardian.services.MinecraftServerService;
 import net.fabricmc.loader.api.FabricLoader;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -38,7 +39,7 @@ public class Server extends WebSocketServer {
         try {
             ConfigurationManager configurationManager = new ConfigurationManager(FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("config.json").toString());
 
-            MessageHandler messageHandler = new MessageHandler(configurationManager);
+            MessageHandler messageHandler = new MessageHandler(configurationManager, MinecraftServerService.getServerInstance());
 
             messageHandler.handleMessage(message);
         } catch (FileNotFoundException e) {

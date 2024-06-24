@@ -5,6 +5,7 @@ import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.discord.commands.OnboardingCommand;
 import com.tropicoss.guardian.discord.events.ChatAdapter;
 import com.tropicoss.guardian.discord.events.UserAdapter;
+import com.tropicoss.guardian.services.MinecraftServerService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -17,6 +18,7 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import java.awt.*;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -25,6 +27,7 @@ import java.net.http.HttpResponse;
 import java.time.Instant;
 
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
+import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +43,6 @@ public class Bot {
     private final ConfigurationManager configurationManager;
     private Webhook webhook = null;
 
-    private Bot() throws InterruptedException {
-        this(null);
-    }
-
     private Bot(ConfigurationManager configurationManager) throws InterruptedException {
         this.configurationManager = configurationManager;
         try {
@@ -53,7 +52,10 @@ public class Bot {
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
                     .addEventListeners(new OnboardingCommand(), new UserAdapter(), new ChatAdapter(
                             this.configurationManager.getSetting("generic", "mode"),
-                            this.configurationManager.getSetting("bot", "chatChannel")))
+                            this.configurationManager.getSetting("bot", "chatChannel"),
+                                    MinecraftServerService.getServerInstance()
+                    )
+                    )
                     .build()
                     .awaitReady();
 
@@ -86,7 +88,7 @@ public class Bot {
                    LOGGER.error("Invalid bot channel. Please check your config file.");
                     break;
                 default:
-                    LOGGER.error("Error starting bot: " + e.getMessage());
+                    LOGGER.error("Error starting bot: {}", e.getMessage());
                     break;
             }
             throw e;
@@ -100,9 +102,12 @@ public class Bot {
     public static Bot getBotInstance() {
         if(null == BOT_INSTANCE) {
             try {
-                // TODO: Refactor to not use Guardian Config Manager
-                BOT_INSTANCE = new Bot();
-            } catch (InterruptedException e) {
+                ConfigurationManager config = new ConfigurationManager(FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("config.json").toString());
+                config.loadConfig();
+
+                BOT_INSTANCE = new Bot(config);
+
+            } catch (InterruptedException | FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
         }
