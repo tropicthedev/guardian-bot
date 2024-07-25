@@ -11,11 +11,7 @@ base {
 }
 
 repositories {
-    // Add repositories to retrieve artifacts from in here.
-    // You should only use this when depending on other mods because
-    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-    // for more information about repositories.
+    mavenCentral()
 }
 
 dependencies {
@@ -49,6 +45,8 @@ dependencies {
     include("org.jetbrains.kotlin:kotlin-stdlib:1.6.20")
     include("org.apache.commons:commons-collections4:4.4")
     include("com.neovisionaries:nv-websocket-client:2.14")
+
+    include( implementation'de.exlll:configlib-yaml:4.5.0')
 }
 
 processResources {

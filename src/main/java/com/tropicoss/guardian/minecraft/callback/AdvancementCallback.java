@@ -1,7 +1,7 @@
 package com.tropicoss.guardian.minecraft.callback;
 
 import com.google.gson.Gson;
-import com.tropicoss.guardian.config.ConfigurationManager;
+import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.discord.Bot;
 import com.tropicoss.guardian.minecraft.event.AdvancementEvent;
 import com.tropicoss.guardian.networking.messaging.AdvancementMessage;
@@ -17,11 +17,9 @@ import static com.tropicoss.guardian.Guardian.*;
 
 public class AdvancementCallback implements AdvancementEvent {
 
-    private final ConfigurationManager configurationManger;
-
+    private final Config config = Config.getInstance();
     public AdvancementCallback() throws FileNotFoundException {
         String filePath = FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("config.json").toString();
-        this.configurationManger = new ConfigurationManager(filePath);
     }
 
     @Override
@@ -32,11 +30,11 @@ public class AdvancementCallback implements AdvancementEvent {
 
         AdvancementMessage advancementMessage = new AdvancementMessage(advancementDisplay.getTitle().getString(),
                 advancementDisplay.getDescription().getString(), player.getUuidAsString(),
-                this.configurationManger.getSetting("generic", "serverName"));
+                this.config.getConfig().getGeneric().getName());
 
         String json = new Gson().toJson(advancementMessage);
 
-        switch (configurationManger.getSetting("generic", "mode")){
+        switch (config.getConfig().getGeneric().getName()){
             case "server" -> {
                 SOCKET_SERVER.broadcast(json);
 

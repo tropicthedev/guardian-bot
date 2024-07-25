@@ -5,9 +5,9 @@ public abstract class ServerEventCallback {
     private final String host;
     private final String serverName;
     private final String mode;
-    private String port;
+    private int port;
 
-    public ServerEventCallback(String host, String serverName, String mode, String port) {
+    public ServerEventCallback(String host, String serverName, String mode, int port) {
         // TODO: Make port an int
         // TODO: Add constuctor to Convert string to int
         this.host = host;
@@ -28,7 +28,7 @@ public abstract class ServerEventCallback {
         return this.serverName;
     }
 
-    protected String getPort() {
+    protected int getPort() {
         return this.port;
     }
 }

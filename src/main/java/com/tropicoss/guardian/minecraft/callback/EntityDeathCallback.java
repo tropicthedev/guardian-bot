@@ -1,7 +1,6 @@
 package com.tropicoss.guardian.minecraft.callback;
 
 import com.google.gson.Gson;
-import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.discord.Bot;
 import com.tropicoss.guardian.minecraft.event.EntityDeathEvents;
 import com.tropicoss.guardian.minecraft.event.PlayerDeathEvents;
@@ -18,7 +17,7 @@ public final class EntityDeathCallback extends ServerEventCallback implements Pl
     private final Bot bot;
 
 
-    public EntityDeathCallback(String host, String serverName, String mode, String port, Bot bot) {
+    public EntityDeathCallback(String host, String serverName, String mode, int port, Bot bot) {
         super(host, serverName, mode, port);
         this.bot = bot;
     }

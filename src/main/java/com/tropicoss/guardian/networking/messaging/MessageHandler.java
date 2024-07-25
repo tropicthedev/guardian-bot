@@ -3,7 +3,7 @@ package com.tropicoss.guardian.networking.messaging;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.tropicoss.guardian.config.ConfigurationManager;
+import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.discord.Bot;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
@@ -11,21 +11,18 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
-import static com.tropicoss.guardian.Guardian.*;
-
 public class MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageHandler.class);
-    private final ConfigurationManager configurationManger;
     private final MinecraftServer minecraftServer;
     private Bot botInstance;
+    private final Config config = Config.getInstance();
 
-    public MessageHandler(ConfigurationManager configurationManager, MinecraftServer minecraftServer) {
-        this.configurationManger = configurationManager;
+    public MessageHandler(MinecraftServer minecraftServer) {
         this.minecraftServer = minecraftServer;
     }
 
     private boolean isServer() {
-        return Objects.equals(configurationManger.getSetting("generic", "mode"), "server");
+        return Objects.equals(config.getConfig().getGeneric().getMode(), "server");
     }
 
     public void handleMessage(String message) {

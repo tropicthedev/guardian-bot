@@ -16,7 +16,7 @@ public class ServerPlayerConnectionCallback extends ServerEventCallback implemen
 
     private final Gson gson = new Gson();
 
-    public ServerPlayerConnectionCallback(String host, String serverName, String mode, String port) {
+    public ServerPlayerConnectionCallback(String host, String serverName, String mode, int port) {
         super(host, serverName, mode, port);
     }
 

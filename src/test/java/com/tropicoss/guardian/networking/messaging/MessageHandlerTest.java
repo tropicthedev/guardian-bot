@@ -1,7 +1,6 @@
 package com.tropicoss.guardian.networking.messaging;
 
 import com.mojang.authlib.GameProfile;
-import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.discord.Bot;
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
 import net.minecraft.server.MinecraftServer;
@@ -9,11 +8,8 @@ import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.mockito.stubbing.OngoingStubbing;
 import org.slf4j.Logger;
 
 import java.io.FileNotFoundException;
@@ -55,11 +51,8 @@ public class MessageHandlerTest {
         // instantiate the minecraft server in guardian
         MinecraftServer minecraftServer = mock(MinecraftServer.class);
 
-        ConfigurationManager configurationManager = new ConfigurationManager(streamReader);
-        configurationManager.loadConfig();
-
         // instantiate a message handler object
-        MessageHandler messageHandler = new MessageHandler(configurationManager, minecraftServer);
+        MessageHandler messageHandler = new MessageHandler(minecraftServer);
 
         // Create a mock bot object
         Bot bot =  mock(Bot.class);

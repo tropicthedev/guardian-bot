@@ -1,7 +1,7 @@
 package com.tropicoss.guardian;
 
 
-import com.tropicoss.guardian.config.ConfigurationManager;
+import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.discord.Bot;
 import com.tropicoss.guardian.minecraft.callback.*;
@@ -15,25 +15,25 @@ import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.nio.file.Path;
 
 public class Guardian implements DedicatedServerModInitializer {
     public static Server SOCKET_SERVER;
     public static Client SOCKET_CLIENT;
-    private MinecraftServer minecraftServer;
-    public static final Logger LOGGER = LoggerFactory.getLogger(Guardian.class);
-    public ConfigurationManager configurationManager;
+    private static final String MOD_ID = "Guardian";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     @Override
     public void onInitializeServer() {
         try {
 
             Path guardianConfigPath = FabricLoader.getInstance().getConfigDir().resolve("guardian");
+
+            Config config = Config.getInstance();
+
             if (!guardianConfigPath.toFile().exists()) {
 
                 boolean isCreated = guardianConfigPath.toFile().mkdir();
@@ -47,38 +47,34 @@ public class Guardian implements DedicatedServerModInitializer {
                 databaseManager.createDatabases();
             }
 
-            configurationManager = new ConfigurationManager(guardianConfigPath.resolve("config.json").toString());
-
-            configurationManager.loadConfig();
-
             ServerLifecycleCallback serverLifecycleCallback = new ServerLifecycleCallback(
-                    configurationManager.getSetting("server","host"),
-                    configurationManager.getSetting("generic", "serverName"),
-                    configurationManager.getSetting("generic", "mode"),
-                    configurationManager.getSetting("server","port")
+                    config.getConfig().getServer().getHost(),
+                    config.getConfig().getGeneric().getName(),
+                    config.getConfig().getGeneric().getMode(),
+                    config.getConfig().getServer().getPort()
             );
 
             ServerPlayerConnectionCallback serverPlayerConnectionCallback = new ServerPlayerConnectionCallback(
-                    configurationManager.getSetting("server","host"),
-                    configurationManager.getSetting("generic", "serverName"),
-                    configurationManager.getSetting("generic", "mode"),
-                    configurationManager.getSetting("server","port")
+                    config.getConfig().getServer().getHost(),
+                    config.getConfig().getGeneric().getName(),
+                    config.getConfig().getGeneric().getMode(),
+                    config.getConfig().getServer().getPort()
             );
 
             ServerMessageCallback serverMessageCallback = new ServerMessageCallback(
-                    configurationManager.getSetting("server","host"),
-                    configurationManager.getSetting("generic", "serverName"),
-                    configurationManager.getSetting("generic", "mode"),
-                    configurationManager.getSetting("server","port")
+                    config.getConfig().getServer().getHost(),
+                    config.getConfig().getGeneric().getName(),
+                    config.getConfig().getGeneric().getMode(),
+                    config.getConfig().getServer().getPort()
             );
 
             AdvancementCallback advancementCallback = new AdvancementCallback();
 
             EntityDeathCallback entityDeathCallback = new EntityDeathCallback(
-                    configurationManager.getSetting("server","host"),
-                    configurationManager.getSetting("generic", "serverName"),
-                    configurationManager.getSetting("generic", "mode"),
-                    configurationManager.getSetting("server","port"),
+                    config.getConfig().getServer().getHost(),
+                    config.getConfig().getGeneric().getName(),
+                    config.getConfig().getGeneric().getMode(),
+                    config.getConfig().getServer().getPort(),
                     Bot.getBotInstance()
             );
 

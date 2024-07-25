@@ -25,7 +25,7 @@ public class ServerLifecycleCallback extends ServerEventCallback implements Serv
         ServerLifecycleEvents.ServerStopping,
         ServerLifecycleEvents.ServerStopped {
 
-    public ServerLifecycleCallback(String host, String serverName, String mode, String port) {
+    public ServerLifecycleCallback(String host, String serverName, String mode, int port) {
         super(host, serverName, mode, port);
     }
 
@@ -65,7 +65,7 @@ public class ServerLifecycleCallback extends ServerEventCallback implements Serv
                 case "server" -> {
                     Bot.getBotInstance().sendServerStartingMessage(getMode());
 
-                    SOCKET_SERVER = new Server(new InetSocketAddress(Integer.parseInt(getPort())));
+                    SOCKET_SERVER = new Server(new InetSocketAddress(getPort()));
 
                     SOCKET_SERVER.start();
 

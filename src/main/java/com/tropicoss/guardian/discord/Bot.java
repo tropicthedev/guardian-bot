@@ -1,7 +1,7 @@
 package com.tropicoss.guardian.discord;
 
 import com.google.gson.JsonObject;
-import com.tropicoss.guardian.config.ConfigurationManager;
+import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.discord.commands.OnboardingCommand;
 import com.tropicoss.guardian.discord.events.ChatAdapter;
 import com.tropicoss.guardian.discord.events.UserAdapter;
@@ -18,7 +18,6 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import java.awt.*;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -27,39 +26,33 @@ import java.net.http.HttpResponse;
 import java.time.Instant;
 
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
-import net.fabricmc.loader.api.FabricLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import static com.tropicoss.guardian.Guardian.LOGGER;
 
 public class Bot {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Bot.class);
-
     private static Bot BOT_INSTANCE;
 
     private final JDA bot;
     private final TextChannel textChannel;
     private final String iconUrl = "https://cdn2.iconfinder.com/data/icons/whcompare-isometric-web-hosting-servers/50/value-server-512.png";
-    private final ConfigurationManager configurationManager;
     private Webhook webhook = null;
 
-    private Bot(ConfigurationManager configurationManager) throws InterruptedException {
-        this.configurationManager = configurationManager;
+    private Bot() throws InterruptedException {
         try {
-            bot = JDABuilder.createDefault(getConfigManager().getSetting("bot", "token"))
+            Config config = Config.getInstance();
+            bot = JDABuilder.createDefault(config.getConfig().getBot().getToken())
                     .setChunkingFilter(ChunkingFilter.ALL)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
                     .addEventListeners(new OnboardingCommand(), new UserAdapter(), new ChatAdapter(
-                            this.configurationManager.getSetting("generic", "mode"),
-                            this.configurationManager.getSetting("bot", "chatChannel"),
+                            config.getConfig().getGeneric().getMode(),
+                            config.getConfig().getBot().getChannel(),
                                     MinecraftServerService.getServerInstance()
                     )
                     )
                     .build()
                     .awaitReady();
 
-            textChannel = bot.getTextChannelById(getConfigManager().getSetting("bot", "chatChannel"));
+            textChannel = bot.getTextChannelById(config.getConfig().getBot().getChannel());
 
             for (Webhook webhook : textChannel.getGuild().retrieveWebhooks().complete()) {
                 if ("Alfred".equals(webhook.getName())) {
@@ -71,7 +64,7 @@ public class Bot {
                 webhook = textChannel.createWebhook("Alfred").complete();
             }
 
-            Guild guild = bot.getGuildById(getConfigManager().getSetting("bot","guildId"));
+            Guild guild = bot.getGuildById(config.getConfig().getBot().getGuild());
 
             if (guild != null) {
                 guild.upsertCommand(
@@ -95,19 +88,12 @@ public class Bot {
         }
     }
 
-    private ConfigurationManager getConfigManager() {
-        return configurationManager;
-    }
-
     public static Bot getBotInstance() {
         if(null == BOT_INSTANCE) {
             try {
-                ConfigurationManager config = new ConfigurationManager(FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("config.json").toString());
-                config.loadConfig();
+                BOT_INSTANCE = new Bot();
 
-                BOT_INSTANCE = new Bot(config);
-
-            } catch (InterruptedException | FileNotFoundException e) {
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }

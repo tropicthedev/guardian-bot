@@ -1,11 +1,6 @@
 package com.tropicoss.guardian.networking.messaging;
 
-import com.tropicoss.guardian.Guardian;
-import com.tropicoss.guardian.config.ConfigurationManager;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.text.Text;
-
-import java.io.FileNotFoundException;
 
 public class EntityDeathMessage implements WebsocketMessage{
 

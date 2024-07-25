@@ -13,7 +13,7 @@ import static com.tropicoss.guardian.Guardian.*;
 
 public class ServerMessageCallback  extends ServerEventCallback implements ServerMessageEvents.ChatMessage, ServerMessageEvents.CommandMessage{
 
-    public ServerMessageCallback(String host, String serverName, String mode, String port) {
+    public ServerMessageCallback(String host, String serverName, String mode, int port) {
         super(host, serverName, mode, port);
     }
 

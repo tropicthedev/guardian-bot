@@ -1,6 +1,5 @@
 package com.tropicoss.guardian.networking;
 
-import com.tropicoss.guardian.config.ConfigurationManager;
 import com.tropicoss.guardian.networking.messaging.MessageHandler;
 import com.tropicoss.guardian.services.MinecraftServerService;
 import net.fabricmc.loader.api.FabricLoader;
@@ -26,16 +25,9 @@ public class Client extends WebSocketClient {
 
     @Override
     public void onMessage(String message) {
-        try {
-            ConfigurationManager configurationManager = new ConfigurationManager(FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("config.json").toString());
+        MessageHandler messageHandler = new MessageHandler(MinecraftServerService.getServerInstance());
 
-            MessageHandler messageHandler = new MessageHandler(configurationManager, MinecraftServerService.getServerInstance());
-
-            messageHandler.handleMessage(message);
-
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        messageHandler.handleMessage(message);
     }
 
     @Override
