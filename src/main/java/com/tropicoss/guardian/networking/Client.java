@@ -1,15 +1,13 @@
 package com.tropicoss.guardian.networking;
 
+import com.tropicoss.guardian.Guardian;
 import com.tropicoss.guardian.networking.messaging.MessageHandler;
-import com.tropicoss.guardian.services.MinecraftServerService;
-import net.fabricmc.loader.api.FabricLoader;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
-import java.io.FileNotFoundException;
 import java.net.URI;
 
-import static com.tropicoss.guardian.Guardian.LOGGER;
+import static com.tropicoss.guardian.Guardian.*;
 
 public class Client extends WebSocketClient {
 
@@ -25,7 +23,7 @@ public class Client extends WebSocketClient {
 
     @Override
     public void onMessage(String message) {
-        MessageHandler messageHandler = new MessageHandler(MinecraftServerService.getServerInstance());
+        MessageHandler messageHandler = new MessageHandler(MINECRAFT_SERVER);
 
         messageHandler.handleMessage(message);
     }

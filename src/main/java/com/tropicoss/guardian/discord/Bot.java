@@ -5,7 +5,6 @@ import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.discord.commands.OnboardingCommand;
 import com.tropicoss.guardian.discord.events.ChatAdapter;
 import com.tropicoss.guardian.discord.events.UserAdapter;
-import com.tropicoss.guardian.services.MinecraftServerService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -26,7 +25,9 @@ import java.net.http.HttpResponse;
 import java.time.Instant;
 
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
+
 import static com.tropicoss.guardian.Guardian.LOGGER;
+import static com.tropicoss.guardian.Guardian.MINECRAFT_SERVER;
 
 public class Bot {
     private static Bot BOT_INSTANCE;
@@ -43,10 +44,13 @@ public class Bot {
                     .setChunkingFilter(ChunkingFilter.ALL)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
-                    .addEventListeners(new OnboardingCommand(), new UserAdapter(), new ChatAdapter(
+                    .addEventListeners(
+                            new OnboardingCommand(),
+                            new UserAdapter(),
+                            new ChatAdapter(
                             config.getConfig().getGeneric().getMode(),
                             config.getConfig().getBot().getChannel(),
-                                    MinecraftServerService.getServerInstance()
+                                    MINECRAFT_SERVER
                     )
                     )
                     .build()

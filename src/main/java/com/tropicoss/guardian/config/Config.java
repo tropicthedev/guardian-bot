@@ -35,11 +35,33 @@ public final class Config {
         }
     }
 
+    @Configuration
+    public static class WelcomeConfiguration{
+        private String channel = "channel-id";
+        private String message = "message-id";
+
+        public String getChannel() {
+            return channel;
+        }
+
+        public void setChannel(String channel) {
+            this.channel = channel;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
+
     // Create the Bot configuration
     @Configuration
     public static class BotConfiguration {
-        private String channel = "#default";
-        private String token = "default-token";
+        private String channel = "channel-id";
+        private String token = "bot-token";
         private String guild = "guild-id";
 
         // Getters and Setters
@@ -94,6 +116,7 @@ public final class Config {
         private ServerConfiguration server = new ServerConfiguration();
         private BotConfiguration bot = new BotConfiguration();
         private GenericConfiguration generic = new GenericConfiguration();
+        private WelcomeConfiguration welcome = new WelcomeConfiguration();
 
         // Getters and Setters for each configuration
         public ServerConfiguration getServer() {
@@ -118,6 +141,14 @@ public final class Config {
 
         public void setGeneric(GenericConfiguration generic) {
             this.generic = generic;
+        }
+
+        public WelcomeConfiguration getWelcome() {
+            return welcome;
+        }
+
+        public void setWelcome(WelcomeConfiguration welcome) {
+            this.welcome = welcome;
         }
     }
 
