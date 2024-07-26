@@ -4,6 +4,7 @@ package com.tropicoss.guardian;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.discord.Bot;
+import com.tropicoss.guardian.minecraft.Commands;
 import com.tropicoss.guardian.minecraft.callback.*;
 import com.tropicoss.guardian.minecraft.event.PlayerDeathEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
@@ -41,8 +42,11 @@ public class Guardian implements DedicatedServerModInitializer {
                 if (!isCreated) {
                     throw new Exception("Could not create Guardian config directory");
                 }
+            }
 
-                DatabaseManager databaseManager = new DatabaseManager(guardianConfigPath.resolve("elder.db").toString());
+            if(guardianConfigPath.toFile().exists())
+            {
+                DatabaseManager databaseManager = new DatabaseManager(guardianConfigPath.resolve("guardian.db").toString());
 
                 databaseManager.createDatabases();
             }
@@ -97,6 +101,8 @@ public class Guardian implements DedicatedServerModInitializer {
             PlayerDeathEvents.EVENT.register(entityDeathCallback);
 
             EntityDeathEvents.EVENT.register(entityDeathCallback);
+
+            Commands.register();
 
             LOGGER.info("Guardian Has Started");
 
