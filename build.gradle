@@ -46,7 +46,7 @@ dependencies {
     include (implementation 'org.java-websocket:Java-WebSocket:1.5.2')
 
     // JDA (Discord API)
-    include(implementation 'net.dv8tion:JDA:5.0.0-beta.17')
+    include(implementation 'net.dv8tion:JDA:5.0.1')
 
     // JDA Utilities
     include("org.slf4j:slf4j-api:2.0.7")

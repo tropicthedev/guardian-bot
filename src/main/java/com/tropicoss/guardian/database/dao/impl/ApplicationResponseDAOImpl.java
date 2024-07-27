@@ -13,58 +13,75 @@ import org.slf4j.LoggerFactory;
 
 
 public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
-    private final DatabaseManager databaseManager;
+    private static Connection connection = null;
     public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
 
+    public ApplicationResponseDAOImpl(Connection connection) {
+        ApplicationResponseDAOImpl.connection = connection;
+    }
 
-    public ApplicationResponseDAOImpl(DatabaseManager databaseManager) {
-        this.databaseManager = databaseManager;
+    public ApplicationResponseDAOImpl() throws SQLException{
+        connection =  DatabaseManager.getConnection();
     }
 
     @Override
-    public void addApplicationResponse(ApplicationResponse applicationResponse) {
-        String sql = "INSERT INTO application_responses (applicationResponseId, adminId, applicationId, content, status, createdAt, modifiedAt) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    public void addApplicationResponse(ApplicationResponse applicationResponse) throws SQLException {
+        String sql = "INSERT INTO application_responses (admin_id, application_id, content, status, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement statement = null;
 
-            stmt.setInt(1, applicationResponse.getApplicationResponseId());
-            stmt.setInt(2, applicationResponse.getAdminId());
-            stmt.setInt(3, applicationResponse.getApplicationId());
-            stmt.setString(4, applicationResponse.getContent());
-            stmt.setString(5, applicationResponse.getStatus().name());
-            stmt.setTimestamp(6, Timestamp.valueOf(applicationResponse.getCreatedAt()));
-            stmt.setTimestamp(7, Timestamp.valueOf(applicationResponse.getModifiedAt()));
+        try{
+            statement = connection.prepareStatement(sql);
+            statement.setLong(1, applicationResponse.getAdminId());
+            statement.setLong(2, applicationResponse.getApplicationId());
+            statement.setString(3, applicationResponse.getContent());
+            statement.setString(4, applicationResponse.getStatus().name());
+            statement.setTimestamp(5, Timestamp.valueOf(applicationResponse.getCreatedAt()));
+            statement.setTimestamp(6, Timestamp.valueOf(applicationResponse.getModifiedAt()));
 
-            stmt.executeUpdate();
+            statement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
+            connection.rollback();
             LOGGER.error(e.getMessage());
+        }
+
+        finally {
+            DatabaseManager.closeStatement(statement);
         }
     }
 
     @Override
-    public ApplicationResponse getApplicationResponseById(int applicationResponseId) {
-        String sql = "SELECT * FROM application_responses WHERE applicationResponseId = ?";
+    public ApplicationResponse getApplicationResponseById(int applicationResponseId) throws SQLException {
+        String sql = "SELECT * FROM application_responses WHERE application_response_id = ?";
         ApplicationResponse applicationResponse = null;
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
 
-            stmt.setInt(1, applicationResponseId);
-            ResultSet rs = stmt.executeQuery();
+        try  {
+            statement = connection.prepareStatement(sql);
 
-            if (rs.next()) {
+            statement.setInt(1, applicationResponseId);
+            resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
                 applicationResponse = new ApplicationResponse();
-                applicationResponse.setApplicationResponseId(rs.getInt("applicationResponseId"));
-                applicationResponse.setAdminId(rs.getInt("adminId"));
-                applicationResponse.setApplicationId(rs.getInt("applicationId"));
-                applicationResponse.setContent(rs.getString("content"));
-                applicationResponse.setStatus(Status.valueOf(rs.getString("status")));
-                applicationResponse.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
-                applicationResponse.setModifiedAt(rs.getTimestamp("modifiedAt").toLocalDateTime());
+                applicationResponse.setApplicationResponseId(resultSet.getInt("application_response_id"));
+                applicationResponse.setAdminId(resultSet.getInt("admin_id"));
+                applicationResponse.setApplicationId(resultSet.getInt("application_id"));
+                applicationResponse.setContent(resultSet.getString("content"));
+                applicationResponse.setStatus(Status.valueOf(resultSet.getString("status")));
+                applicationResponse.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+                applicationResponse.setModifiedAt(resultSet.getTimestamp("modified_at").toLocalDateTime());
             }
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
+        }
+
+        finally {
+            DatabaseManager.closeResultSet(resultSet);
+            DatabaseManager.closeStatement(statement);
         }
 
         return applicationResponse;
@@ -75,19 +92,23 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
         String sql = "SELECT * FROM application_responses";
         List<ApplicationResponse> applicationResponses = new ArrayList<>();
 
-        try (Connection conn = databaseManager.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
 
-            while (rs.next()) {
+        try {
+
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
                 ApplicationResponse applicationResponse = new ApplicationResponse();
-                applicationResponse.setApplicationResponseId(rs.getInt("applicationResponseId"));
-                applicationResponse.setAdminId(rs.getInt("adminId"));
-                applicationResponse.setApplicationId(rs.getInt("applicationId"));
-                applicationResponse.setContent(rs.getString("content"));
-                applicationResponse.setStatus(Status.valueOf(rs.getString("status")));
-                applicationResponse.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
-                applicationResponse.setModifiedAt(rs.getTimestamp("modifiedAt").toLocalDateTime());
+                applicationResponse.setApplicationResponseId(resultSet.getInt("application_response_id"));
+                applicationResponse.setAdminId(resultSet.getInt("admin_id"));
+                applicationResponse.setApplicationId(resultSet.getInt("application_id"));
+                applicationResponse.setContent(resultSet.getString("content"));
+                applicationResponse.setStatus(Status.valueOf(resultSet.getString("status")));
+                applicationResponse.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+                applicationResponse.setModifiedAt(resultSet.getTimestamp("modified_at").toLocalDateTime());
 
                 applicationResponses.add(applicationResponse);
             }
@@ -99,34 +120,36 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
     }
 
     @Override
-    public void updateApplicationResponse(ApplicationResponse applicationResponse) {
-        String sql = "UPDATE application_responses SET adminId = ?, applicationId = ?, content = ?, status = ?, modifiedAt = ? WHERE applicationResponseId = ?";
+    public void updateApplicationResponse(ApplicationResponse applicationResponse) throws SQLException {
+        String sql = "UPDATE application_responses SET admin_id = ?, application_id = ?, content = ?, status = ?, modified_at = ? WHERE application_response_id = ?";
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement statement = connection.prepareStatement(sql);
 
-            stmt.setInt(1, applicationResponse.getAdminId());
-            stmt.setInt(2, applicationResponse.getApplicationId());
-            stmt.setString(3, applicationResponse.getContent());
-            stmt.setString(4, applicationResponse.getStatus().name());
-            stmt.setTimestamp(5, Timestamp.valueOf(applicationResponse.getModifiedAt()));
-            stmt.setInt(6, applicationResponse.getApplicationResponseId());
+        try {
+            statement.setLong(1, applicationResponse.getAdminId());
+            statement.setLong(2, applicationResponse.getApplicationId());
+            statement.setString(3, applicationResponse.getContent());
+            statement.setString(4, applicationResponse.getStatus().name());
+            statement.setTimestamp(5, Timestamp.valueOf(applicationResponse.getModifiedAt()));
+            statement.setLong(6, applicationResponse.getApplicationResponseId());
 
-            stmt.executeUpdate();
+            statement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }
     }
 
     @Override
-    public void deleteApplicationResponse(int applicationResponseId) {
+    public void deleteApplicationResponse(int applicationResponseId) throws SQLException {
         String sql = "DELETE FROM application_responses WHERE applicationResponseId = ?";
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement statement = connection.prepareStatement(sql);
 
-            stmt.setInt(1, applicationResponseId);
-            stmt.executeUpdate();
+        try {
+            statement.setInt(1, applicationResponseId);
+            statement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }

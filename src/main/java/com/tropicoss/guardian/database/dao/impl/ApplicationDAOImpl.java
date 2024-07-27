@@ -208,4 +208,40 @@ public class ApplicationDAOImpl implements ApplicationDAO {
             DatabaseManager.closeStatement(statement);
         }
     }
+
+    @Override
+    public Application getApplicationByMessageId(String messageId) throws SQLException {
+        String sql = "SELECT * FROM applications WHERE message_id = ?";
+        Application application = null;
+
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, messageId);
+            resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                application = new Application();
+                application.setApplicationId(resultSet.getLong("application_id"));
+                application.setContent(resultSet.getString("content"));
+                application.setMessageId(resultSet.getString("message_id"));
+                application.setDiscordId(resultSet.getString("discord_id"));
+                application.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+                application.setModifiedAt(resultSet.getTimestamp("modified_at").toLocalDateTime());
+            }
+
+            connection.commit();
+        } catch (SQLException e) {
+            connection.rollback();
+            LOGGER.error(e.getMessage());
+        }
+        finally {
+            DatabaseManager.closeResultSet(resultSet);
+            DatabaseManager.closeStatement(statement);
+        }
+
+        return application;
+    }
 }

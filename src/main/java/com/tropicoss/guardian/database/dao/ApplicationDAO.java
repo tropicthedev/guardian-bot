@@ -12,4 +12,5 @@ public interface ApplicationDAO {
     List<Application> getAllApplications() throws SQLException;
     void updateApplication(Application application) throws SQLException;
     void deleteApplication(int applicationId) throws SQLException;
+    Application getApplicationByMessageId(String messageId) throws SQLException;
 }

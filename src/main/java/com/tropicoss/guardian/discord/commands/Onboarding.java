@@ -4,12 +4,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tropicoss.guardian.config.Config;
+import com.tropicoss.guardian.database.dao.impl.ApplicationResponseDAOImpl;
+import com.tropicoss.guardian.database.model.ApplicationResponse;
+import com.tropicoss.guardian.database.model.Status;
 import com.tropicoss.guardian.utils.Cache;
 import com.tropicoss.guardian.database.dao.impl.ApplicationDAOImpl;
 import com.tropicoss.guardian.database.model.Application;
 import com.tropicoss.guardian.ids.ButtonIds;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.UserSnowflake;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -17,6 +25,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.entities.MessageEmbed.Field;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
+import net.dv8tion.jda.api.requests.restaction.ThreadChannelAction;
 import org.jetbrains.annotations.NotNull;
 
 import static com.tropicoss.guardian.Guardian.LOGGER;
@@ -34,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 public class Onboarding extends ListenerAdapter {
     private final Config config = Config.getInstance();
     private final ApplicationDAOImpl applicationDAO = new ApplicationDAOImpl();
+    private final ApplicationResponseDAOImpl applicationResponseDAO = new ApplicationResponseDAOImpl();
     private final Map<String, List<QuestionAnswers>> conversationState = new ConcurrentHashMap<>();
 
     public Onboarding() throws SQLException {
@@ -83,8 +94,20 @@ public class Onboarding extends ListenerAdapter {
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
-        if (!Objects.equals(event.getButton().getId(), ButtonIds.APPLY) || event.getUser().isBot()) return;
+        if (event.getUser().isBot()) return;
 
+        switch (event.getButton().getId()) {
+            case ButtonIds.APPLY -> {
+                handleApplyButtonInteraction(event);
+            }
+            case ButtonIds.ACCEPT -> {
+                handleAcceptButtonInteraction(event);
+            }
+            case null, default -> {}
+        }
+    }
+
+    private void handleApplyButtonInteraction(ButtonInteraction event) {
         Cache<Object, Object> cache = Cache.getInstance();
 
         if (cache.get("timeout::" + event.getUser().getId()) != null) {
@@ -123,6 +146,63 @@ public class Onboarding extends ListenerAdapter {
         questionAnswersList.add(new QuestionAnswers(questions.getFirst(), null));
 
         conversationState.put(event.getUser().getId(), questionAnswersList);
+    }
+
+    // TODO: Prevent Duplicate Application Responses from being submitted
+    // TODO: Fix Webhook error with editing embed
+
+    private void handleAcceptButtonInteraction(ButtonInteraction event) {
+       try{
+           Application application = applicationDAO.getApplicationByMessageId(event.getMessageId());
+
+           if(application == null) {
+               event.reply("Could not find application in the database").setEphemeral(true).queue();
+           }
+
+           Member member = Objects.requireNonNull(event.getGuild()).getMemberById(application.getDiscordId());
+
+           Role role = event.getGuild().getRoleById(config.getConfig().getInterview().getRole());
+
+           TextChannel interviewChannel = event.getGuild().getTextChannelById(config.getConfig().getInterview().getChannel());
+
+           interviewChannel.createThreadChannel(String.format("%s's Interview", member.getUser().getName()), true).queue(channel -> {
+               channel.addThreadMember(member).queue();
+               channel.addThreadMember(event.getMember()).queue();
+
+               ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), application.getApplicationId(), "Member accepted", Status.ACCEPTED);
+
+               try {
+                   applicationResponseDAO.addApplicationResponse(applicationResponse);
+               } catch (SQLException e) {
+                   LOGGER.error("There was an error when storing application response {}", e.getMessage());
+               }
+
+               channel.sendMessage(config.getConfig().getInterview().getMessage().replaceAll("\\{member}", String.format("<@%s>", member.getUser().getName()))).queue();
+           });
+
+           member.getGuild().addRoleToMember(UserSnowflake.fromId(member.getId()), role).queue();
+
+           member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessage(String.format("You have been accepted for an interview in <#%s>", interviewChannel.getId()))).queue();
+
+           MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
+
+           EmbedBuilder embedBuilder = new EmbedBuilder(embed);
+
+           embedBuilder.setColor(Color.green);
+
+           event.getMessage().editMessageEmbeds(
+                   embedBuilder.build()
+           ).setActionRow(
+                   Button.primary(ButtonIds.JOIN_THREAD, "Join Tread")
+                           .withEmoji(Emoji.fromFormatted("🚀")),
+                   Button.danger(ButtonIds.BAN, "Ban Applicant (Coming Soon)")
+                           .withEmoji(Emoji.fromFormatted("🦵"))
+                           .asDisabled()
+           ).queue();
+
+       } catch (Exception e) {
+           LOGGER.error("There was an error when accepting member {}", e.getMessage());
+       }
     }
 
     @Override

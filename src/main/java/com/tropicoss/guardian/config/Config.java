@@ -143,6 +143,37 @@ public final class Config {
         }
     }
 
+    @Configuration
+    public static class InterviewConfiguration {
+        private String role = "role-id";
+        private String channel = "channel-id";
+        private String message = "Hi {member}. This is a example message with a way to ping a member";
+
+        public String getRole() {
+            return role;
+        }
+
+        public void setRole(String role) {
+            this.role = role;
+        }
+
+        public String getChannel() {
+            return channel;
+        }
+
+        public void setChannel(String channel) {
+            this.channel = channel;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
+
     // Main configuration class that combines the above configurations
     @Configuration
     public static class MainConfiguration {
@@ -151,6 +182,7 @@ public final class Config {
         private GenericConfiguration generic = new GenericConfiguration();
         private WelcomeConfiguration welcome = new WelcomeConfiguration();
         private ApplicationConfiguration application = new ApplicationConfiguration();
+        private InterviewConfiguration interview = new InterviewConfiguration();
 
         // Getters and Setters for each configuration
         public ServerConfiguration getServer() {
@@ -191,6 +223,14 @@ public final class Config {
 
         public void setApplication(ApplicationConfiguration application) {
             this.application = application;
+        }
+
+        public InterviewConfiguration getInterview() {
+            return  interview;
+        }
+
+        public void setInterview(InterviewConfiguration interview) {
+            this.interview = interview;
         }
     }
 

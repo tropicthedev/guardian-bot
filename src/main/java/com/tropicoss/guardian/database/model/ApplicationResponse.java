@@ -3,9 +3,9 @@ package com.tropicoss.guardian.database.model;
 import java.time.LocalDateTime;
 
 public class ApplicationResponse {
-    private int applicationResponseId;
-    private int adminId;
-    private int applicationId;
+    private long applicationResponseId;
+    private long adminId;
+    private long applicationId;
     private String content;
     private Status status;
     private LocalDateTime createdAt;
@@ -13,8 +13,7 @@ public class ApplicationResponse {
 
     public ApplicationResponse() {}
 
-    public ApplicationResponse(int applicationResponseId, int adminId, int applicationId, String content, Status status){
-        this.applicationResponseId = applicationResponseId;
+    public ApplicationResponse(long adminId, long applicationId, String content, Status status){
         this.adminId = adminId;
         this.applicationId = applicationId;
         this.content = content;
@@ -23,15 +22,15 @@ public class ApplicationResponse {
         this.modifiedAt = LocalDateTime.now();
     }
 
-    public int getApplicationResponseId() {
+    public long getApplicationResponseId() {
         return applicationResponseId;
     }
 
-    public int getAdminId() {
+    public long getAdminId() {
         return adminId;
     }
 
-    public int getApplicationId() {
+    public long getApplicationId() {
         return applicationId;
     }
 
@@ -51,17 +50,17 @@ public class ApplicationResponse {
         return modifiedAt;
     }
 
-    public void setApplicationResponseId(int applicationResponseId) {
+    public void setApplicationResponseId(long applicationResponseId) {
         this.applicationResponseId = applicationResponseId;
         this.modifiedAt = LocalDateTime.now();
     }
 
-    public void setApplicationId(int applicationId) {
+    public void setApplicationId(long applicationId) {
         this.applicationId = applicationId;
         this.modifiedAt = LocalDateTime.now();
     }
 
-    public void setAdminId(int adminId) {
+    public void setAdminId(long adminId) {
         this.adminId = adminId;
         this.modifiedAt = LocalDateTime.now();
     }
