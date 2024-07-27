@@ -6,6 +6,8 @@ import net.fabricmc.loader.api.FabricLoader;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class Config {
     private static Config instance;
@@ -110,6 +112,37 @@ public final class Config {
         }
     }
 
+    @Configuration
+    public static class ApplicationConfiguration {
+        private int timeout = 5;
+        private String channel = "channel-id";
+        private List<String> questions = new ArrayList<>();
+
+        public void setTimeout(int timeout) {
+            this.timeout = timeout;
+        }
+
+        public int getTimeout() {
+            return timeout;
+        }
+
+        public void setChannel(String channel) {
+            this.channel = channel;
+        }
+
+        public String getChannel() {
+            return channel;
+        }
+
+        public void setQuestions(List<String> questions) {
+            this.questions = questions;
+        }
+
+        public List<String> getQuestions() {
+            return questions;
+        }
+    }
+
     // Main configuration class that combines the above configurations
     @Configuration
     public static class MainConfiguration {
@@ -117,6 +150,7 @@ public final class Config {
         private BotConfiguration bot = new BotConfiguration();
         private GenericConfiguration generic = new GenericConfiguration();
         private WelcomeConfiguration welcome = new WelcomeConfiguration();
+        private ApplicationConfiguration application = new ApplicationConfiguration();
 
         // Getters and Setters for each configuration
         public ServerConfiguration getServer() {
@@ -149,6 +183,14 @@ public final class Config {
 
         public void setWelcome(WelcomeConfiguration welcome) {
             this.welcome = welcome;
+        }
+
+        public ApplicationConfiguration getApplication() {
+            return application;
+        }
+
+        public void setApplication(ApplicationConfiguration application) {
+            this.application = application;
         }
     }
 

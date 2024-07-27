@@ -40,6 +40,7 @@ import java.lang.management.RuntimeMXBean;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.file.Path;
+import java.sql.SQLException;
 
 public class Guardian implements DedicatedServerModInitializer {
     public static Server SOCKET_SERVER;
@@ -67,9 +68,7 @@ public class Guardian implements DedicatedServerModInitializer {
 
             if(guardianConfigPath.toFile().exists())
             {
-                DatabaseManager databaseManager = new DatabaseManager(guardianConfigPath.resolve("guardian.db").toString());
-
-                databaseManager.createDatabases();
+                DatabaseManager.createDatabases();
             }
 
             ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
@@ -191,6 +190,13 @@ public class Guardian implements DedicatedServerModInitializer {
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
+        }
+        finally {
+            try {
+                DatabaseManager.closeConnection();
+            } catch (SQLException e) {
+                LOGGER.error("Error shutting down sql connection {}", e.getMessage());
+            }
         }
     }
 

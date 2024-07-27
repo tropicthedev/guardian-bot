@@ -1,33 +1,50 @@
 package com.tropicoss.guardian.database;
 
+import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 
 public class DatabaseManager {
     public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
-    private final String FILEPATH;
-    private final Connection CONNECTION;
+    private static final String DEFAULT_FILEPATH = "jdbc:sqlite:" + FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("guardian.db").toString();
+    private static String filePath = "";
+    private static Connection connection = null;
 
-    public DatabaseManager(String filepath) throws SQLException {
-        FILEPATH = "jdbc:sqlite:" + filepath;
-        CONNECTION = DriverManager.getConnection(FILEPATH);
+    private DatabaseManager(String filepath) throws SQLException {
+        filePath = filepath;
     }
 
-    public Connection getConnection() throws SQLException {
-        return CONNECTION;
+    private DatabaseManager() throws SQLException {
+        filePath = DEFAULT_FILEPATH;
     }
 
-    public boolean createDatabases() throws SQLException {
+    public static Connection getConnection() throws SQLException {
+
+        if(Objects.equals(filePath, "")) {
+            filePath = DEFAULT_FILEPATH;
+        }
+
+        if(connection == null) {
+            connection = DriverManager.getConnection(filePath);
+        }
+
+        return connection;
+    }
+
+    public static void closeConnection() throws SQLException {
+        if (connection != null) {
+            connection.close();
+        }
+    }
+
+    public static void createDatabases() throws SQLException {
 
         String sqlCreateMemberTable = """
-            CREATE TABLE IF NOT EXISTS `member` (
+            CREATE TABLE IF NOT EXISTS `members` (
                 `member_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
                 `discord_id` TEXT NOT NULL,
                 `isAdmin` REAL NOT NULL DEFAULT 'FALSE',
@@ -37,7 +54,7 @@ public class DatabaseManager {
         """;
 
         String sqlCreateMojangAccountTable = """
-            CREATE TABLE IF NOT EXISTS `mojang_account` (
+            CREATE TABLE IF NOT EXISTS `mojang_accounts` (
                 `mojang_account_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
                 `member_id` INTEGER NOT NULL,
                 `mojang_id` TEXT NOT NULL UNIQUE,
@@ -48,9 +65,10 @@ public class DatabaseManager {
         """;
 
         String sqlCreateApplicationTable = """
-            CREATE TABLE IF NOT EXISTS `application` (
-                `application_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
+            CREATE TABLE IF NOT EXISTS `applications` (
+                `application_id` INTEGER PRIMARY KEY,
                 `content` TEXT NOT NULL,
+                `message_id` TEXT NOT NULL UNIQUE,
                 `discord_id` TEXT NOT NULL,
                 `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -58,7 +76,7 @@ public class DatabaseManager {
         """;
 
         String sqlCreateInterviewTable = """
-            CREATE TABLE IF NOT EXISTS `interview` (
+            CREATE TABLE IF NOT EXISTS `interviews` (
                 `interview_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
                 `application_id` INTEGER NOT NULL,
                 `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -68,7 +86,7 @@ public class DatabaseManager {
         """;
 
         String sqlCreateApplicationResponseTable = """
-            CREATE TABLE IF NOT EXISTS `application_response` (
+            CREATE TABLE IF NOT EXISTS `application_responses` (
                 `application_response_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
                 `admin_id` INTEGER NOT NULL,
                 `application_id` INTEGER NOT NULL,
@@ -82,7 +100,7 @@ public class DatabaseManager {
         """;
 
         String sqlCreateInterviewResponseTable = """
-            CREATE TABLE IF NOT EXISTS `interview_response` (
+            CREATE TABLE IF NOT EXISTS `interview_responses` (
                 `interview_response_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
                 `admin_id` INTEGER NOT NULL,
                 `interview_id` INTEGER NOT NULL,
@@ -96,7 +114,7 @@ public class DatabaseManager {
         """;
 
         String sqlCreateServerTable = """
-            CREATE TABLE IF NOT EXISTS `server` (
+            CREATE TABLE IF NOT EXISTS `servers` (
                 `server_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
                 `name` TEXT NOT NULL,
                 `token` TEXT NOT NULL,
@@ -106,7 +124,7 @@ public class DatabaseManager {
         """;
 
         String sqlCreateSessionTable = """
-            CREATE TABLE IF NOT EXISTS `session` (
+                CREATE TABLE IF NOT EXISTS `sessions` (
                 `session_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
                 `member_id` INTEGER NOT NULL,
                 `server_id` INTEGER NOT NULL,
@@ -114,30 +132,42 @@ public class DatabaseManager {
                 `session_end` REAL,
                 FOREIGN KEY(`member_id`) REFERENCES `member`(`member_id`),
                 FOREIGN KEY(`server_id`) REFERENCES `server`(`server_id`)
-            );
-        """;
+                );
+                """;
+        Statement statement = getConnection().createStatement();
 
         try {
-            CONNECTION.setAutoCommit(false);
+            connection.setAutoCommit(false);
 
-            Statement stmt = CONNECTION.createStatement();
+            statement.execute(sqlCreateMemberTable);
+            statement.execute(sqlCreateMojangAccountTable);
+            statement.execute(sqlCreateApplicationTable);
+            statement.execute(sqlCreateInterviewTable);
+            statement.execute(sqlCreateApplicationResponseTable);
+            statement.execute(sqlCreateInterviewResponseTable);
+            statement.execute(sqlCreateServerTable);
+            statement.execute(sqlCreateSessionTable);
 
-            stmt.execute(sqlCreateMemberTable);
-            stmt.execute(sqlCreateMojangAccountTable);
-            stmt.execute(sqlCreateApplicationTable);
-            stmt.execute(sqlCreateInterviewTable);
-            stmt.execute(sqlCreateApplicationResponseTable);
-            stmt.execute(sqlCreateInterviewResponseTable);
-            stmt.execute(sqlCreateServerTable);
-            stmt.execute(sqlCreateSessionTable);
-            CONNECTION.commit();
+            connection.commit();
 
-            return true;
         } catch (SQLException e) {
-
-            CONNECTION.rollback();
+            connection.rollback();
             LOGGER.error("An error occurred while checking database tables: {}", e.getMessage());
-            return false;
+        }
+        finally {
+            closeStatement(statement);
+        }
+    }
+
+    public static void closeStatement(Statement statement) throws SQLException {
+        if(statement!=null) {
+            statement.close();
+        }
+    }
+
+    public static void closeResultSet(ResultSet resultSet) throws SQLException {
+        if(resultSet!=null) {
+            resultSet.close();
         }
     }
 }

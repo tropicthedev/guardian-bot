@@ -2,7 +2,8 @@ package com.tropicoss.guardian.discord;
 
 import com.google.gson.JsonObject;
 import com.tropicoss.guardian.config.Config;
-import com.tropicoss.guardian.discord.commands.OnboardingCommand;
+import com.tropicoss.guardian.discord.commands.Onboarding;
+import com.tropicoss.guardian.discord.commands.ResetCommand;
 import com.tropicoss.guardian.discord.events.ChatAdapter;
 import com.tropicoss.guardian.discord.events.UserAdapter;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -11,6 +12,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
@@ -22,6 +24,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.sql.SQLException;
 import java.time.Instant;
 
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
@@ -37,7 +40,7 @@ public class Bot {
     private final String iconUrl = "https://cdn2.iconfinder.com/data/icons/whcompare-isometric-web-hosting-servers/50/value-server-512.png";
     private Webhook webhook = null;
 
-    private Bot() throws InterruptedException {
+    private Bot() throws InterruptedException, SQLException {
         try {
             Config config = Config.getInstance();
             bot = JDABuilder.createDefault(config.getConfig().getBot().getToken())
@@ -45,7 +48,8 @@ public class Bot {
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
                     .addEventListeners(
-                            new OnboardingCommand(),
+                            new Onboarding(),
+                            new ResetCommand(),
                             new UserAdapter(),
                             new ChatAdapter(
                             config.getConfig().getGeneric().getMode(),
@@ -74,6 +78,10 @@ public class Bot {
                 guild.upsertCommand(
                         Commands.slash("welcome", "Creates a discord embed for new users to start onboarding")
                 ).queue();
+
+                guild.upsertCommand("reset", "Resets user application timeout allowing them to submit another application")
+                        .addOption(OptionType.USER, "member", "The user that you want to reset their application timeout", true)
+                        .queue();
             }
 
         } catch (Exception e) {
@@ -97,7 +105,7 @@ public class Bot {
             try {
                 BOT_INSTANCE = new Bot();
 
-            } catch (InterruptedException e) {
+            } catch (InterruptedException | SQLException e) {
                 throw new RuntimeException(e);
             }
         }

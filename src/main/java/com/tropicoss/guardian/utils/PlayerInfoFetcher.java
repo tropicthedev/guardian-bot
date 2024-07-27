@@ -7,6 +7,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import static com.tropicoss.guardian.Guardian.LOGGER;
@@ -15,7 +17,7 @@ public class PlayerInfoFetcher {
 
     public static Profile getProfile(String playerId) {
         try {
-            URL url = new URL("https://playerdb.co/api/player/minecraft/" + playerId);
+            URL url = new URI("https://playerdb.co/api/player/minecraft/" + playerId).toURL();
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 
@@ -38,7 +40,7 @@ public class PlayerInfoFetcher {
             } else {
                 LOGGER.error("HTTP request failed with response code: {}", responseCode);
             }
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             LOGGER.error("Error fetching player info: {}", e.getMessage());
         }
         return null;
