@@ -132,107 +132,89 @@ public class Onboarding extends ListenerAdapter {
                 state.add(new QuestionAnswers(nextQuestion, null));
 
                 event.getChannel().sendMessage(nextQuestion).queue();
-            } else {
 
-                EmbedBuilder embedBuilder = new EmbedBuilder();
+                return;
+            }
 
-                embedBuilder.setTitle("Application Received").setColor(Color.YELLOW).setTimestamp(Instant.now());
+            EmbedBuilder embedBuilder = new EmbedBuilder();
 
-                Application application = new Application(getConversationStateAsString(state), null, userId);
+            embedBuilder.setTitle("Application Received").setColor(Color.YELLOW).setTimestamp(Instant.now());
 
-                // TODO: FIX MESSAGE ID NOT BEING SET PROPERLY
-                event.getChannel().sendMessageEmbeds(embedBuilder.build()).queue((message -> {
+            Message applicationConfirmationMessage = event.getChannel().sendMessageEmbeds(embedBuilder.build()).complete();
 
-                    application.setMessageId(message.getId());
+            Application application = new Application(getConversationStateAsString(state), applicationConfirmationMessage.getId(), userId);
 
-                    try {
-                        // A message ID is created FOR NOW IT WILL BE CHANGED, this is in case the application is too
-                        // long, and we need to fall back and render it on a website
+            try {
+                int applicationId = applicationDAO.addApplication(application);
 
-                        int applicationId = applicationDAO.addApplication(application);
-
-                        if (applicationId == -1) {
-                            throw new SQLException("Duplicate entry found");
-                        }
-
-                        application.setApplicationId(applicationId);
-
-                    } catch (SQLException e) {
-                        LOGGER.error("Error storing your application");
-
-                        message.reply("Error storing your application please try again or contact one of the admins")
-                                .queue();
-                    }
-                }));
-
-                conversationState.remove(userId);
-
-                TextChannel applicationsChannel = event.getMessage().getJDA().getTextChannelById(config.getConfig().getApplication().getChannel());
-
-                if (applicationsChannel == null) {
-                    LOGGER.error("Applications channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL");
-
-                    event.getChannel().sendMessage("There was an error while sending the application to the admins, please try again or contact and admin for further assistance").queue();
-
-                    return;
+                if (applicationId == -1) {
+                    throw new SQLException("Duplicate entry found");
                 }
 
-                EmbedBuilder applicationEmbedBuilder = new EmbedBuilder();
+                application.setApplicationId(applicationId);
 
-                for (QuestionAnswers questionAnswers : state) {
-                    Field field = new Field(questionAnswers.question, questionAnswers.answer, false);
+            } catch (SQLException e) {
+                LOGGER.error("Error storing your application");
 
-                    applicationEmbedBuilder.addField(field);
-                }
+                applicationConfirmationMessage.reply("Error storing your application please try again or contact one of the admins").queue();
+            }
 
-                applicationEmbedBuilder
-                        .setColor(Color.YELLOW)
-                        .setAuthor(event.getAuthor().getAsTag(), null, event.getAuthor().getAvatarUrl())
-                        .setTitle(String.format("%s has submitted an application", event.getAuthor().getAsTag()))
-                        .setThumbnail(event.getAuthor().getAvatarUrl())
-                        .setTimestamp(Instant.now());
+            conversationState.remove(userId);
 
+            TextChannel applicationsChannel = event.getMessage().getJDA().getTextChannelById(config.getConfig().getApplication().getChannel());
 
-                List<SelectOption> selectOptions = new ArrayList<>();
+            if (applicationsChannel == null) {
+                LOGGER.error("Applications channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL");
 
-                for (String response : config.getConfig().getApplication().getDenyReasons()) {
+                event.getChannel().sendMessage("There was an error while sending the application to the admins, please try again or contact and admin for further assistance").queue();
 
-                    selectOptions.add(SelectOption.of(response, response));
-                }
+                return;
+            }
 
-                try {
-                    applicationsChannel.sendMessageEmbeds(applicationEmbedBuilder.build())
-                            .addActionRow(
-                                    StringSelectMenu.create(ButtonIds.DENY)
-                                            .setPlaceholder("Deny Application Reasons")
-                                            .setMinValues(1)
-                                            .setMaxValues(config.getConfig().getApplication().getDenyReasons().size())
-                                            .addOptions(selectOptions)
-                                            .addOption("Custom", "Custom", "THIS WILL OVERWRITE ALL OTHER SELECTED OPTIONS")
-                                            .build()
-                            )
-                            .addActionRow(
-                                    Button.primary(ButtonIds.ACCEPT, "Accept")
-                                            .withEmoji(Emoji.fromFormatted("✅")),
-//                            Button.secondary(
-//                                    ButtonIds.DENY,
-//                                    "Deny"
-//                            ).withEmoji(Emoji.fromFormatted("❌")),
-                                    Button.danger(
-                                            ButtonIds.BAN,
-                                            "Ban"
-                                    ).withEmoji(Emoji.fromFormatted("🦵")))
-                            .queue((message -> {
-                                application.setMessageId(message.getId());
-                                try {
-                                    applicationDAO.updateApplication(application);
-                                } catch (SQLException e) {
-                                    LOGGER.error("Error sending updating application with new message ID {}", e.getMessage());
-                                }
-                            }));
-                } catch (RuntimeException e) {
-                    LOGGER.error("Error sending application embed {}", e.getMessage());
-                }
+            EmbedBuilder applicationEmbedBuilder = new EmbedBuilder();
+
+            for (QuestionAnswers questionAnswers : state) {
+                Field field = new Field(questionAnswers.question, questionAnswers.answer, false);
+
+                applicationEmbedBuilder.addField(field);
+            }
+
+            applicationEmbedBuilder
+                    .setColor(Color.YELLOW)
+                    .setAuthor(event.getAuthor().getAsTag(), null, event.getAuthor().getAvatarUrl())
+                    .setTitle(String.format("%s has submitted an application", event.getAuthor().getAsTag()))
+                    .setThumbnail(event.getAuthor().getAvatarUrl())
+                    .setTimestamp(Instant.now());
+
+            List<SelectOption> selectOptions = new ArrayList<>();
+
+            for (String response : config.getConfig().getApplication().getDenyReasons()) {
+                selectOptions.add(SelectOption.of(response, response));
+            }
+
+            Message applicationEmbedMessage = applicationsChannel.sendMessageEmbeds(applicationEmbedBuilder.build())
+                    .addActionRow(
+                            StringSelectMenu.create(ButtonIds.DENY)
+                                    .setPlaceholder("Deny Application Reasons")
+                                    .setMinValues(1)
+                                    .setMaxValues(config.getConfig().getApplication().getDenyReasons().size())
+                                    .addOptions(selectOptions)
+                                    .addOption("Custom", "Custom", "THIS WILL OVERWRITE ALL OTHER SELECTED OPTIONS")
+                                    .build()
+                    )
+                    .addActionRow(
+                            Button.primary(ButtonIds.ACCEPT, "Accept")
+                                    .withEmoji(Emoji.fromFormatted("✅")),
+                            Button.danger(ButtonIds.BAN, "Ban")
+                                    .withEmoji(Emoji.fromFormatted("🦵")))
+                    .complete();
+
+            application.setMessageId(applicationEmbedMessage.getId());
+
+            try {
+                applicationDAO.updateApplication(application);
+            } catch (SQLException e) {
+                LOGGER.error("Error sending updated application with new message ID {}", e.getMessage());
             }
         }
     }
