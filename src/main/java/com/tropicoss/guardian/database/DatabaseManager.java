@@ -65,7 +65,7 @@ public class DatabaseManager {
         """;
 
         String sqlCreateApplicationTable = """
-            CREATE TABLE IF NOT EXISTS `applications` (
+                CREATE TABLE IF NOT EXISTS `applications` (
                 `application_id` INTEGER PRIMARY KEY,
                 `content` TEXT NOT NULL,
                 `message_id` TEXT NOT NULL UNIQUE,
@@ -77,8 +77,8 @@ public class DatabaseManager {
 
         String sqlCreateInterviewTable = """
             CREATE TABLE IF NOT EXISTS `interviews` (
-                `interview_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
-                `application_id` INTEGER NOT NULL,
+                `interview_id` INTEGER PRIMARY KEY,
+                `application_id` INTEGER NOT NULL UNIQUE,
                 `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(`application_id`) REFERENCES `application`(`application_id`)
@@ -89,7 +89,7 @@ public class DatabaseManager {
             CREATE TABLE IF NOT EXISTS `application_responses` (
                 `application_response_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
                 `admin_id` INTEGER NOT NULL,
-                `application_id` INTEGER NOT NULL,
+                `application_id` INTEGER NOT NULL UNIQUE,
                 `content` TEXT,
                 `status` TEXT NOT NULL,
                 `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -103,7 +103,7 @@ public class DatabaseManager {
             CREATE TABLE IF NOT EXISTS `interview_responses` (
                 `interview_response_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
                 `admin_id` INTEGER NOT NULL,
-                `interview_id` INTEGER NOT NULL,
+                `interview_id` INTEGER NOT NULL UNIQUE,
                 `content` TEXT,
                 `status` TEXT NOT NULL,
                 `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,

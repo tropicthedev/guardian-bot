@@ -12,4 +12,5 @@ public interface ApplicationResponseDAO {
     List<ApplicationResponse> getAllApplicationResponses();
     void updateApplicationResponse(ApplicationResponse applicationResponse) throws SQLException;
     void deleteApplicationResponse(int applicationResponseId) throws SQLException;
+    ApplicationResponse getApplicationResponseByApplicationId(long applicationId) throws SQLException;
 }

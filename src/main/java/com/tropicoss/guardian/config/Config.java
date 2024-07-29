@@ -117,6 +117,7 @@ public final class Config {
         private int timeout = 5;
         private String channel = "channel-id";
         private List<String> questions = new ArrayList<>();
+        private List<String> denyReasons = new ArrayList<>();
 
         public void setTimeout(int timeout) {
             this.timeout = timeout;
@@ -140,6 +141,14 @@ public final class Config {
 
         public List<String> getQuestions() {
             return questions;
+        }
+
+        public void setDenyReasons(List<String> denyReasons) {
+            this.denyReasons = denyReasons;
+        }
+
+        public List<String> getDenyReasons() {
+            return denyReasons;
         }
     }
 

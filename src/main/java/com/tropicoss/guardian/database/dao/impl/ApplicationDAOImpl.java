@@ -30,6 +30,16 @@ public class ApplicationDAOImpl implements ApplicationDAO {
         int applicationId = -1;
 
         try {
+            String checkSql = "SELECT application_id FROM applications WHERE message_id = ?";
+            statement = connection.prepareStatement(checkSql);
+            statement.setString(1, application.getMessageId());
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                LOGGER.info("Duplicate record found. Discarding");
+                return -1;
+            }
+
             statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             statement.setString(1, application.getContent());
             statement.setString(2, application.getMessageId());
@@ -234,6 +244,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
 
             connection.commit();
         } catch (SQLException e) {
+
             connection.rollback();
             LOGGER.error(e.getMessage());
         }

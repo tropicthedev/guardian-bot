@@ -154,4 +154,40 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
             LOGGER.error(e.getMessage());
         }
     }
+
+    @Override
+    public ApplicationResponse getApplicationResponseByApplicationId(long applicationId) throws SQLException {
+        String sql = "SELECT * FROM application_responses WHERE application_id = ?";
+        ApplicationResponse applicationResponse = null;
+
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+
+        try  {
+            statement = connection.prepareStatement(sql);
+
+            statement.setLong(1, applicationId);
+            resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                applicationResponse = new ApplicationResponse();
+                applicationResponse.setApplicationResponseId(resultSet.getInt("application_response_id"));
+                applicationResponse.setAdminId(resultSet.getInt("admin_id"));
+                applicationResponse.setApplicationId(resultSet.getInt("application_id"));
+                applicationResponse.setContent(resultSet.getString("content"));
+                applicationResponse.setStatus(Status.valueOf(resultSet.getString("status")));
+                applicationResponse.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+                applicationResponse.setModifiedAt(resultSet.getTimestamp("modified_at").toLocalDateTime());
+            }
+        } catch (SQLException e) {
+            LOGGER.error(e.getMessage());
+        }
+
+        finally {
+            DatabaseManager.closeResultSet(resultSet);
+            DatabaseManager.closeStatement(statement);
+        }
+
+        return applicationResponse;
+    }
 }

@@ -7,25 +7,31 @@ import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.dao.impl.ApplicationResponseDAOImpl;
 import com.tropicoss.guardian.database.model.ApplicationResponse;
 import com.tropicoss.guardian.database.model.Status;
+import com.tropicoss.guardian.ids.ModalIds;
 import com.tropicoss.guardian.utils.Cache;
 import com.tropicoss.guardian.database.dao.impl.ApplicationDAOImpl;
 import com.tropicoss.guardian.database.model.Application;
 import com.tropicoss.guardian.ids.ButtonIds;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.UserSnowflake;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.entities.MessageEmbed.Field;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
+import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.interactions.components.text.TextInput;
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.requests.restaction.ThreadChannelAction;
 import org.jetbrains.annotations.NotNull;
 
@@ -69,7 +75,9 @@ public class Onboarding extends ListenerAdapter {
                 TextChannel textChannel = event.getJDA().getTextChannelById(config.getConfig().getWelcome().getChannel());
 
                 if (textChannel == null) {
-                    LOGGER.error("The text channel ID provided for the welcome channel does not seem to be valid, please ensure that the correct ID is used");
+                    event.reply("Welcome channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL").setEphemeral(true).queue();
+
+                    LOGGER.error("Welcome channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL");
 
                     return;
                 }
@@ -97,17 +105,139 @@ public class Onboarding extends ListenerAdapter {
         if (event.getUser().isBot()) return;
 
         switch (event.getButton().getId()) {
-            case ButtonIds.APPLY -> {
-                handleApplyButtonInteraction(event);
+            case ButtonIds.APPLY -> handleApplyButtonInteraction(event);
+            case ButtonIds.ACCEPT -> handleAcceptButtonInteraction(event);
+            case null, default -> {
             }
-            case ButtonIds.ACCEPT -> {
-                handleAcceptButtonInteraction(event);
-            }
-            case null, default -> {}
         }
     }
 
-    private void handleApplyButtonInteraction(ButtonInteraction event) {
+    @Override
+    public void onMessageReceived(MessageReceivedEvent event) {
+        if (event.getAuthor().isBot()) return;
+
+        String userId = event.getAuthor().getId();
+
+        List<QuestionAnswers> state = conversationState.get(userId);
+
+        if (state != null && !state.isEmpty()) {
+            QuestionAnswers currentQuestion = state.getLast();
+
+            currentQuestion.answer = event.getMessage().getContentRaw();
+
+            List<String> questions = config.getConfig().getApplication().getQuestions();
+
+            if (state.size() < questions.size()) {
+                String nextQuestion = questions.get(state.size());
+                state.add(new QuestionAnswers(nextQuestion, null));
+
+                event.getChannel().sendMessage(nextQuestion).queue();
+            } else {
+
+                EmbedBuilder embedBuilder = new EmbedBuilder();
+
+                embedBuilder.setTitle("Application Received").setColor(Color.YELLOW).setTimestamp(Instant.now());
+
+                Application application = new Application(getConversationStateAsString(state), null, userId);
+
+                // TODO: FIX MESSAGE ID NOT BEING SET PROPERLY
+                event.getChannel().sendMessageEmbeds(embedBuilder.build()).queue((message -> {
+
+                    application.setMessageId(message.getId());
+
+                    try {
+                        // A message ID is created FOR NOW IT WILL BE CHANGED, this is in case the application is too
+                        // long, and we need to fall back and render it on a website
+
+                        int applicationId = applicationDAO.addApplication(application);
+
+                        if (applicationId == -1) {
+                            throw new SQLException("Duplicate entry found");
+                        }
+
+                        application.setApplicationId(applicationId);
+
+                    } catch (SQLException e) {
+                        LOGGER.error("Error storing your application");
+
+                        message.reply("Error storing your application please try again or contact one of the admins")
+                                .queue();
+                    }
+                }));
+
+                conversationState.remove(userId);
+
+                TextChannel applicationsChannel = event.getMessage().getJDA().getTextChannelById(config.getConfig().getApplication().getChannel());
+
+                if (applicationsChannel == null) {
+                    LOGGER.error("Applications channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL");
+
+                    event.getChannel().sendMessage("There was an error while sending the application to the admins, please try again or contact and admin for further assistance").queue();
+
+                    return;
+                }
+
+                EmbedBuilder applicationEmbedBuilder = new EmbedBuilder();
+
+                for (QuestionAnswers questionAnswers : state) {
+                    Field field = new Field(questionAnswers.question, questionAnswers.answer, false);
+
+                    applicationEmbedBuilder.addField(field);
+                }
+
+                applicationEmbedBuilder
+                        .setColor(Color.YELLOW)
+                        .setAuthor(event.getAuthor().getAsTag(), null, event.getAuthor().getAvatarUrl())
+                        .setTitle(String.format("%s has submitted an application", event.getAuthor().getAsTag()))
+                        .setThumbnail(event.getAuthor().getAvatarUrl())
+                        .setTimestamp(Instant.now());
+
+
+                List<SelectOption> selectOptions = new ArrayList<>();
+
+                for (String response : config.getConfig().getApplication().getDenyReasons()) {
+
+                    selectOptions.add(SelectOption.of(response, response));
+                }
+
+                try {
+                    applicationsChannel.sendMessageEmbeds(applicationEmbedBuilder.build())
+                            .addActionRow(
+                                    StringSelectMenu.create(ButtonIds.DENY)
+                                            .setPlaceholder("Deny Application Reasons")
+                                            .setMinValues(1)
+                                            .setMaxValues(config.getConfig().getApplication().getDenyReasons().size())
+                                            .addOptions(selectOptions)
+                                            .addOption("Custom", "Custom", "THIS WILL OVERWRITE ALL OTHER SELECTED OPTIONS")
+                                            .build()
+                            )
+                            .addActionRow(
+                                    Button.primary(ButtonIds.ACCEPT, "Accept")
+                                            .withEmoji(Emoji.fromFormatted("✅")),
+//                            Button.secondary(
+//                                    ButtonIds.DENY,
+//                                    "Deny"
+//                            ).withEmoji(Emoji.fromFormatted("❌")),
+                                    Button.danger(
+                                            ButtonIds.BAN,
+                                            "Ban"
+                                    ).withEmoji(Emoji.fromFormatted("🦵")))
+                            .queue((message -> {
+                                application.setMessageId(message.getId());
+                                try {
+                                    applicationDAO.updateApplication(application);
+                                } catch (SQLException e) {
+                                    LOGGER.error("Error sending updating application with new message ID {}", e.getMessage());
+                                }
+                            }));
+                } catch (RuntimeException e) {
+                    LOGGER.error("Error sending application embed {}", e.getMessage());
+                }
+            }
+        }
+    }
+
+    private void handleApplyButtonInteraction(ButtonInteractionEvent event) {
         Cache<Object, Object> cache = Cache.getInstance();
 
         if (cache.get("timeout::" + event.getUser().getId()) != null) {
@@ -143,163 +273,265 @@ public class Onboarding extends ListenerAdapter {
         ).queue();
 
         List<QuestionAnswers> questionAnswersList = new ArrayList<>();
+
         questionAnswersList.add(new QuestionAnswers(questions.getFirst(), null));
 
         conversationState.put(event.getUser().getId(), questionAnswersList);
     }
 
     // TODO: Prevent Duplicate Application Responses from being submitted
-    // TODO: Fix Webhook error with editing embed
 
     private void handleAcceptButtonInteraction(ButtonInteraction event) {
-       try{
-           Application application = applicationDAO.getApplicationByMessageId(event.getMessageId());
+        try {
+            Application application = applicationDAO.getApplicationByMessageId(event.getMessageId());
 
-           if(application == null) {
-               event.reply("Could not find application in the database").setEphemeral(true).queue();
-           }
+            if (application == null) {
+                event.reply("Could not find application in the database").setEphemeral(true).queue();
 
-           Member member = Objects.requireNonNull(event.getGuild()).getMemberById(application.getDiscordId());
+                LOGGER.error("Could not find application in the database");
 
-           Role role = event.getGuild().getRoleById(config.getConfig().getInterview().getRole());
+                return;
+            }
 
-           TextChannel interviewChannel = event.getGuild().getTextChannelById(config.getConfig().getInterview().getChannel());
+            ApplicationResponse existingApplicationResponse = applicationResponseDAO.getApplicationResponseByApplicationId(application.getApplicationId());
 
-           interviewChannel.createThreadChannel(String.format("%s's Interview", member.getUser().getName()), true).queue(channel -> {
-               channel.addThreadMember(member).queue();
-               channel.addThreadMember(event.getMember()).queue();
+            if (existingApplicationResponse != null) {
+                event.reply("This application has already been updated").setEphemeral(true).queue();
 
-               ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), application.getApplicationId(), "Member accepted", Status.ACCEPTED);
+                LOGGER.error("This application has already been updated");
 
-               try {
-                   applicationResponseDAO.addApplicationResponse(applicationResponse);
-               } catch (SQLException e) {
-                   LOGGER.error("There was an error when storing application response {}", e.getMessage());
-               }
+                return;
+            }
 
-               channel.sendMessage(config.getConfig().getInterview().getMessage().replaceAll("\\{member}", String.format("<@%s>", member.getUser().getName()))).queue();
-           });
+            Member member = Objects.requireNonNull(event.getGuild()).getMemberById(application.getDiscordId());
 
-           member.getGuild().addRoleToMember(UserSnowflake.fromId(member.getId()), role).queue();
+            Role role = event.getGuild().getRoleById(config.getConfig().getInterview().getRole());
 
-           member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessage(String.format("You have been accepted for an interview in <#%s>", interviewChannel.getId()))).queue();
+            TextChannel interviewChannel = event.getGuild().getTextChannelById(config.getConfig().getInterview().getChannel());
 
-           MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
+            if (member == null) {
+                event.reply("Member could not be found, are they still apart of the server ?").setEphemeral(true).queue();
 
-           EmbedBuilder embedBuilder = new EmbedBuilder(embed);
+                LOGGER.error("Member could not be found, are they still apart of the server ?");
 
-           embedBuilder.setColor(Color.green);
+                return;
+            }
+            if (role == null) {
+                event.reply("Role could not be found, ensure that the role id is correct in the config file").setEphemeral(true).queue();
 
-           event.getMessage().editMessageEmbeds(
-                   embedBuilder.build()
-           ).setActionRow(
-                   Button.primary(ButtonIds.JOIN_THREAD, "Join Tread")
-                           .withEmoji(Emoji.fromFormatted("🚀")),
-                   Button.danger(ButtonIds.BAN, "Ban Applicant (Coming Soon)")
-                           .withEmoji(Emoji.fromFormatted("🦵"))
-                           .asDisabled()
-           ).queue();
+                LOGGER.error("Role could not be found, ensure that the role id is correct in the config file");
 
-       } catch (Exception e) {
-           LOGGER.error("There was an error when accepting member {}", e.getMessage());
-       }
+                return;
+            }
+            if (interviewChannel == null) {
+                event.reply("Interview channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL").setEphemeral(true).queue();
+
+                LOGGER.error("Interview channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL");
+
+                return;
+            }
+
+            interviewChannel.createThreadChannel(String.format("%s's Interview", member.getUser().getName()), true).queue(channel -> {
+
+                channel.addThreadMember(member).queue();
+                channel.addThreadMember(event.getMember()).queue();
+
+                ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), application.getApplicationId(), "", Status.ACCEPTED);
+
+                try {
+                    applicationResponseDAO.addApplicationResponse(applicationResponse);
+                } catch (SQLException e) {
+                    event.reply("There was an error when storing application response").setEphemeral(true).queue();
+
+                    LOGGER.error("There was an error when storing application response {}", e.getMessage());
+                    return;
+                }
+
+                channel.sendMessage(config.getConfig().getInterview().getMessage().replaceAll("\\{member}", member.getUser().getAsTag())).queue();
+            });
+
+            member.getGuild().addRoleToMember(UserSnowflake.fromId(member.getId()), role).queue();
+
+            member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessage(String.format("You have been accepted for an interview in %s", interviewChannel.getAsMention()))).queue();
+
+            MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
+
+            EmbedBuilder embedBuilder = new EmbedBuilder(embed);
+
+            embedBuilder.setColor(Color.green);
+
+            event.deferEdit().queue();
+
+            event.getMessage().editMessageEmbeds(
+                    embedBuilder.build()
+            ).setActionRow(
+                    Button.success(ButtonIds.JOIN_THREAD, "Join Tread")
+                            .withEmoji(Emoji.fromFormatted("🚀")),
+                    Button.danger(ButtonIds.BAN, "Ban Applicant (Coming Soon)")
+                            .withEmoji(Emoji.fromFormatted("🔨"))
+                            .asDisabled()
+            ).queue();
+
+        } catch (Exception e) {
+            LOGGER.error("There was an error when accepting member {}", e.getMessage());
+        }
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot()) return;
+    public void onStringSelectInteraction(StringSelectInteractionEvent event) {
+        if (event.getComponentId().equals(ButtonIds.DENY) && !event.getMember().getUser().isBot()) {
 
-        String userId = event.getAuthor().getId();
-        List<QuestionAnswers> state = conversationState.get(userId);
+            List<String> selectedValues = event.getValues();
 
-        if (state != null && !state.isEmpty()) {
-            QuestionAnswers currentQuestion = state.getLast();
-            currentQuestion.answer = event.getMessage().getContentRaw();
+            String reason = null;
 
-            List<String> questions = config.getConfig().getApplication().getQuestions();
-            if (state.size() < questions.size()) {
-                String nextQuestion = questions.get(state.size());
-                state.add(new QuestionAnswers(nextQuestion, null));
+            if (selectedValues.contains("Custom")) {
+                event.replyModal(Modal.create(ModalIds.REASON, "Guardian - Deny Reason")
+                        .addActionRow(TextInput.create("deny_reason", "Reason for Denial", TextInputStyle.PARAGRAPH)
+                                .setRequired(true).build()).build()).queue();
 
-                event.getChannel().sendMessage(nextQuestion).queue();
             } else {
+                StringBuilder denialReasons = new StringBuilder();
 
-                EmbedBuilder embedBuilder = new EmbedBuilder();
-
-                embedBuilder.setTitle("Application Received").setColor(Color.YELLOW).setTimestamp(Instant.now());
-
-                Application application = new Application(getConversationStateAsString(state), null, userId);
-
-                event.getChannel().sendMessageEmbeds(embedBuilder.build()).queue((message -> {
-
-                    application.setMessageId(message.getId());
-
-                    try {
-                        // A message ID is created FOR NOW IT WILL BE CHANGED, this is in case the application is too
-                        // long, and we need to fall back and render it on a website
-
-                        int applicationId =  applicationDAO.addApplication(application);
-
-                        application.setApplicationId(applicationId);
-
-
-                    } catch (SQLException e) {
-                        LOGGER.error("Error while adding data to User");
-                        message.reply("Error storing your application please try again or contact one of the admins")
-                                .queue();
-                        throw new RuntimeException(e);
-                    }
-                }));
-
-                conversationState.remove(userId);
-
-                TextChannel applicationsChannel = event.getMessage().getJDA().getTextChannelById(config.getConfig().getApplication().getChannel());
-
-                EmbedBuilder applicationEmbedBuilder = new EmbedBuilder();
-
-                for (QuestionAnswers questionAnswers : state) {
-                    Field field = new Field(questionAnswers.question, questionAnswers.answer, false);
-
-                    applicationEmbedBuilder.addField(field);
+                for (String value : selectedValues) {
+                    denialReasons.append(value).append("\n");
                 }
+                reason = denialReasons.toString();
+                try {
+                    handleDeny(event, reason);
+                } catch (SQLException e) {
+                    LOGGER.error("Error handling denial: {}", e.getMessage());
 
-                applicationEmbedBuilder
-                        .setColor(Color.YELLOW)
-                        .setAuthor(event.getAuthor().getName(), null, event.getAuthor().getAvatarUrl())
-                        .setTitle(String.format("%s has submitted an application", event.getAuthor().getName()))
-                        .setThumbnail(event.getAuthor().getAvatarUrl())
-                        .setTimestamp(Instant.now())
-                ;
-
-               try {
-                   assert applicationsChannel != null;
-                   applicationsChannel.sendMessageEmbeds(applicationEmbedBuilder.build()).addActionRow(
-                           Button.primary(
-                                   ButtonIds.ACCEPT,
-                                   "Accept"
-                           ).withEmoji(Emoji.fromFormatted("✅")),
-                           Button.secondary(
-                                   ButtonIds.DENY,
-                                   "Deny"
-                           ).withEmoji(Emoji.fromFormatted("❌")),
-                           Button.danger(
-                                   ButtonIds.BAN,
-                                   "Ban"
-                           ).withEmoji(Emoji.fromFormatted("🦵"))
-                   ).queue((message -> {
-                       application.setMessageId(message.getId());
-                       try {
-                           applicationDAO.updateApplication(application);
-                       } catch (SQLException e) {
-                           LOGGER.error("Error sending updating application with new message ID {}", e.getMessage());
-                       }
-                   }));
-
-               } catch (RuntimeException e) {
-                   LOGGER.error("Error sending application embed {}", e.getMessage());
-               }
+                    event.reply("An error occurred while processing the denial. Please try again later.").setEphemeral(true).queue();
+                }
             }
         }
+    }
+
+    @Override
+    public void onModalInteraction(@NotNull ModalInteractionEvent event) {
+        if (event.getModalId().equals(ModalIds.REASON)) {
+            String customReason = event.getValue("deny_reason").getAsString();
+
+            try {
+                handleDeny(event, customReason);
+            } catch (SQLException e) {
+                LOGGER.error("Error handling denial: {}", e.getMessage());
+
+                event.reply("An error occurred while processing the denial. Please try again later.").setEphemeral(true).queue();
+            }
+        }
+    }
+
+    private void handleDeny(StringSelectInteractionEvent event, String reason) throws SQLException {
+        Application application = applicationDAO.getApplicationByMessageId(event.getMessageId());
+
+        if (application == null) {
+            LOGGER.error("Could not find application in the database");
+            event.reply("Could not find application in the database").setEphemeral(true).queue();
+            return;
+        }
+
+        ApplicationResponse existingApplicationResponse = applicationResponseDAO.getApplicationResponseByApplicationId(application.getApplicationId());
+
+        if (existingApplicationResponse != null) {
+            event.reply("This application has already been updated").setEphemeral(true).queue();
+
+            LOGGER.error("This application has already been updated");
+
+            return;
+        }
+
+        Guild guild = event.getGuild();
+        if (guild == null) {
+            LOGGER.error("Guild could not be found, please try again");
+            event.reply("Guild could not be found, please try again").setEphemeral(true).queue();
+            return;
+        }
+
+        Member member = guild.getMemberById(application.getDiscordId());
+        if (member == null) {
+            LOGGER.error("Member could not be found, are they still in the server?");
+            event.reply("Member could not be found, are they still in the server?").setEphemeral(true).queue();
+            return;
+        }
+
+        ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), application.getApplicationId(), reason, Status.DENIED);
+
+        applicationResponseDAO.addApplicationResponse(applicationResponse);
+
+        member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessage("Your application has been denied for the following reason(s):\n" + reason)).queue();
+
+        MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
+
+        EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.RED).setFooter(
+                String.format("User Denied By %s \nReason %b\n", event.getMember().getUser().getAsTag(), reason));
+
+        event.deferEdit().queue();
+
+        event.getMessage().editMessageEmbeds(embedBuilder.build()).queue();
+
+        event.reply("Application has been denied and the user has been notified.").setEphemeral(true).queue();
+    }
+
+    private void handleDeny(ModalInteractionEvent event, String reason) throws SQLException {
+        String messageId = event.getMessage().getId();
+
+        Application application = applicationDAO.getApplicationByMessageId(messageId);
+
+        if (application == null) {
+            LOGGER.error("Could not find application in the database");
+
+            event.reply("Could not find application in the database").setEphemeral(true).queue();
+
+            return;
+        }
+
+        ApplicationResponse existingApplicationResponse = applicationResponseDAO.getApplicationResponseByApplicationId(application.getApplicationId());
+
+        if (existingApplicationResponse != null) {
+            event.reply("This application has already been updated").setEphemeral(true).queue();
+
+            LOGGER.error("This application has already been updated");
+
+            return;
+        }
+
+        Guild guild = event.getGuild();
+        if (guild == null) {
+            LOGGER.error("Guild could not be found, please try again");
+
+            event.reply("Guild could not be found, please try again").setEphemeral(true).queue();
+
+            return;
+        }
+
+        Member member = guild.getMemberById(application.getDiscordId());
+
+        if (member == null) {
+            LOGGER.error("Member could not be found, are they still in the server?");
+
+            event.reply("Member could not be found, are they still in the server?").setEphemeral(true).queue();
+
+            return;
+        }
+
+        ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), application.getApplicationId(), reason, Status.DENIED);
+
+        applicationResponseDAO.addApplicationResponse(applicationResponse);
+
+        member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessage("Your application has been denied for the following reason(s):\n" + reason)).queue();
+
+        MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
+
+        EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.RED).setFooter(
+                String.format("User Denied By %s \nReason %b\n", event.getMember().getUser().getAsTag(), reason));
+
+        event.deferEdit().queue();
+
+        event.getMessage().editMessageEmbeds(embedBuilder.build()).setActionRow().queue();
+
+        event.reply("Application has been denied and the user has been notified.").setEphemeral(true).queue();
     }
 
     private class QuestionAnswers {
