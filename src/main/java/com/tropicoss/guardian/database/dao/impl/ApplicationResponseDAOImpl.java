@@ -190,4 +190,41 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
 
         return applicationResponse;
     }
+
+    @Override
+    public ApplicationResponse getApplicationResponseByMessageId(long messageId) throws SQLException {
+        String sql = "SELECT ar.application_response_id, ar.admin_id, ar.application_id, ar.content, ar.status, ar.created_at, ar.modified_at\n" +
+                "FROM application_responses ar INNER JOIN applications a on ar.application_id = a.application_id WHERE message_id = ?";
+        ApplicationResponse applicationResponse = null;
+
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+
+        try  {
+            statement = connection.prepareStatement(sql);
+
+            statement.setLong(1, messageId);
+            resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                applicationResponse = new ApplicationResponse();
+                applicationResponse.setApplicationResponseId(resultSet.getInt("application_response_id"));
+                applicationResponse.setAdminId(resultSet.getInt("admin_id"));
+                applicationResponse.setApplicationId(resultSet.getInt("application_id"));
+                applicationResponse.setContent(resultSet.getString("content"));
+                applicationResponse.setStatus(Status.valueOf(resultSet.getString("status")));
+                applicationResponse.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+                applicationResponse.setModifiedAt(resultSet.getTimestamp("modified_at").toLocalDateTime());
+            }
+        } catch (SQLException e) {
+            LOGGER.error(e.getMessage());
+        }
+
+        finally {
+            DatabaseManager.closeResultSet(resultSet);
+            DatabaseManager.closeStatement(statement);
+        }
+
+        return applicationResponse;
+    }
 }

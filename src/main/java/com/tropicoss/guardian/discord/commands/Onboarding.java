@@ -15,9 +15,7 @@ import com.tropicoss.guardian.ids.ButtonIds;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -32,7 +30,6 @@ import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
-import net.dv8tion.jda.api.requests.restaction.ThreadChannelAction;
 import org.jetbrains.annotations.NotNull;
 
 import static com.tropicoss.guardian.Guardian.LOGGER;
@@ -107,6 +104,8 @@ public class Onboarding extends ListenerAdapter {
         switch (event.getButton().getId()) {
             case ButtonIds.APPLY -> handleApplyButtonInteraction(event);
             case ButtonIds.ACCEPT -> handleAcceptButtonInteraction(event);
+            case ButtonIds.RESET -> handleResetButtonInteraction(event);
+//            case ButtonIds.BAN -> handleBanButtonInteraction(event);
             case null, default -> {
             }
         }
@@ -157,6 +156,8 @@ public class Onboarding extends ListenerAdapter {
                 LOGGER.error("Error storing your application");
 
                 applicationConfirmationMessage.reply("Error storing your application please try again or contact one of the admins").queue();
+
+                return;
             }
 
             conversationState.remove(userId);
@@ -349,8 +350,8 @@ public class Onboarding extends ListenerAdapter {
             ).setActionRow(
                     Button.success(ButtonIds.JOIN_THREAD, "Join Tread")
                             .withEmoji(Emoji.fromFormatted("🚀")),
-                    Button.danger(ButtonIds.BAN, "Ban Applicant (Coming Soon)")
-                            .withEmoji(Emoji.fromFormatted("🔨"))
+                    Button.primary(ButtonIds.RESET, "Reset (Coming Soon)")
+                            .withEmoji(Emoji.fromFormatted("🔙"))
                             .asDisabled()
             ).queue();
 
@@ -372,20 +373,21 @@ public class Onboarding extends ListenerAdapter {
                         .addActionRow(TextInput.create("deny_reason", "Reason for Denial", TextInputStyle.PARAGRAPH)
                                 .setRequired(true).build()).build()).queue();
 
-            } else {
-                StringBuilder denialReasons = new StringBuilder();
+                return;
+            }
 
-                for (String value : selectedValues) {
-                    denialReasons.append(value).append("\n");
-                }
-                reason = denialReasons.toString();
-                try {
-                    handleDeny(event, reason);
-                } catch (SQLException e) {
-                    LOGGER.error("Error handling denial: {}", e.getMessage());
+            StringBuilder denialReasons = new StringBuilder();
 
-                    event.reply("An error occurred while processing the denial. Please try again later.").setEphemeral(true).queue();
-                }
+            for (String value : selectedValues) {
+                denialReasons.append(value).append("\n");
+            }
+            reason = denialReasons.toString();
+            try {
+                handleDeny(event, reason);
+            } catch (SQLException e) {
+                LOGGER.error("Error handling denial: {}", e.getMessage());
+
+                event.reply("An error occurred while processing the denial. Please try again later.").setEphemeral(true).queue();
             }
         }
     }
@@ -451,9 +453,12 @@ public class Onboarding extends ListenerAdapter {
 
         event.deferEdit().queue();
 
-        event.getMessage().editMessageEmbeds(embedBuilder.build()).queue();
-
-        event.reply("Application has been denied and the user has been notified.").setEphemeral(true).queue();
+        event.getMessage().editMessageEmbeds(embedBuilder.build()).setActionRow(
+                Button.primary(
+                        ButtonIds.RESET,
+                        "Reset (Coming Soon)"
+                ).withEmoji(Emoji.fromFormatted("🔙"))
+        ).queue();
     }
 
     private void handleDeny(ModalInteractionEvent event, String reason) throws SQLException {
@@ -511,9 +516,43 @@ public class Onboarding extends ListenerAdapter {
 
         event.deferEdit().queue();
 
-        event.getMessage().editMessageEmbeds(embedBuilder.build()).setActionRow().queue();
+        event.getMessage().editMessageEmbeds(embedBuilder.build()).setActionRow(
+                Button.primary(
+                        ButtonIds.RESET,
+                        "Reset (Coming Soon)"
+                ).withEmoji(Emoji.fromFormatted("🔙"))
+        ).queue();
 
         event.reply("Application has been denied and the user has been notified.").setEphemeral(true).queue();
+    }
+
+    private void handleResetButtonInteraction(ButtonInteractionEvent event) {
+        ApplicationResponse applicationResponse;
+
+        try {
+            applicationResponse = applicationResponseDAO.getApplicationResponseByMessageId(event.getMessageIdLong());
+        } catch (SQLException e) {
+            LOGGER.error("There was an error while getting the application response");
+            event.reply("There was an error while trying to get the application response").setEphemeral(true).queue();
+            return;
+        }
+
+        switch (applicationResponse.getStatus()) {
+            case ACCEPTED -> {}
+            case DENIED -> {}
+        }
+    }
+
+    private void handleBanButtonInteraction(ButtonInteractionEvent event) {
+        ApplicationResponse applicationResponse;
+
+        try {
+            applicationResponse = applicationResponseDAO.getApplicationResponseByMessageId(event.getMessageIdLong());
+        } catch (SQLException e) {
+            LOGGER.error("There was an error while getting the application response");
+            event.reply("There was an error while trying to get the application response").setEphemeral(true).queue();
+            return;
+        }
     }
 
     private class QuestionAnswers {

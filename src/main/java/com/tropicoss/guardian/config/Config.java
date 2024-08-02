@@ -1,5 +1,6 @@
 package com.tropicoss.guardian.config;
 
+import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
 import de.exlll.configlib.YamlConfigurations;
 import net.fabricmc.loader.api.FabricLoader;
@@ -117,6 +118,7 @@ public final class Config {
         private int timeout = 5;
         private String channel = "channel-id";
         private List<String> questions = new ArrayList<>();
+        @Comment("IMPORTANT!! Each item in this list must not be longer than 100 characters long or you will have issues with the embed")
         private List<String> denyReasons = new ArrayList<>();
 
         public void setTimeout(int timeout) {

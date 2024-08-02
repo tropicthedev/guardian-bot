@@ -6,4 +6,5 @@ public class ButtonIds {
     public static final String DENY = "Guardian:MEMBER_DENY";
     public static final String JOIN_THREAD = "Guardian:JOIN_THREAD";
     public static final String BAN = "Guardian:MEMBER_BAN";
+    public static final String RESET = "Guardian:RESET";
 }
