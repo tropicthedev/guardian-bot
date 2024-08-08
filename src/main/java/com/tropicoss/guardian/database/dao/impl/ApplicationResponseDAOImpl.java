@@ -6,6 +6,7 @@ import com.tropicoss.guardian.database.model.ApplicationResponse;
 import com.tropicoss.guardian.database.model.Status;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -226,5 +227,22 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
         }
 
         return applicationResponse;
+    }
+
+    @Override
+    public void resetApplication(long applicationId) throws SQLException {
+        String sql = "UPDATE application_responses SET status = ?, modified_at = ? WHERE application_response_id = ?";
+
+        PreparedStatement statement = connection.prepareStatement(sql);
+
+        try {
+            statement.setString(4, Status.RESET.toString());
+            statement.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
+
+            statement.executeUpdate();
+            connection.commit();
+        } catch (SQLException e) {
+            LOGGER.error(e.getMessage());
+        }
     }
 }

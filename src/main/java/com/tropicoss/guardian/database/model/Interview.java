@@ -3,25 +3,25 @@ package com.tropicoss.guardian.database.model;
 import java.time.LocalDateTime;
 
 public class Interview {
-    private int interviewId;
-    private int applicationId;
+    private long interviewId;
+    private long applicationId;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
     public Interview() {}
 
-    public Interview(int interviewId, int applicationId) {
+    public Interview(long interviewId, long applicationId) {
         this.interviewId = interviewId;
         this.applicationId = applicationId;
         this.createdAt = LocalDateTime.now();
         this.modifiedAt = LocalDateTime.now();
     }
 
-    public int getInterviewId() {
+    public long getInterviewId() {
         return interviewId;
     }
 
-    public int getApplicationId() {
+    public long getApplicationId() {
         return applicationId;
     }
 

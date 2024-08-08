@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tropicoss.guardian.config.Config;
+import com.tropicoss.guardian.database.dao.InterviewDAO;
 import com.tropicoss.guardian.database.dao.impl.ApplicationResponseDAOImpl;
+import com.tropicoss.guardian.database.dao.impl.InterviewDAOImpl;
 import com.tropicoss.guardian.database.model.ApplicationResponse;
+import com.tropicoss.guardian.database.model.Interview;
 import com.tropicoss.guardian.database.model.Status;
 import com.tropicoss.guardian.ids.ModalIds;
 import com.tropicoss.guardian.utils.Cache;
@@ -22,6 +25,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.entities.MessageEmbed.Field;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
@@ -47,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 public class Onboarding extends ListenerAdapter {
     private final Config config = Config.getInstance();
     private final ApplicationDAOImpl applicationDAO = new ApplicationDAOImpl();
+    private final InterviewDAO interviewDAO = new InterviewDAOImpl();
     private final ApplicationResponseDAOImpl applicationResponseDAO = new ApplicationResponseDAOImpl();
     private final Map<String, List<QuestionAnswers>> conversationState = new ConcurrentHashMap<>();
 
@@ -105,9 +110,8 @@ public class Onboarding extends ListenerAdapter {
             case ButtonIds.APPLY -> handleApplyButtonInteraction(event);
             case ButtonIds.ACCEPT -> handleAcceptButtonInteraction(event);
             case ButtonIds.RESET -> handleResetButtonInteraction(event);
-//            case ButtonIds.BAN -> handleBanButtonInteraction(event);
-            case null, default -> {
-            }
+            case ButtonIds.BAN -> handleBanButtonInteraction(event);
+            case null, default -> {}
         }
     }
 
@@ -320,9 +324,10 @@ public class Onboarding extends ListenerAdapter {
                 channel.addThreadMember(event.getMember()).queue();
 
                 ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), application.getApplicationId(), "", Status.ACCEPTED);
-
+                Interview interview = new Interview(channel.getIdLong(), application.getApplicationId());
                 try {
                     applicationResponseDAO.addApplicationResponse(applicationResponse);
+                    interviewDAO.addInterview(interview);
                 } catch (SQLException e) {
                     event.reply("There was an error when storing application response").setEphemeral(true).queue();
 
@@ -528,31 +533,102 @@ public class Onboarding extends ListenerAdapter {
 
     private void handleResetButtonInteraction(ButtonInteractionEvent event) {
         ApplicationResponse applicationResponse;
+        Application application;
+        Member member;
 
         try {
             applicationResponse = applicationResponseDAO.getApplicationResponseByMessageId(event.getMessageIdLong());
+            application = applicationDAO.getApplicationByMessageId(event.getMessageId());
+            member = event.getGuild().getMemberById(application.getDiscordId());
+            applicationResponseDAO.resetApplication(event.getMessageIdLong());
+
         } catch (SQLException e) {
             LOGGER.error("There was an error while getting the application response");
             event.reply("There was an error while trying to get the application response").setEphemeral(true).queue();
             return;
         }
 
-        switch (applicationResponse.getStatus()) {
-            case ACCEPTED -> {}
-            case DENIED -> {}
+        if (member == null) {
+            LOGGER.error("There was an error getting member, are they still in the server ?");
+            event.reply("There was an error getting member, are they still in the server ?").setEphemeral(true).queue();
+            return;
         }
+
+        if(applicationResponse.getStatus() == Status.ACCEPTED) {
+            List<Role> memberRoles = member.getRoles();
+
+            for (Role memberRole : memberRoles) {
+                member.getGuild().removeRoleFromMember(member.getUser(), memberRole).queue();
+            }
+        }
+
+        member.getUser().openPrivateChannel().flatMap(privateChannel -> privateChannel.sendMessage("Your application is being reconsidered, once a decision is made you will be updated")).queue();
+
+        List<SelectOption> selectOptions = new ArrayList<>();
+
+        for (String response : config.getConfig().getApplication().getDenyReasons()) {
+            selectOptions.add(SelectOption.of(response, response));
+        }
+
+        MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
+
+        EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.RED).setFooter(
+                String.format("Application Reset by %s",member.getAsMention()));
+
+        event.deferEdit().queue();
+
+        event.getMessage().editMessageEmbeds(embedBuilder.build()).setComponents(
+                ActionRow.of(StringSelectMenu.create(ButtonIds.DENY)
+                        .setPlaceholder("Deny Application Reasons")
+                        .setMinValues(1)
+                        .setMaxValues(config.getConfig().getApplication().getDenyReasons().size())
+                        .addOptions(selectOptions)
+                        .addOption("Custom", "Custom", "THIS WILL OVERWRITE ALL OTHER SELECTED OPTIONS")
+                        .build()),
+                ActionRow.of( Button.primary(ButtonIds.ACCEPT, "Accept")
+                                .withEmoji(Emoji.fromFormatted("✅")),
+                        Button.danger(ButtonIds.BAN, "Ban")
+                                .withEmoji(Emoji.fromFormatted("🦵")))
+        ).queue();
     }
 
     private void handleBanButtonInteraction(ButtonInteractionEvent event) {
-        ApplicationResponse applicationResponse;
+        Application application;
 
         try {
-            applicationResponse = applicationResponseDAO.getApplicationResponseByMessageId(event.getMessageIdLong());
+            application = applicationDAO.getApplicationByMessageId(event.getMessageId());
         } catch (SQLException e) {
             LOGGER.error("There was an error while getting the application response");
+
             event.reply("There was an error while trying to get the application response").setEphemeral(true).queue();
             return;
         }
+
+        Member member = event.getGuild().getMemberById(application.getDiscordId());
+
+        if(member == null) {
+            LOGGER.error("There was an error while getting the member to ban, are they still in the server ?");
+
+            event.reply("There was an error while getting the member to ban, are they still in the server ?").setEphemeral(true).queue();
+            return;
+        }
+
+        member.ban(0, TimeUnit.MINUTES).queue();
+
+        ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), event.getMessageIdLong(), "Member Banned", Status.BANNED);
+
+        try {
+            applicationResponseDAO.addApplicationResponse(applicationResponse);
+        } catch (SQLException e) {
+            LOGGER.error("There was an error while storing application response for banned user");
+
+            event.reply("There was an error while storing application response for banned user").setEphemeral(true).queue();
+            return;
+        }
+
+        member.getUser().openPrivateChannel().flatMap(privateChannel -> privateChannel.sendMessage("You have been banned")).queue();
+
+        event.reply("Member has been banned").setEphemeral(true).queue();
     }
 
     private class QuestionAnswers {

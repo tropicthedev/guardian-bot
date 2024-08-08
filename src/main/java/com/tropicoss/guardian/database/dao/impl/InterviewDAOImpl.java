@@ -13,27 +13,32 @@ import org.slf4j.LoggerFactory;
 
 
 public class InterviewDAOImpl implements InterviewDAO {
-    private final DatabaseManager databaseManager;
+    private static Connection connection = null;
     public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
 
-
-    public InterviewDAOImpl(DatabaseManager databaseManager) {
-        this.databaseManager = databaseManager;
+    public InterviewDAOImpl(Connection connection) {
+        InterviewDAOImpl.connection = connection;
     }
+
+    public InterviewDAOImpl() throws SQLException{
+        connection =  DatabaseManager.getConnection();
+    }
+
 
     @Override
     public void addInterview(Interview interview) {
-        String sql = "INSERT INTO interviews (interviewId, applicationId, createdAt, modifiedAt) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO interviews (interview_id, application_id, created_at, modified_at) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement statement = null;
 
-            stmt.setInt(1, interview.getInterviewId());
-            stmt.setInt(2, interview.getApplicationId());
-            stmt.setTimestamp(3, Timestamp.valueOf(interview.getCreatedAt()));
-            stmt.setTimestamp(4, Timestamp.valueOf(interview.getModifiedAt()));
+        try {
+            statement = connection.prepareStatement(sql);
+            statement.setLong(1, interview.getInterviewId());
+            statement.setLong(2, interview.getApplicationId());
+            statement.setTimestamp(3, Timestamp.valueOf(interview.getCreatedAt()));
+            statement.setTimestamp(4, Timestamp.valueOf(interview.getModifiedAt()));
 
-            stmt.executeUpdate();
+            statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }
@@ -41,21 +46,22 @@ public class InterviewDAOImpl implements InterviewDAO {
 
     @Override
     public Interview getInterviewById(int interviewId) {
-        String sql = "SELECT * FROM interviews WHERE interviewId = ?";
+        String sql = "SELECT * FROM interviews WHERE interview_id = ?";
         Interview interview = null;
+        PreparedStatement statement = null;
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try {
+            statement = connection.prepareStatement(sql);
 
-            stmt.setInt(1, interviewId);
-            ResultSet rs = stmt.executeQuery();
+            statement.setInt(1, interviewId);
+            ResultSet rs = statement.executeQuery();
 
             if (rs.next()) {
                 interview = new Interview();
-                interview.setInterviewId(rs.getInt("interviewId"));
-                interview.setApplicationId(rs.getInt("applicationId"));
-                interview.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
-                interview.setModifiedAt(rs.getTimestamp("modifiedAt").toLocalDateTime());
+                interview.setInterviewId(rs.getInt("interview_id"));
+                interview.setApplicationId(rs.getInt("application_id"));
+                interview.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                interview.setModifiedAt(rs.getTimestamp("modified_at").toLocalDateTime());
             }
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
@@ -69,16 +75,18 @@ public class InterviewDAOImpl implements InterviewDAO {
         String sql = "SELECT * FROM interviews";
         List<Interview> interviews = new ArrayList<>();
 
-        try (Connection conn = databaseManager.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        PreparedStatement statement = null;
+
+        try {
+            statement = connection.prepareStatement(sql);
+            ResultSet rs = statement.executeQuery(sql);
 
             while (rs.next()) {
                 Interview interview = new Interview();
-                interview.setInterviewId(rs.getInt("interviewId"));
-                interview.setApplicationId(rs.getInt("applicationId"));
-                interview.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
-                interview.setModifiedAt(rs.getTimestamp("modifiedAt").toLocalDateTime());
+                interview.setInterviewId(rs.getInt("interview_id"));
+                interview.setApplicationId(rs.getInt("application_id"));
+                interview.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                interview.setModifiedAt(rs.getTimestamp("modified_at").toLocalDateTime());
 
                 interviews.add(interview);
             }
@@ -91,16 +99,18 @@ public class InterviewDAOImpl implements InterviewDAO {
 
     @Override
     public void updateInterview(Interview interview) {
-        String sql = "UPDATE interviews SET applicationId = ?, modifiedAt = ? WHERE interviewId = ?";
+        String sql = "UPDATE interviews SET application_id = ?, modified_at = ? WHERE interview_id = ?";
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement statement = null;
 
-            stmt.setInt(1, interview.getApplicationId());
-            stmt.setTimestamp(2, Timestamp.valueOf(interview.getModifiedAt()));
-            stmt.setInt(3, interview.getInterviewId());
+        try {
+            statement = connection.prepareStatement(sql);
 
-            stmt.executeUpdate();
+            statement.setLong(1, interview.getApplicationId());
+            statement.setTimestamp(2, Timestamp.valueOf(interview.getModifiedAt()));
+            statement.setLong(3, interview.getInterviewId());
+
+            statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }
@@ -108,13 +118,15 @@ public class InterviewDAOImpl implements InterviewDAO {
 
     @Override
     public void deleteInterview(int interviewId) {
-        String sql = "DELETE FROM interviews WHERE interviewId = ?";
+        String sql = "DELETE FROM interviews WHERE interview_id = ?";
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement statement = null;
 
-            stmt.setInt(1, interviewId);
-            stmt.executeUpdate();
+        try {
+            statement = connection.prepareStatement(sql);
+
+            statement.setInt(1, interviewId);
+            statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }
