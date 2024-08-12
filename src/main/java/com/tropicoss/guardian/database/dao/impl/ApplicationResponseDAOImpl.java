@@ -26,33 +26,6 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
     }
 
     @Override
-    public void addApplicationResponse(ApplicationResponse applicationResponse) throws SQLException {
-        String sql = "INSERT INTO application_responses (admin_id, application_id, content, status, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?)";
-
-        PreparedStatement statement = null;
-
-        try{
-            statement = connection.prepareStatement(sql);
-            statement.setLong(1, applicationResponse.getAdminId());
-            statement.setLong(2, applicationResponse.getApplicationId());
-            statement.setString(3, applicationResponse.getContent());
-            statement.setString(4, applicationResponse.getStatus().name());
-            statement.setTimestamp(5, Timestamp.valueOf(applicationResponse.getCreatedAt()));
-            statement.setTimestamp(6, Timestamp.valueOf(applicationResponse.getModifiedAt()));
-
-            statement.executeUpdate();
-            connection.commit();
-        } catch (SQLException e) {
-            connection.rollback();
-            LOGGER.error(e.getMessage());
-        }
-
-        finally {
-            DatabaseManager.closeStatement(statement);
-        }
-    }
-
-    @Override
     public ApplicationResponse getApplicationResponseById(int applicationResponseId) throws SQLException {
         String sql = "SELECT * FROM application_responses WHERE application_response_id = ?";
         ApplicationResponse applicationResponse = null;
@@ -121,26 +94,37 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
     }
 
     @Override
-    public void updateApplicationResponse(ApplicationResponse applicationResponse) throws SQLException {
-        String sql = "UPDATE application_responses SET admin_id = ?, application_id = ?, content = ?, status = ?, modified_at = ? WHERE application_response_id = ?";
+    public void upsertApplicationResponse(ApplicationResponse applicationResponse) throws SQLException {
+        String sql = "INSERT INTO application_responses (application_response_id, admin_id, application_id, content, status, modified_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?) " +
+                "ON CONFLICT(application_response_id) " +
+                "DO UPDATE SET admin_id = excluded.admin_id, " +
+                "application_id = excluded.application_id, " +
+                "content = excluded.content, " +
+                "status = excluded.status, " +
+                "modified_at = excluded.modified_at";
 
         PreparedStatement statement = connection.prepareStatement(sql);
 
         try {
-            statement.setLong(1, applicationResponse.getAdminId());
-            statement.setLong(2, applicationResponse.getApplicationId());
-            statement.setString(3, applicationResponse.getContent());
-            statement.setString(4, applicationResponse.getStatus().name());
-            statement.setTimestamp(5, Timestamp.valueOf(applicationResponse.getModifiedAt()));
-            statement.setLong(6, applicationResponse.getApplicationResponseId());
+            statement.setLong(1, applicationResponse.getApplicationResponseId());
+            statement.setLong(2, applicationResponse.getAdminId());
+            statement.setLong(3, applicationResponse.getApplicationId());
+            statement.setString(4, applicationResponse.getContent());
+            statement.setString(5, applicationResponse.getStatus().name());
+            statement.setTimestamp(6, Timestamp.valueOf(applicationResponse.getModifiedAt()));
 
             statement.executeUpdate();
             connection.commit();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
+            connection.rollback();  // Roll back in case of an error
+        } finally {
+            if (statement != null) {
+                statement.close();
+            }
         }
     }
-
     @Override
     public void deleteApplicationResponse(int applicationResponseId) throws SQLException {
         String sql = "DELETE FROM application_responses WHERE applicationResponseId = ?";
@@ -236,8 +220,8 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
         PreparedStatement statement = connection.prepareStatement(sql);
 
         try {
-            statement.setString(4, Status.RESET.toString());
-            statement.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setString(1, Status.RESET.toString());
+            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
 
             statement.executeUpdate();
             connection.commit();

@@ -5,18 +5,21 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.dao.InterviewDAO;
+import com.tropicoss.guardian.database.dao.InterviewResponseDAO;
 import com.tropicoss.guardian.database.dao.impl.ApplicationResponseDAOImpl;
 import com.tropicoss.guardian.database.dao.impl.InterviewDAOImpl;
-import com.tropicoss.guardian.database.model.ApplicationResponse;
-import com.tropicoss.guardian.database.model.Interview;
-import com.tropicoss.guardian.database.model.Status;
+import com.tropicoss.guardian.database.dao.impl.InterviewResponseDAOImpl;
+import com.tropicoss.guardian.database.model.*;
 import com.tropicoss.guardian.ids.ModalIds;
 import com.tropicoss.guardian.utils.Cache;
 import com.tropicoss.guardian.database.dao.impl.ApplicationDAOImpl;
-import com.tropicoss.guardian.database.model.Application;
 import com.tropicoss.guardian.ids.ButtonIds;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -52,6 +55,7 @@ public class Onboarding extends ListenerAdapter {
     private final Config config = Config.getInstance();
     private final ApplicationDAOImpl applicationDAO = new ApplicationDAOImpl();
     private final InterviewDAO interviewDAO = new InterviewDAOImpl();
+    private final InterviewResponseDAO interviewResponseDao = new InterviewResponseDAOImpl();
     private final ApplicationResponseDAOImpl applicationResponseDAO = new ApplicationResponseDAOImpl();
     private final Map<String, List<QuestionAnswers>> conversationState = new ConcurrentHashMap<>();
 
@@ -64,43 +68,118 @@ public class Onboarding extends ListenerAdapter {
         try {
             if (Objects.requireNonNull(event.getUser()).isBot()) return;
 
+            if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+                event.reply("Insufficient Permissions").queue();
+                return;
+            }
+
             if (event.getName().equals("welcome")) {
+                handleWelcomeCommand(event);
+            }
 
-                EmbedBuilder embedBuilder = new EmbedBuilder();
+            if (event.getName().equals("accept")) {
+                handleAcceptCommand(event);
+            }
 
-                embedBuilder
-                        .setTitle("Beep Boop")
-                        .setColor(Color.BLUE)
-                        .setDescription(config.getConfig().getWelcome().getMessage())
-                        .setTimestamp(Instant.now());
-
-                TextChannel textChannel = event.getJDA().getTextChannelById(config.getConfig().getWelcome().getChannel());
-
-                if (textChannel == null) {
-                    event.reply("Welcome channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL").setEphemeral(true).queue();
-
-                    LOGGER.error("Welcome channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL");
-
-                    return;
-                }
-
-                textChannel.sendMessageEmbeds(embedBuilder.build())
-                        .addActionRow(
-                                Button.primary(
-                                        ButtonIds.APPLY,
-                                        "Apply"
-                                ).withEmoji(Emoji.fromFormatted("\uD83D\uDCDC"))
-                        )
-                        .queue();
+            if(event.getName().equals("deny")) {
+                handleDenyCommand(event);
             }
         } catch (RuntimeException e) {
-            LOGGER.error("An error occurred while sending welcome embed {}", e.getMessage());
+            LOGGER.error("An error occurred while running command {} {}",event.getName(), e.getMessage());
 
-            event.reply("An error occurred while sending welcome embed, please try again")
+            event.reply("An error occurred while running command, please try again")
                     .setEphemeral(true)
                     .queue();
         }
     }
+
+    private void handleAcceptCommand(SlashCommandInteractionEvent event) {
+
+        if(event.getChannel().getType() != ChannelType.GUILD_PRIVATE_THREAD) {
+            event.reply("This can only be ran in a private guild thread (Interview Thread)").queue();
+            return;
+        }
+
+        try {
+
+            Guild guild = event.getGuild();
+
+            InterviewResponse interviewResponse = new InterviewResponse(event.getMember().getIdLong(),
+                    event.getChannelIdLong(),
+                    "Member Accepted", Status.ACCEPTED);
+
+            Long memberId = applicationDAO.getMemberFromChannelId(event.getChannelIdLong());
+
+            Member member = event.getGuild().getMemberById(memberId);
+
+            if(member == null) {
+                event.reply("Member could not be found, are they still in the server ?").setEphemeral(true).queue();
+                return;
+            }
+
+            TextChannel channel = guild.getChannelById(TextChannel.class ,config.getConfig().getMember().getChannel());
+
+            if (channel == null) {
+                event.reply("The guild channel could not be found, ensure it exists and the correct id is present in the config file")
+                        .setEphemeral(true)
+                        .queue();
+                return;
+            }
+
+            Role role = guild.getRoleById(config.getConfig().getMember().getRole());
+
+            if(role == null)
+            {
+                event.reply("The member role could not be found, ensure it exists and the correct id is present in the config file")
+                        .setEphemeral(true)
+                        .queue();
+                return;
+            }
+
+            guild.addRoleToMember(member.getUser(), role).queue();
+
+            channel.sendMessage(config.getConfig().getMember().getMessage().replace("{member}", member.getAsMention())).queue();
+
+            interviewResponseDao.addInterviewResponse(interviewResponse);
+
+            event.reply("Member Accepted").queue();
+        } catch (Exception e) {
+            LOGGER.error("There was an error trying to accept member");
+            event.reply("There was an error trying to accept member").setEphemeral(true).queue();
+        }
+    }
+
+    private void handleWelcomeCommand(SlashCommandInteractionEvent event) {
+
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+
+        embedBuilder
+                .setTitle("Beep Boop")
+                .setColor(Color.BLUE)
+                .setDescription(config.getConfig().getWelcome().getMessage())
+                .setTimestamp(Instant.now());
+
+        TextChannel textChannel = event.getJDA().getTextChannelById(config.getConfig().getWelcome().getChannel());
+
+        if (textChannel == null) {
+            event.reply("Welcome channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL").setEphemeral(true).queue();
+
+            LOGGER.error("Welcome channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL");
+
+            return;
+        }
+
+        textChannel.sendMessageEmbeds(embedBuilder.build())
+                .addActionRow(
+                        Button.primary(
+                                ButtonIds.APPLY,
+                                "Apply"
+                        ).withEmoji(Emoji.fromFormatted("\uD83D\uDCDC"))
+                )
+                .queue();
+    }
+
+    private void handleDenyCommand(SlashCommandInteractionEvent event) {}
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
@@ -270,6 +349,11 @@ public class Onboarding extends ListenerAdapter {
 
     private void handleAcceptButtonInteraction(ButtonInteraction event) {
         try {
+            if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+                event.reply("Insufficient Permissions").queue();
+                return;
+            }
+
             Application application = applicationDAO.getApplicationByMessageId(event.getMessageId());
 
             if (application == null) {
@@ -282,7 +366,7 @@ public class Onboarding extends ListenerAdapter {
 
             ApplicationResponse existingApplicationResponse = applicationResponseDAO.getApplicationResponseByApplicationId(application.getApplicationId());
 
-            if (existingApplicationResponse != null) {
+            if (existingApplicationResponse != null && existingApplicationResponse.getStatus() != Status.RESET) {
                 event.reply("This application has already been updated").setEphemeral(true).queue();
 
                 LOGGER.error("This application has already been updated");
@@ -326,7 +410,7 @@ public class Onboarding extends ListenerAdapter {
                 ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), application.getApplicationId(), "", Status.ACCEPTED);
                 Interview interview = new Interview(channel.getIdLong(), application.getApplicationId());
                 try {
-                    applicationResponseDAO.addApplicationResponse(applicationResponse);
+                    applicationResponseDAO.upsertApplicationResponse(applicationResponse);
                     interviewDAO.addInterview(interview);
                 } catch (SQLException e) {
                     event.reply("There was an error when storing application response").setEphemeral(true).queue();
@@ -355,9 +439,8 @@ public class Onboarding extends ListenerAdapter {
             ).setActionRow(
                     Button.success(ButtonIds.JOIN_THREAD, "Join Tread")
                             .withEmoji(Emoji.fromFormatted("🚀")),
-                    Button.primary(ButtonIds.RESET, "Reset (Coming Soon)")
+                    Button.primary(ButtonIds.RESET, "Reset")
                             .withEmoji(Emoji.fromFormatted("🔙"))
-                            .asDisabled()
             ).queue();
 
         } catch (Exception e) {
@@ -368,6 +451,11 @@ public class Onboarding extends ListenerAdapter {
     @Override
     public void onStringSelectInteraction(StringSelectInteractionEvent event) {
         if (event.getComponentId().equals(ButtonIds.DENY) && !event.getMember().getUser().isBot()) {
+
+            if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+                event.reply("Insufficient Permissions").queue();
+                return;
+            }
 
             List<String> selectedValues = event.getValues();
 
@@ -400,6 +488,12 @@ public class Onboarding extends ListenerAdapter {
     @Override
     public void onModalInteraction(@NotNull ModalInteractionEvent event) {
         if (event.getModalId().equals(ModalIds.REASON)) {
+
+            if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+                event.reply("Insufficient Permissions").queue();
+                return;
+            }
+
             String customReason = event.getValue("deny_reason").getAsString();
 
             try {
@@ -413,6 +507,11 @@ public class Onboarding extends ListenerAdapter {
     }
 
     private void handleDeny(StringSelectInteractionEvent event, String reason) throws SQLException {
+        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("Insufficient Permissions").queue();
+            return;
+        }
+
         Application application = applicationDAO.getApplicationByMessageId(event.getMessageId());
 
         if (application == null) {
@@ -423,7 +522,7 @@ public class Onboarding extends ListenerAdapter {
 
         ApplicationResponse existingApplicationResponse = applicationResponseDAO.getApplicationResponseByApplicationId(application.getApplicationId());
 
-        if (existingApplicationResponse != null) {
+        if (existingApplicationResponse != null && existingApplicationResponse.getStatus() != Status.RESET) {
             event.reply("This application has already been updated").setEphemeral(true).queue();
 
             LOGGER.error("This application has already been updated");
@@ -447,7 +546,7 @@ public class Onboarding extends ListenerAdapter {
 
         ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), application.getApplicationId(), reason, Status.DENIED);
 
-        applicationResponseDAO.addApplicationResponse(applicationResponse);
+        applicationResponseDAO.upsertApplicationResponse(applicationResponse);
 
         member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessage("Your application has been denied for the following reason(s):\n" + reason)).queue();
 
@@ -461,12 +560,17 @@ public class Onboarding extends ListenerAdapter {
         event.getMessage().editMessageEmbeds(embedBuilder.build()).setActionRow(
                 Button.primary(
                         ButtonIds.RESET,
-                        "Reset (Coming Soon)"
+                        "Reset"
                 ).withEmoji(Emoji.fromFormatted("🔙"))
         ).queue();
     }
 
     private void handleDeny(ModalInteractionEvent event, String reason) throws SQLException {
+        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("Insufficient Permissions").queue();
+            return;
+        }
+
         String messageId = event.getMessage().getId();
 
         Application application = applicationDAO.getApplicationByMessageId(messageId);
@@ -481,7 +585,7 @@ public class Onboarding extends ListenerAdapter {
 
         ApplicationResponse existingApplicationResponse = applicationResponseDAO.getApplicationResponseByApplicationId(application.getApplicationId());
 
-        if (existingApplicationResponse != null) {
+        if (existingApplicationResponse != null && existingApplicationResponse.getStatus() != Status.RESET) {
             event.reply("This application has already been updated").setEphemeral(true).queue();
 
             LOGGER.error("This application has already been updated");
@@ -510,7 +614,7 @@ public class Onboarding extends ListenerAdapter {
 
         ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), application.getApplicationId(), reason, Status.DENIED);
 
-        applicationResponseDAO.addApplicationResponse(applicationResponse);
+        applicationResponseDAO.upsertApplicationResponse(applicationResponse);
 
         member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessage("Your application has been denied for the following reason(s):\n" + reason)).queue();
 
@@ -524,7 +628,7 @@ public class Onboarding extends ListenerAdapter {
         event.getMessage().editMessageEmbeds(embedBuilder.build()).setActionRow(
                 Button.primary(
                         ButtonIds.RESET,
-                        "Reset (Coming Soon)"
+                        "Reset"
                 ).withEmoji(Emoji.fromFormatted("🔙"))
         ).queue();
 
@@ -535,6 +639,11 @@ public class Onboarding extends ListenerAdapter {
         ApplicationResponse applicationResponse;
         Application application;
         Member member;
+
+        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("Insufficient Permissions").queue();
+            return;
+        }
 
         try {
             applicationResponse = applicationResponseDAO.getApplicationResponseByMessageId(event.getMessageIdLong());
@@ -572,7 +681,7 @@ public class Onboarding extends ListenerAdapter {
 
         MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
 
-        EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.RED).setFooter(
+        EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.YELLOW).setFooter(
                 String.format("Application Reset by %s",member.getAsMention()));
 
         event.deferEdit().queue();
@@ -595,6 +704,12 @@ public class Onboarding extends ListenerAdapter {
     private void handleBanButtonInteraction(ButtonInteractionEvent event) {
         Application application;
 
+        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("Insufficient Permissions").queue();
+            return;
+        }
+
+
         try {
             application = applicationDAO.getApplicationByMessageId(event.getMessageId());
         } catch (SQLException e) {
@@ -615,10 +730,10 @@ public class Onboarding extends ListenerAdapter {
 
         member.ban(0, TimeUnit.MINUTES).queue();
 
-        ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), event.getMessageIdLong(), "Member Banned", Status.BANNED);
+        ApplicationResponse applicationResponse = new ApplicationResponse(event.getMember().getIdLong(), application.getApplicationId(), "Member Banned", Status.BANNED);
 
         try {
-            applicationResponseDAO.addApplicationResponse(applicationResponse);
+            applicationResponseDAO.upsertApplicationResponse(applicationResponse);
         } catch (SQLException e) {
             LOGGER.error("There was an error while storing application response for banned user");
 
@@ -628,7 +743,14 @@ public class Onboarding extends ListenerAdapter {
 
         member.getUser().openPrivateChannel().flatMap(privateChannel -> privateChannel.sendMessage("You have been banned")).queue();
 
-        event.reply("Member has been banned").setEphemeral(true).queue();
+        MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
+
+        EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.RED).setFooter(
+                String.format("Application Banned by %s",member.getAsMention()));
+
+        event.deferEdit().queue();
+
+        event.getMessage().editMessageEmbeds(embedBuilder.build()).setComponents().queue();
     }
 
     private class QuestionAnswers {

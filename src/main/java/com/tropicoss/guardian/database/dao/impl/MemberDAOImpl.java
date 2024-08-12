@@ -12,71 +12,89 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MemberDAOImpl implements MemberDAO {
-    private final DatabaseManager databaseManager;
     public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
+    private static Connection connection = null;
 
+    public MemberDAOImpl(Connection connection) {
+        MemberDAOImpl.connection = connection;
+    }
 
-    public MemberDAOImpl(DatabaseManager databaseManager) {
-        this.databaseManager = databaseManager;
+    public MemberDAOImpl() throws SQLException {
+        connection =  DatabaseManager.getConnection();
     }
 
     @Override
-    public void addMember(Member member) {
-        String sql = "INSERT INTO members (memberId, discordId, isAdmin, createdAt, modifiedAt) VALUES (?, ?, ?, ?, ?)";
+    public void addMember(Member member) throws SQLException {
+        String sql = "INSERT INTO members (member_id, discord_id, isAdmin, created_at, modified_at) VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement statement = null;
 
-            stmt.setInt(1, member.getMemberId());
-            stmt.setString(2, member.getDiscordId());
-            stmt.setBoolean(3, member.getIsAdmin());
-            stmt.setTimestamp(4, Timestamp.valueOf(member.getCreatedAt()));
-            stmt.setTimestamp(5, Timestamp.valueOf(member.getModifiedAt()));
+        try {
+            statement = connection.prepareStatement(sql);
 
-            stmt.executeUpdate();
+            statement.setString(1, member.getMemberId());
+            statement.setString(2, member.getDiscordId());
+            statement.setBoolean(3, member.getIsAdmin());
+            statement.setTimestamp(4, Timestamp.valueOf(member.getCreatedAt()));
+            statement.setTimestamp(5, Timestamp.valueOf(member.getModifiedAt()));
+
+            statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
+        }
+        finally {
+            DatabaseManager.closeStatement(statement);
         }
     }
 
     @Override
-    public Member getMemberById(int memberId) {
+    public Member getMemberById(String memberId) throws SQLException {
         String sql = "SELECT * FROM members WHERE memberId = ?";
         Member member = null;
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement statement = null;
 
-            stmt.setInt(1, memberId);
-            ResultSet rs = stmt.executeQuery();
+        try {
+            statement = connection.prepareStatement(sql);
+
+            statement.setString(1, memberId);
+            ResultSet rs = statement.executeQuery();
 
             if (rs.next()) {
                 member = new Member();
-                member.setMemberId(rs.getInt("memberId"));
+                member.setMemberId(rs.getString("memberId"));
                 member.setDiscordId(rs.getString("discordId"));
                 member.setIsAdmin(rs.getBoolean("isAdmin"));
                 member.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
                 member.setModifiedAt(rs.getTimestamp("modifiedAt").toLocalDateTime());
             }
         } catch (SQLException e) {
+            connection.rollback();
             LOGGER.error(e.getMessage());
+        }
+        finally {
+            DatabaseManager.closeResultSet(statement.getResultSet());
+            DatabaseManager.closeStatement(statement);
         }
 
         return member;
     }
 
     @Override
-    public List<Member> getAllMembers() {
+    public List<Member> getAllMembers() throws SQLException {
         String sql = "SELECT * FROM members";
         List<Member> members = new ArrayList<>();
 
-        try (Connection conn = databaseManager.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        Statement statement = null;
+
+        try {
+
+            statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(sql);
 
             while (rs.next()) {
                 Member member = new Member();
-                member.setMemberId(rs.getInt("memberId"));
+                member.setMemberId(rs.getString("memberId"));
                 member.setDiscordId(rs.getString("discordId"));
                 member.setIsAdmin(rs.getBoolean("isAdmin"));
                 member.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
@@ -86,6 +104,10 @@ public class MemberDAOImpl implements MemberDAO {
             }
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
+        }
+        finally {
+            DatabaseManager.closeResultSet(statement.getResultSet());
+            DatabaseManager.closeStatement(statement);
         }
 
         return members;
@@ -101,7 +123,7 @@ public class MemberDAOImpl implements MemberDAO {
             stmt.setString(1, member.getDiscordId());
             stmt.setBoolean(2, member.getIsAdmin());
             stmt.setTimestamp(3, Timestamp.valueOf(member.getModifiedAt()));
-            stmt.setInt(4, member.getMemberId());
+            stmt.setString(4, member.getMemberId());
 
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -110,13 +132,13 @@ public class MemberDAOImpl implements MemberDAO {
     }
 
     @Override
-    public void deleteMember(int memberId) {
+    public void deleteMember(String memberId) {
         String sql = "DELETE FROM members WHERE memberId = ?";
 
         try (Connection conn = databaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, memberId);
+            stmt.setString(1, memberId);
             stmt.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());

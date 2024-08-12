@@ -3,7 +3,7 @@ package com.tropicoss.guardian.database.model;
 import java.time.LocalDateTime;
 
 public class Member {
-    private int memberId;
+    private String memberId;
     private String discordId;
     private Boolean isAdmin;
     private LocalDateTime createdAt;
@@ -11,7 +11,7 @@ public class Member {
 
     public Member() {}
 
-    public Member(int memberId, String discordId, Boolean isAdmin) {
+    public Member(String memberId, String discordId, Boolean isAdmin) {
         this.memberId = memberId;
         this.discordId = discordId;
         this.isAdmin = isAdmin;
@@ -19,7 +19,7 @@ public class Member {
         this.modifiedAt = LocalDateTime.now();
     }
 
-    public int getMemberId() {
+    public String getMemberId() {
         return memberId;
     }
 
@@ -46,7 +46,7 @@ public class Member {
         this.modifiedAt = modifiedAt;
     }
 
-    public void setMemberId(int memberId) {
+    public void setMemberId(String memberId) {
         this.memberId = memberId;
         this.modifiedAt = LocalDateTime.now();
     }

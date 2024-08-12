@@ -3,9 +3,9 @@ package com.tropicoss.guardian.database.model;
 import java.time.LocalDateTime;
 
 public class InterviewResponse {
-    private int interviewResponseId;
-    private int adminId;
-    private int interviewId;
+    private long interviewResponseId;
+    private long adminId;
+    private long interviewId;
     private String content;
     private Status status;
     private LocalDateTime createdAt;
@@ -13,8 +13,7 @@ public class InterviewResponse {
 
     public InterviewResponse() {}
 
-    public InterviewResponse(int interviewResponseId, int adminId, int interviewId, String content, Status status) {
-        this.interviewResponseId = interviewResponseId;
+    public InterviewResponse(long adminId, long interviewId, String content, Status status) {
         this.adminId = adminId;
         this.interviewId = interviewId;
         this.content = content;
@@ -23,15 +22,15 @@ public class InterviewResponse {
         this.modifiedAt = LocalDateTime.now();
     }
 
-    public int getInterviewResponseId() {
+    public long getInterviewResponseId() {
         return interviewResponseId;
     }
 
-    public int getAdminId() {
+    public long getAdminId() {
         return adminId;
     }
 
-    public int getInterviewId() {
+    public long getInterviewId() {
         return interviewId;
     }
 

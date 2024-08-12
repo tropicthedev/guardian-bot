@@ -256,5 +256,38 @@ public class ApplicationDAOImpl implements ApplicationDAO {
         return application;
     }
 
+    @Override
+    public Long getMemberFromChannelId(long channelId) throws SQLException {
+        String sql = """
+                SELECT a.discord_id\s
+                FROM applications a\s
+                LEFT JOIN interviews i ON a.application_id = i.application_id\s
+                LEFT JOIN interview_responses ir ON i.interview_id = ir.interview_id\s
+                WHERE ir.interview_id = ?
+                """;
 
+        Long memberId = null;
+
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            statement = connection.prepareStatement(sql);
+            statement.setLong(1, channelId);
+            resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                memberId = resultSet.getLong("discord_id");
+            }
+
+        } catch (SQLException e) {
+            LOGGER.error(e.getMessage());
+        }
+        finally {
+            DatabaseManager.closeResultSet(resultSet);
+            DatabaseManager.closeStatement(statement);
+        }
+
+        return memberId;
+    }
 }

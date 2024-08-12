@@ -114,6 +114,48 @@ public final class Config {
     }
 
     @Configuration
+    public static class MemberConfiguration {
+        @Comment("Amount of time in days until someone is considered inactive")
+        private int inactivityThreshold = 30;
+        private String role = "role-id";
+        @Comment("The channel that the welcome to the server message will be sent to")
+        private String channel = "channel-id";
+        private String message = "Welcome to the server {member}, ip is in <#channel-id>";
+
+        public int getInactivityThreshold() {
+            return inactivityThreshold;
+        }
+
+        public String getRole() {
+            return role;
+        }
+
+        public void setInactivityThreshold(int inactivityThreshold) {
+            this.inactivityThreshold = inactivityThreshold;
+        }
+
+        public void setRole(String role) {
+            this.role = role;
+        }
+
+        public String getChannel() {
+            return channel;
+        }
+
+        public void setChannel(String channel) {
+            this.channel = channel;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
+
+    @Configuration
     public static class ApplicationConfiguration {
         private int timeout = 5;
         private String channel = "channel-id";
@@ -194,6 +236,7 @@ public final class Config {
         private WelcomeConfiguration welcome = new WelcomeConfiguration();
         private ApplicationConfiguration application = new ApplicationConfiguration();
         private InterviewConfiguration interview = new InterviewConfiguration();
+        private MemberConfiguration member = new MemberConfiguration();
 
         // Getters and Setters for each configuration
         public ServerConfiguration getServer() {
@@ -242,6 +285,14 @@ public final class Config {
 
         public void setInterview(InterviewConfiguration interview) {
             this.interview = interview;
+        }
+
+        public MemberConfiguration getMember() {
+            return member;
+        }
+
+        public void setMember(MemberConfiguration member) {
+            this.member = member;
         }
     }
 

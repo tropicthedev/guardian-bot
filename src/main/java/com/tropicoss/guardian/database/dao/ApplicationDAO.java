@@ -13,4 +13,5 @@ public interface ApplicationDAO {
     void updateApplication(Application application) throws SQLException;
     void deleteApplication(int applicationId) throws SQLException;
     Application getApplicationByMessageId(String messageId) throws SQLException;
+    Long getMemberFromChannelId (long id) throws SQLException;
 }

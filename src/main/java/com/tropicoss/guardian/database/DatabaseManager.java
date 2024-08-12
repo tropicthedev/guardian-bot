@@ -45,22 +45,12 @@ public class DatabaseManager {
 
         String sqlCreateMemberTable = """
             CREATE TABLE IF NOT EXISTS `members` (
-                `member_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
+                `member_id` INTEGER NOT NULL,
                 `discord_id` TEXT NOT NULL,
                 `isAdmin` REAL NOT NULL DEFAULT 'FALSE',
                 `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
-        """;
-
-        String sqlCreateMojangAccountTable = """
-            CREATE TABLE IF NOT EXISTS `mojang_accounts` (
-                `mojang_account_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
-                `member_id` INTEGER NOT NULL,
-                `mojang_id` TEXT NOT NULL UNIQUE,
-                `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(`member_id`) REFERENCES `member`(`member_id`)
+                PRIMARY KEY (member_id, discord_id)
             );
         """;
 
@@ -140,7 +130,6 @@ public class DatabaseManager {
             connection.setAutoCommit(false);
 
             statement.execute(sqlCreateMemberTable);
-            statement.execute(sqlCreateMojangAccountTable);
             statement.execute(sqlCreateApplicationTable);
             statement.execute(sqlCreateInterviewTable);
             statement.execute(sqlCreateApplicationResponseTable);
