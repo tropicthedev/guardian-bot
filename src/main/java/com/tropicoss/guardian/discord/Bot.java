@@ -6,6 +6,7 @@ import com.tropicoss.guardian.discord.commands.Onboarding;
 import com.tropicoss.guardian.discord.commands.ResetCommand;
 import com.tropicoss.guardian.discord.events.ChatAdapter;
 import com.tropicoss.guardian.discord.events.UserAdapter;
+import com.tropicoss.guardian.utils.PlayerInfoFetcher;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -26,8 +27,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.sql.SQLException;
 import java.time.Instant;
-
-import com.tropicoss.guardian.utils.PlayerInfoFetcher;
 
 import static com.tropicoss.guardian.Guardian.LOGGER;
 import static com.tropicoss.guardian.Guardian.MINECRAFT_SERVER;
@@ -52,10 +51,10 @@ public class Bot {
                             new ResetCommand(),
                             new UserAdapter(),
                             new ChatAdapter(
-                            config.getConfig().getGeneric().getMode(),
-                            config.getConfig().getBot().getChannel(),
+                                    config.getConfig().getGeneric().getMode(),
+                                    config.getConfig().getBot().getChannel(),
                                     MINECRAFT_SERVER
-                    )
+                            )
                     )
                     .build()
                     .awaitReady();
@@ -90,7 +89,7 @@ public class Bot {
                     LOGGER.error("Invalid bot token. Please check your config file.");
                     break;
                 case "IllegalArgumentException":
-                   LOGGER.error("Invalid bot channel. Please check your config file.");
+                    LOGGER.error("Invalid bot channel. Please check your config file.");
                     break;
                 default:
                     LOGGER.error("Error starting bot: {}", e.getMessage());
@@ -101,7 +100,7 @@ public class Bot {
     }
 
     public static Bot getBotInstance() {
-        if(null == BOT_INSTANCE) {
+        if (null == BOT_INSTANCE) {
             try {
                 BOT_INSTANCE = new Bot();
 
@@ -245,7 +244,7 @@ public class Bot {
 
         textChannel.sendMessageEmbeds(
                 new EmbedBuilder()
-                        .setAuthor(origin, null ,iconUrl)
+                        .setAuthor(origin, null, iconUrl)
                         .setDescription(description)
                         .setTimestamp(Instant.now())
                         .setFooter(origin, iconUrl)

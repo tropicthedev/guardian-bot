@@ -4,25 +4,24 @@ import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.database.dao.InterviewResponseDAO;
 import com.tropicoss.guardian.database.model.InterviewResponse;
 import com.tropicoss.guardian.database.model.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 public class InterviewResponseDAOImpl implements InterviewResponseDAO {
-    private static Connection connection = null;
     public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
+    private static Connection connection = null;
 
     public InterviewResponseDAOImpl(Connection connection) {
         InterviewResponseDAOImpl.connection = connection;
     }
 
     public InterviewResponseDAOImpl() throws SQLException {
-        connection =  DatabaseManager.getConnection();
+        connection = DatabaseManager.getConnection();
     }
 
     @Override
@@ -45,8 +44,7 @@ public class InterviewResponseDAOImpl implements InterviewResponseDAO {
         } catch (SQLException e) {
             connection.rollback();
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeStatement(statement);
         }
     }
@@ -78,8 +76,7 @@ public class InterviewResponseDAOImpl implements InterviewResponseDAO {
         } catch (SQLException e) {
             connection.rollback();
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeStatement(statement);
             DatabaseManager.closeResultSet(statement.getResultSet());
         }
@@ -94,7 +91,7 @@ public class InterviewResponseDAOImpl implements InterviewResponseDAO {
 
         Statement statement = null;
 
-        try{
+        try {
 
             statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(sql);
@@ -114,8 +111,7 @@ public class InterviewResponseDAOImpl implements InterviewResponseDAO {
         } catch (SQLException e) {
             connection.rollback();
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeStatement(statement);
             DatabaseManager.closeResultSet(statement.getResultSet());
         }
@@ -151,7 +147,7 @@ public class InterviewResponseDAOImpl implements InterviewResponseDAO {
 
         PreparedStatement statement = null;
 
-        try{
+        try {
             statement = connection.prepareStatement(sql);
 
             statement.setLong(1, interviewResponseId);
@@ -188,8 +184,7 @@ public class InterviewResponseDAOImpl implements InterviewResponseDAO {
         } catch (SQLException e) {
             connection.rollback();
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeStatement(statement);
             DatabaseManager.closeResultSet(statement.getResultSet());
         }

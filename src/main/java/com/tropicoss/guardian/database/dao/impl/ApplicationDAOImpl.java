@@ -11,15 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ApplicationDAOImpl implements ApplicationDAO {
-    private static Connection connection = null;
     public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
+    private static Connection connection = null;
 
     public ApplicationDAOImpl(Connection connection) {
         ApplicationDAOImpl.connection = connection;
     }
 
     public ApplicationDAOImpl() throws SQLException {
-        connection =  DatabaseManager.getConnection();
+        connection = DatabaseManager.getConnection();
     }
 
     @Override
@@ -92,8 +92,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
         } catch (SQLException e) {
             connection.rollback();
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeResultSet(resultSet);
             DatabaseManager.closeStatement(statement);
         }
@@ -145,7 +144,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
         try {
             statement = connection.createStatement();
             resultSet = statement.executeQuery(sql);
-            
+
             while (resultSet.next()) {
                 Application application = new Application();
                 application.setApplicationId(resultSet.getInt("application_id"));
@@ -161,9 +160,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
         } catch (SQLException e) {
             connection.rollback();
             LOGGER.error(e.getMessage());
-        }
-
-        finally {
+        } finally {
             DatabaseManager.closeStatement(statement);
             DatabaseManager.closeResultSet(resultSet);
         }
@@ -191,9 +188,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
         } catch (SQLException e) {
             connection.rollback();
             LOGGER.error(e.getMessage());
-        }
-
-        finally {
+        } finally {
             DatabaseManager.closeStatement(statement);
         }
     }
@@ -213,8 +208,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
         } catch (SQLException e) {
             connection.rollback();
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeStatement(statement);
         }
     }
@@ -247,8 +241,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
 
             connection.rollback();
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeResultSet(resultSet);
             DatabaseManager.closeStatement(statement);
         }
@@ -282,8 +275,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
 
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeResultSet(resultSet);
             DatabaseManager.closeStatement(statement);
         }

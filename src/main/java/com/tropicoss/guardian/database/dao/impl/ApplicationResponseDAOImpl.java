@@ -4,25 +4,25 @@ import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.database.dao.ApplicationResponseDAO;
 import com.tropicoss.guardian.database.model.ApplicationResponse;
 import com.tropicoss.guardian.database.model.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
-    private static Connection connection = null;
     public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
+    private static Connection connection = null;
 
     public ApplicationResponseDAOImpl(Connection connection) {
         ApplicationResponseDAOImpl.connection = connection;
     }
 
-    public ApplicationResponseDAOImpl() throws SQLException{
-        connection =  DatabaseManager.getConnection();
+    public ApplicationResponseDAOImpl() throws SQLException {
+        connection = DatabaseManager.getConnection();
     }
 
     @Override
@@ -33,7 +33,7 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
 
-        try  {
+        try {
             statement = connection.prepareStatement(sql);
 
             statement.setInt(1, applicationResponseId);
@@ -51,9 +51,7 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
             }
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
-        }
-
-        finally {
+        } finally {
             DatabaseManager.closeResultSet(resultSet);
             DatabaseManager.closeStatement(statement);
         }
@@ -125,6 +123,7 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
             }
         }
     }
+
     @Override
     public void deleteApplicationResponse(int applicationResponseId) throws SQLException {
         String sql = "DELETE FROM application_responses WHERE applicationResponseId = ?";
@@ -148,7 +147,7 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
 
-        try  {
+        try {
             statement = connection.prepareStatement(sql);
 
             statement.setLong(1, applicationId);
@@ -166,9 +165,7 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
             }
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
-        }
-
-        finally {
+        } finally {
             DatabaseManager.closeResultSet(resultSet);
             DatabaseManager.closeStatement(statement);
         }
@@ -185,7 +182,7 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
 
-        try  {
+        try {
             statement = connection.prepareStatement(sql);
 
             statement.setLong(1, messageId);
@@ -203,9 +200,7 @@ public class ApplicationResponseDAOImpl implements ApplicationResponseDAO {
             }
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
-        }
-
-        finally {
+        } finally {
             DatabaseManager.closeResultSet(resultSet);
             DatabaseManager.closeStatement(statement);
         }

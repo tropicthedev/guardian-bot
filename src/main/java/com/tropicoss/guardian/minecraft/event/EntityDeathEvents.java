@@ -4,11 +4,9 @@ import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.server.network.ServerPlayerEntity;
 
 @FunctionalInterface
-public interface EntityDeathEvents
-{
+public interface EntityDeathEvents {
 
     Event<EntityDeathEvents> EVENT =
             EventFactory.createArrayBacked(EntityDeathEvents.class, callbacks -> (entity, source) -> {

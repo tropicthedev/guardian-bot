@@ -4,11 +4,9 @@ import net.minecraft.text.Text;
 
 public class DiscordMessage implements WebsocketMessage {
 
-    public String message;
-
-    public String member;
-
     private final String type = "discord";
+    public String message;
+    public String member;
 
     public DiscordMessage(String message, String member) {
         this.message = message;

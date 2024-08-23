@@ -9,7 +9,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-import static com.tropicoss.guardian.Guardian.*;
+import static com.tropicoss.guardian.Guardian.LOGGER;
+import static com.tropicoss.guardian.Guardian.SOCKET_SERVER;
 
 public class ChatAdapter extends ListenerAdapter {
 
@@ -35,8 +36,7 @@ public class ChatAdapter extends ListenerAdapter {
 
             DiscordMessage msg;
 
-            if ((long) event.getMessage().getAttachments().size() > 0)
-            {
+            if ((long) event.getMessage().getAttachments().size() > 0) {
                 msg = new DiscordMessage("Sent an Attachment: " + event.getMessage().getAttachments().getFirst().getUrl(), member);
             } else {
                 msg = new DiscordMessage(event.getMessage().getContentRaw(), member);
@@ -46,7 +46,7 @@ public class ChatAdapter extends ListenerAdapter {
 
             minecraftServer.getPlayerManager().getPlayerList().forEach(player -> player.sendMessage(msg.toChatText(), false));
 
-            String json =  new Gson().toJson(msg);
+            String json = new Gson().toJson(msg);
 
             if (isServer()) {
                 SOCKET_SERVER.broadcast(json);

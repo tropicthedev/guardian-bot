@@ -17,15 +17,15 @@ public class ResetCommand extends ListenerAdapter {
             if (Objects.requireNonNull(event.getUser()).isBot()) return;
 
             if (event.getName().equals("reset")) {
-                OptionMapping optionMapping =  event.getOption("member");
+                OptionMapping optionMapping = event.getOption("member");
 
-                if(optionMapping == null) return;
+                if (optionMapping == null) return;
 
                 String userId = optionMapping.getAsUser().getId();
 
                 Cache.getInstance().remove("timeout::" + userId);
 
-                if(!Cache.getInstance().containsKey("timeout::" + userId)) {
+                if (!Cache.getInstance().containsKey("timeout::" + userId)) {
                     event.reply("User's application timeout reset was successful").queue();
 
                     return;

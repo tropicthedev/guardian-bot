@@ -33,17 +33,17 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    include (implementation "io.javalin:javalin:6.2.0")
+    include(implementation "io.javalin:javalin:6.2.0")
     implementation "com.google.code.gson:gson:2.10.1"
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
     testImplementation 'org.mockito:mockito-core:5.12.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    include (implementation 'org.xerial:sqlite-jdbc:3.46.0.0')
+    include(implementation 'org.xerial:sqlite-jdbc:3.46.0.0')
 
     // Java-WebSocket (Websocket API)
-    include (implementation 'org.java-websocket:Java-WebSocket:1.5.2')
+    include(implementation 'org.java-websocket:Java-WebSocket:1.5.2')
 
     // JDA (Discord API)
     include(implementation 'net.dv8tion:JDA:5.0.1')
@@ -58,11 +58,11 @@ dependencies {
     include("com.neovisionaries:nv-websocket-client:2.14")
     include("com.squareup.okio:okio-jvm:3.9.0")
 
-    include( implementation "com.fasterxml.jackson.core:jackson-core:2.14.1")
-    include( implementation "com.fasterxml.jackson.core:jackson-databind:2.14.1")
-    include( implementation "com.fasterxml.jackson.core:jackson-annotations:2.14.1")
+    include(implementation "com.fasterxml.jackson.core:jackson-core:2.14.1")
+    include(implementation "com.fasterxml.jackson.core:jackson-databind:2.14.1")
+    include(implementation "com.fasterxml.jackson.core:jackson-annotations:2.14.1")
 
-    include ( implementation'de.exlll:configlib-yaml:4.5.0')
+    include(implementation 'de.exlll:configlib-yaml:4.5.0')
     include('de.exlll:configlib-core:4.5.0')
     include('org.snakeyaml:snakeyaml-engine:2.7')
 }
@@ -80,6 +80,32 @@ processResources {
     }
 }
 
+
+def viteDir = "${projectDir}/client"
+def viteDistDir = "${viteDir}/dist"
+def modResourcesDir = "${projectDir}/src/main/resources/static" // Adjust this path if necessary
+
+task buildVite(type: Exec) {
+    workingDir viteDir
+    commandLine 'C:/Program Files/nodejs/npm.cmd', 'run', 'build'
+    doLast {
+        println "Vite build complete."
+    }
+}
+
+task copyViteBuild(type: Copy) {
+    dependsOn buildVite
+    from viteDistDir
+    into modResourcesDir
+    doLast {
+        println "Copied Vite build to resources directory."
+    }
+}
+
+compileJava.dependsOn(copyViteBuild)
+processResources.dependsOn(copyViteBuild)
+
+
 def targetJavaVersion = 21
 tasks.withType(JavaCompile).configureEach {
     // ensure that the encoding is set to UTF-8, no matter what the system default is
@@ -91,6 +117,8 @@ tasks.withType(JavaCompile).configureEach {
         it.options.release.set(targetJavaVersion)
     }
 }
+
+build.dependsOn copyViteBuild
 
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
@@ -105,7 +133,7 @@ java {
 
 jar {
     from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}"}
+        rename { "${it}_${project.archivesBaseName}" }
     }
 }
 
@@ -132,24 +160,6 @@ jar {
 //}
 
 
-// configure the maven publication
-publishing {
-    publications {
-        create("mavenJava", MavenPublication) {
-            artifactId = project.archives_base_name
-            from components.java
-        }
-    }
-
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-    repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
-    }
-}
-
 tasks.named('test', Test) {
     useJUnitPlatform()
 
@@ -159,3 +169,4 @@ tasks.named('test', Test) {
         events "passed"
     }
 }
+sourcesJar.dependsOn(copyViteBuild)

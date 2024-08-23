@@ -3,17 +3,17 @@ package com.tropicoss.guardian.database.dao.impl;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.database.dao.UserDAO;
 import com.tropicoss.guardian.database.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class UserDAOImpl implements UserDAO {
-    private final DatabaseManager databaseManager;
     public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
+    private final DatabaseManager databaseManager;
 
 
     public UserDAOImpl(DatabaseManager databaseManager) {

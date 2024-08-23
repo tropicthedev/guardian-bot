@@ -13,8 +13,7 @@ public abstract class EntityDeathMixin {
 
     @Inject(method = "onDeath", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;sendEntityStatus("
             + "Lnet/minecraft/entity/Entity;B)V"))
-    public void onDeath(DamageSource source, CallbackInfo ci)
-    {
+    public void onDeath(DamageSource source, CallbackInfo ci) {
         EntityDeathEvents.EVENT.invoker().onEntityDeath((LivingEntity) (Object) this, source);
     }
 }

@@ -1,13 +1,13 @@
 package com.tropicoss.guardian.networking;
 
-import com.tropicoss.guardian.Guardian;
 import com.tropicoss.guardian.networking.messaging.MessageHandler;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
 
-import static com.tropicoss.guardian.Guardian.*;
+import static com.tropicoss.guardian.Guardian.LOGGER;
+import static com.tropicoss.guardian.Guardian.MINECRAFT_SERVER;
 
 public class Client extends WebSocketClient {
 

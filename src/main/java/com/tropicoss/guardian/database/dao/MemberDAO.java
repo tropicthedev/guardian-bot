@@ -8,8 +8,12 @@ import java.util.List;
 
 public interface MemberDAO {
     void addMember(Member member) throws SQLException;
+
     Member getMemberById(String memberId) throws SQLException;
+
     List<Member> getAllMembers() throws SQLException;
-    void updateMember(Member member);
-    void deleteMember(String memberId);
+
+    void updateMember(Member member) throws SQLException;
+
+    void deleteMember(String memberId) throws SQLException;
 }

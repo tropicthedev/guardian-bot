@@ -10,9 +10,10 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public User() {}
+    public User() {
+    }
 
-    public User(String userId, String username, String discriminator){
+    public User(String userId, String username, String discriminator) {
         this.userId = userId;
         this.username = username;
         this.discriminator = discriminator;
@@ -24,44 +25,44 @@ public class User {
         return userId;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getDiscriminator() {
-        return discriminator;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public void setDiscriminator(String discriminator) {
-        this.discriminator = discriminator;
+    public String getUsername() {
+        return username;
     }
 
     public void setUsername(String username) {
         this.username = username;
     }
 
+    public String getDiscriminator() {
+        return discriminator;
+    }
+
+    public void setDiscriminator(String discriminator) {
+        this.discriminator = discriminator;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
     public void setUpdatedAt(LocalDateTime updatedAt) {

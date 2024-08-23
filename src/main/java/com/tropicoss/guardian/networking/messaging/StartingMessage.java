@@ -4,8 +4,8 @@ import net.minecraft.text.Text;
 
 public class StartingMessage implements WebsocketMessage {
 
-    public String origin;
     private final String type = "starting";
+    public String origin;
 
     public StartingMessage(String origin) {
         this.origin = origin;

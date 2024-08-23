@@ -9,7 +9,8 @@ public class Session {
     private LocalDateTime sessionStart;
     private LocalDateTime sessionEnd;
 
-    public Session() {}
+    public Session() {
+    }
 
     public Session(int sessionId, int memberId, int serverId) {
         this.sessionId = sessionId;
@@ -22,39 +23,39 @@ public class Session {
         return sessionId;
     }
 
-    public int getMemberId() {
-        return memberId;
-    }
-
-    public int getServerId() {
-        return serverId;
-    }
-
     public void setSessionId(int sessionId) {
         this.sessionId = sessionId;
+    }
+
+    public int getMemberId() {
+        return memberId;
     }
 
     public void setMemberId(int memberId) {
         this.memberId = memberId;
     }
 
+    public int getServerId() {
+        return serverId;
+    }
+
     public void setServerId(int serverId) {
         this.serverId = serverId;
-    }
-
-    public void setSessionEnd(LocalDateTime sessionEnd) {
-        this.sessionEnd = sessionEnd;
-    }
-
-    public void setSessionStart(LocalDateTime sessionStart) {
-        this.sessionStart = sessionStart;
     }
 
     public LocalDateTime getSessionStart() {
         return sessionStart;
     }
 
+    public void setSessionStart(LocalDateTime sessionStart) {
+        this.sessionStart = sessionStart;
+    }
+
     public LocalDateTime getSessionEnd() {
         return sessionEnd;
+    }
+
+    public void setSessionEnd(LocalDateTime sessionEnd) {
+        this.sessionEnd = sessionEnd;
     }
 }

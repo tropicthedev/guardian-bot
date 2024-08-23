@@ -8,7 +8,8 @@ public class Interview {
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
-    public Interview() {}
+    public Interview() {
+    }
 
     public Interview(long interviewId, long applicationId) {
         this.interviewId = interviewId;
@@ -21,17 +22,25 @@ public class Interview {
         return interviewId;
     }
 
-    public long getApplicationId() {
-        return applicationId;
-    }
-
     public void setInterviewId(int interviewId) {
         this.interviewId = interviewId;
         this.modifiedAt = LocalDateTime.now();
     }
 
+    public long getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(int applicationId) {
+        this.applicationId = applicationId;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public LocalDateTime getModifiedAt() {
@@ -40,13 +49,5 @@ public class Interview {
 
     public void setModifiedAt(LocalDateTime modifiedAt) {
         this.modifiedAt = modifiedAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setApplicationId(int applicationId) {
-        this.applicationId = applicationId;
     }
 }

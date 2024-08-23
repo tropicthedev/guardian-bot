@@ -4,9 +4,8 @@ import net.minecraft.text.Text;
 
 public class StoppingMessage implements WebsocketMessage {
 
-    public String server;
-
     private final String type = "stopping";
+    public String server;
 
 
     public StoppingMessage(String server) {

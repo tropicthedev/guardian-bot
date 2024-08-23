@@ -6,9 +6,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Cache<K, V> {
+    private static Cache<?, ?> instance;
     private final ConcurrentHashMap<K, V> cache;
     private final ScheduledExecutorService scheduler;
-    private static Cache<?, ?> instance;
 
     private Cache() {
         this.cache = new ConcurrentHashMap<>();

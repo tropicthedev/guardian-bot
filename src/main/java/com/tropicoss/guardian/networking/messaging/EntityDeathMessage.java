@@ -2,12 +2,12 @@ package com.tropicoss.guardian.networking.messaging;
 
 import net.minecraft.text.Text;
 
-public class EntityDeathMessage implements WebsocketMessage{
+public class EntityDeathMessage implements WebsocketMessage {
 
+    public final String origin;
     private final String type = "death";
     public String message;
     public String coordinates;
-    public final String origin;
 
     public EntityDeathMessage(String message, String coordinates, String origin) {
         this.message = message;

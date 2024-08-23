@@ -4,11 +4,9 @@ import net.minecraft.text.Text;
 
 public class StartedMessage implements WebsocketMessage {
 
-    public String origin;
-
-    public Long uptime;
-
     private final String type = "started";
+    public String origin;
+    public Long uptime;
 
     public StartedMessage(String origin, Long uptime) {
         this.origin = origin;

@@ -4,12 +4,11 @@
   "package": "com.tropicoss.guardian.minecraft.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-
   ],
   "server": [
     "EntityDeathMixin",
-    "PlayerDeathMixin",
-    "PlayerAdvancementTrackerMixin"
+    "PlayerAdvancementTrackerMixin",
+    "PlayerDeathMixin"
   ],
   "injectors": {
     "defaultRequire": 1

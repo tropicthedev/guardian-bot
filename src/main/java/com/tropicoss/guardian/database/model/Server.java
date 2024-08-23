@@ -9,7 +9,8 @@ public class Server {
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
-    public Server() {}
+    public Server() {
+    }
 
     public Server(int serverId, String name, String token) {
         this.serverId = serverId;
@@ -23,22 +24,22 @@ public class Server {
         return serverId;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
     public void setServerId(int serverId) {
         this.serverId = serverId;
         this.modifiedAt = LocalDateTime.now();
     }
 
+    public String getName() {
+        return name;
+    }
+
     public void setName(String name) {
         this.name = name;
         this.modifiedAt = LocalDateTime.now();
+    }
+
+    public String getToken() {
+        return token;
     }
 
     public void setToken(String token) {
@@ -50,12 +51,12 @@ public class Server {
         return createdAt;
     }
 
-    public LocalDateTime getModifiedAt() {
-        return modifiedAt;
-    }
-
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getModifiedAt() {
+        return modifiedAt;
     }
 
     public void setModifiedAt(LocalDateTime modifiedAt) {

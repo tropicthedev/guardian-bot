@@ -3,18 +3,17 @@ package com.tropicoss.guardian.database.dao.impl;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.database.dao.SessionDAO;
 import com.tropicoss.guardian.database.model.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 public class SessionDAOImpl implements SessionDAO {
-    private final DatabaseManager databaseManager;
     public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
+    private final DatabaseManager databaseManager;
 
 
     public SessionDAOImpl(DatabaseManager databaseManager) {

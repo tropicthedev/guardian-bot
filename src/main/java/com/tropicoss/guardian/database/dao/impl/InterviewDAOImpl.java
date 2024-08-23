@@ -3,25 +3,24 @@ package com.tropicoss.guardian.database.dao.impl;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.database.dao.InterviewDAO;
 import com.tropicoss.guardian.database.model.Interview;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 public class InterviewDAOImpl implements InterviewDAO {
-    private static Connection connection = null;
     public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
+    private static Connection connection = null;
 
     public InterviewDAOImpl(Connection connection) {
         InterviewDAOImpl.connection = connection;
     }
 
-    public InterviewDAOImpl() throws SQLException{
-        connection =  DatabaseManager.getConnection();
+    public InterviewDAOImpl() throws SQLException {
+        connection = DatabaseManager.getConnection();
     }
 
 

@@ -3,13 +3,12 @@ package com.tropicoss.guardian.database.dao.impl;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.database.dao.MemberDAO;
 import com.tropicoss.guardian.database.model.Member;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MemberDAOImpl implements MemberDAO {
     public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
@@ -20,7 +19,7 @@ public class MemberDAOImpl implements MemberDAO {
     }
 
     public MemberDAOImpl() throws SQLException {
-        connection =  DatabaseManager.getConnection();
+        connection = DatabaseManager.getConnection();
     }
 
     @Override
@@ -41,8 +40,7 @@ public class MemberDAOImpl implements MemberDAO {
             statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeStatement(statement);
         }
     }
@@ -71,8 +69,7 @@ public class MemberDAOImpl implements MemberDAO {
         } catch (SQLException e) {
             connection.rollback();
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeResultSet(statement.getResultSet());
             DatabaseManager.closeStatement(statement);
         }
@@ -104,8 +101,7 @@ public class MemberDAOImpl implements MemberDAO {
             }
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeResultSet(statement.getResultSet());
             DatabaseManager.closeStatement(statement);
         }
@@ -114,34 +110,46 @@ public class MemberDAOImpl implements MemberDAO {
     }
 
     @Override
-    public void updateMember(Member member) {
+    public void updateMember(Member member) throws SQLException {
         String sql = "UPDATE members SET discordId = ?, isAdmin = ?, modifiedAt = ? WHERE memberId = ?";
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement statement = null;
 
-            stmt.setString(1, member.getDiscordId());
-            stmt.setBoolean(2, member.getIsAdmin());
-            stmt.setTimestamp(3, Timestamp.valueOf(member.getModifiedAt()));
-            stmt.setString(4, member.getMemberId());
+        try {
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, member.getDiscordId());
+            statement.setBoolean(2, member.getIsAdmin());
+            statement.setTimestamp(3, Timestamp.valueOf(member.getModifiedAt()));
+            statement.setString(4, member.getMemberId());
 
-            stmt.executeUpdate();
+            statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
+        }
+
+       finally {
+            DatabaseManager.closeResultSet(statement.getResultSet());
+            DatabaseManager.closeStatement(statement);
         }
     }
 
     @Override
-    public void deleteMember(String memberId) {
+    public void deleteMember(String memberId) throws SQLException {
         String sql = "DELETE FROM members WHERE memberId = ?";
 
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement statement = null;
 
-            stmt.setString(1, memberId);
-            stmt.executeUpdate();
+        try {
+            statement = connection.prepareStatement(sql);
+
+            statement.setString(1, memberId);
+            statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
+        }
+        finally {
+            DatabaseManager.closeResultSet(statement.getResultSet());
+            DatabaseManager.closeStatement(statement);
         }
     }
 }

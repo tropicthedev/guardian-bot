@@ -11,8 +11,43 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class Config {
-    private static Config instance;
     private static final String DEFAULT_CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("config.yml").toString();
+    private static Config instance;
+    private MainConfiguration config;
+
+    private Config() {
+        loadConfig(DEFAULT_CONFIG_PATH);
+    }
+
+    public static synchronized Config getInstance() {
+        if (instance == null) {
+            instance = new Config();
+        }
+        return instance;
+    }
+
+    public MainConfiguration getConfig() {
+        return config;
+    }
+
+    public void saveConfig() {
+        saveConfig(DEFAULT_CONFIG_PATH);
+    }
+
+    public void saveConfig(String filePath) {
+        var configFile = Paths.get(filePath);
+        YamlConfigurations.save(configFile, MainConfiguration.class, config);
+    }
+
+    public void loadConfig(String filePath) {
+        var configFile = Paths.get(filePath);
+        if (Files.exists(configFile)) {
+            this.config = YamlConfigurations.load(configFile, MainConfiguration.class);
+        } else {
+            this.config = new MainConfiguration();
+            saveConfig(filePath);
+        }
+    }
 
     // Create the Server configuration
     @Configuration
@@ -39,7 +74,7 @@ public final class Config {
     }
 
     @Configuration
-    public static class WelcomeConfiguration{
+    public static class WelcomeConfiguration {
         private String channel = "channel-id";
         private String message = "message-id";
 
@@ -126,12 +161,12 @@ public final class Config {
             return inactivityThreshold;
         }
 
-        public String getRole() {
-            return role;
-        }
-
         public void setInactivityThreshold(int inactivityThreshold) {
             this.inactivityThreshold = inactivityThreshold;
+        }
+
+        public String getRole() {
+            return role;
         }
 
         public void setRole(String role) {
@@ -163,36 +198,36 @@ public final class Config {
         @Comment("IMPORTANT!! Each item in this list must not be longer than 100 characters long or you will have issues with the embed")
         private List<String> denyReasons = new ArrayList<>();
 
-        public void setTimeout(int timeout) {
-            this.timeout = timeout;
-        }
-
         public int getTimeout() {
             return timeout;
         }
 
-        public void setChannel(String channel) {
-            this.channel = channel;
+        public void setTimeout(int timeout) {
+            this.timeout = timeout;
         }
 
         public String getChannel() {
             return channel;
         }
 
-        public void setQuestions(List<String> questions) {
-            this.questions = questions;
+        public void setChannel(String channel) {
+            this.channel = channel;
         }
 
         public List<String> getQuestions() {
             return questions;
         }
 
-        public void setDenyReasons(List<String> denyReasons) {
-            this.denyReasons = denyReasons;
+        public void setQuestions(List<String> questions) {
+            this.questions = questions;
         }
 
         public List<String> getDenyReasons() {
             return denyReasons;
+        }
+
+        public void setDenyReasons(List<String> denyReasons) {
+            this.denyReasons = denyReasons;
         }
     }
 
@@ -280,7 +315,7 @@ public final class Config {
         }
 
         public InterviewConfiguration getInterview() {
-            return  interview;
+            return interview;
         }
 
         public void setInterview(InterviewConfiguration interview) {
@@ -293,42 +328,6 @@ public final class Config {
 
         public void setMember(MemberConfiguration member) {
             this.member = member;
-        }
-    }
-
-    private MainConfiguration config;
-
-    private Config() {
-        loadConfig(DEFAULT_CONFIG_PATH);
-    }
-
-    public static synchronized Config getInstance() {
-        if (instance == null) {
-            instance = new Config();
-        }
-        return instance;
-    }
-
-    public MainConfiguration getConfig() {
-        return config;
-    }
-
-    public void saveConfig() {
-        saveConfig(DEFAULT_CONFIG_PATH);
-    }
-
-    public void saveConfig(String filePath) {
-        var configFile = Paths.get(filePath);
-        YamlConfigurations.save(configFile, MainConfiguration.class, config);
-    }
-
-    public void loadConfig(String filePath) {
-        var configFile = Paths.get(filePath);
-        if (Files.exists(configFile)) {
-            this.config = YamlConfigurations.load(configFile, MainConfiguration.class);
-        } else {
-            this.config = new MainConfiguration();
-            saveConfig(filePath);
         }
     }
 }

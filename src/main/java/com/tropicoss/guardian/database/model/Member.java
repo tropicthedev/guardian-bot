@@ -9,7 +9,8 @@ public class Member {
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
-    public Member() {}
+    public Member() {
+    }
 
     public Member(String memberId, String discordId, Boolean isAdmin) {
         this.memberId = memberId;
@@ -23,40 +24,41 @@ public class Member {
         return memberId;
     }
 
-    public String getDiscordId() {
-        return discordId;
-    }
-    public Boolean getIsAdmin() {
-        return isAdmin;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getModifiedAt() {
-        return modifiedAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setModifiedAt(LocalDateTime modifiedAt) {
-        this.modifiedAt = modifiedAt;
-    }
-
     public void setMemberId(String memberId) {
         this.memberId = memberId;
         this.modifiedAt = LocalDateTime.now();
+    }
+
+    public String getDiscordId() {
+        return discordId;
+    }
+
+    public void setDiscordId(String discordId) {
+        this.discordId = discordId;
+        this.modifiedAt = LocalDateTime.now();
+    }
+
+    public Boolean getIsAdmin() {
+        return isAdmin;
     }
 
     public void setIsAdmin(Boolean isAdmin) {
         this.isAdmin = isAdmin;
     }
 
-    public void setDiscordId(String discordId) {
-        this.discordId = discordId;
-        this.modifiedAt = LocalDateTime.now();
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getModifiedAt() {
+        return modifiedAt;
+    }
+
+    public void setModifiedAt(LocalDateTime modifiedAt) {
+        this.modifiedAt = modifiedAt;
     }
 }

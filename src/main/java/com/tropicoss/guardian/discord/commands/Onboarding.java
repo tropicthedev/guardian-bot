@@ -6,19 +6,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.dao.InterviewDAO;
 import com.tropicoss.guardian.database.dao.InterviewResponseDAO;
+import com.tropicoss.guardian.database.dao.impl.ApplicationDAOImpl;
 import com.tropicoss.guardian.database.dao.impl.ApplicationResponseDAOImpl;
 import com.tropicoss.guardian.database.dao.impl.InterviewDAOImpl;
 import com.tropicoss.guardian.database.dao.impl.InterviewResponseDAOImpl;
 import com.tropicoss.guardian.database.model.*;
+import com.tropicoss.guardian.ids.ButtonIds;
 import com.tropicoss.guardian.ids.ModalIds;
 import com.tropicoss.guardian.utils.Cache;
-import com.tropicoss.guardian.database.dao.impl.ApplicationDAOImpl;
-import com.tropicoss.guardian.ids.ButtonIds;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.MessageEmbed.Field;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -30,7 +30,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.entities.MessageEmbed.Field;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
@@ -38,8 +37,6 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 import org.jetbrains.annotations.NotNull;
-
-import static com.tropicoss.guardian.Guardian.LOGGER;
 
 import java.awt.*;
 import java.sql.SQLException;
@@ -50,6 +47,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import static com.tropicoss.guardian.Guardian.LOGGER;
 
 public class Onboarding extends ListenerAdapter {
     private final Config config = Config.getInstance();
@@ -68,7 +67,7 @@ public class Onboarding extends ListenerAdapter {
         try {
             if (Objects.requireNonNull(event.getUser()).isBot()) return;
 
-            if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+            if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
                 event.reply("Insufficient Permissions").queue();
                 return;
             }
@@ -81,11 +80,11 @@ public class Onboarding extends ListenerAdapter {
                 handleAcceptCommand(event);
             }
 
-            if(event.getName().equals("deny")) {
+            if (event.getName().equals("deny")) {
                 handleDenyCommand(event);
             }
         } catch (RuntimeException e) {
-            LOGGER.error("An error occurred while running command {} {}",event.getName(), e.getMessage());
+            LOGGER.error("An error occurred while running command {} {}", event.getName(), e.getMessage());
 
             event.reply("An error occurred while running command, please try again")
                     .setEphemeral(true)
@@ -95,7 +94,7 @@ public class Onboarding extends ListenerAdapter {
 
     private void handleAcceptCommand(SlashCommandInteractionEvent event) {
 
-        if(event.getChannel().getType() != ChannelType.GUILD_PRIVATE_THREAD) {
+        if (event.getChannel().getType() != ChannelType.GUILD_PRIVATE_THREAD) {
             event.reply("This can only be ran in a private guild thread (Interview Thread)").queue();
             return;
         }
@@ -112,12 +111,12 @@ public class Onboarding extends ListenerAdapter {
 
             Member member = event.getGuild().getMemberById(memberId);
 
-            if(member == null) {
+            if (member == null) {
                 event.reply("Member could not be found, are they still in the server ?").setEphemeral(true).queue();
                 return;
             }
 
-            TextChannel channel = guild.getChannelById(TextChannel.class ,config.getConfig().getMember().getChannel());
+            TextChannel channel = guild.getChannelById(TextChannel.class, config.getConfig().getMember().getChannel());
 
             if (channel == null) {
                 event.reply("The guild channel could not be found, ensure it exists and the correct id is present in the config file")
@@ -128,8 +127,7 @@ public class Onboarding extends ListenerAdapter {
 
             Role role = guild.getRoleById(config.getConfig().getMember().getRole());
 
-            if(role == null)
-            {
+            if (role == null) {
                 event.reply("The member role could not be found, ensure it exists and the correct id is present in the config file")
                         .setEphemeral(true)
                         .queue();
@@ -179,7 +177,8 @@ public class Onboarding extends ListenerAdapter {
                 .queue();
     }
 
-    private void handleDenyCommand(SlashCommandInteractionEvent event) {}
+    private void handleDenyCommand(SlashCommandInteractionEvent event) {
+    }
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
@@ -190,7 +189,8 @@ public class Onboarding extends ListenerAdapter {
             case ButtonIds.ACCEPT -> handleAcceptButtonInteraction(event);
             case ButtonIds.RESET -> handleResetButtonInteraction(event);
             case ButtonIds.BAN -> handleBanButtonInteraction(event);
-            case null, default -> {}
+            case null, default -> {
+            }
         }
     }
 
@@ -349,7 +349,7 @@ public class Onboarding extends ListenerAdapter {
 
     private void handleAcceptButtonInteraction(ButtonInteraction event) {
         try {
-            if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+            if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
                 event.reply("Insufficient Permissions").queue();
                 return;
             }
@@ -452,7 +452,7 @@ public class Onboarding extends ListenerAdapter {
     public void onStringSelectInteraction(StringSelectInteractionEvent event) {
         if (event.getComponentId().equals(ButtonIds.DENY) && !event.getMember().getUser().isBot()) {
 
-            if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+            if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
                 event.reply("Insufficient Permissions").queue();
                 return;
             }
@@ -489,7 +489,7 @@ public class Onboarding extends ListenerAdapter {
     public void onModalInteraction(@NotNull ModalInteractionEvent event) {
         if (event.getModalId().equals(ModalIds.REASON)) {
 
-            if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+            if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
                 event.reply("Insufficient Permissions").queue();
                 return;
             }
@@ -507,7 +507,7 @@ public class Onboarding extends ListenerAdapter {
     }
 
     private void handleDeny(StringSelectInteractionEvent event, String reason) throws SQLException {
-        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+        if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
             event.reply("Insufficient Permissions").queue();
             return;
         }
@@ -566,7 +566,7 @@ public class Onboarding extends ListenerAdapter {
     }
 
     private void handleDeny(ModalInteractionEvent event, String reason) throws SQLException {
-        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+        if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
             event.reply("Insufficient Permissions").queue();
             return;
         }
@@ -640,7 +640,7 @@ public class Onboarding extends ListenerAdapter {
         Application application;
         Member member;
 
-        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+        if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
             event.reply("Insufficient Permissions").queue();
             return;
         }
@@ -663,7 +663,7 @@ public class Onboarding extends ListenerAdapter {
             return;
         }
 
-        if(applicationResponse.getStatus() == Status.ACCEPTED) {
+        if (applicationResponse.getStatus() == Status.ACCEPTED) {
             List<Role> memberRoles = member.getRoles();
 
             for (Role memberRole : memberRoles) {
@@ -682,7 +682,7 @@ public class Onboarding extends ListenerAdapter {
         MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
 
         EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.YELLOW).setFooter(
-                String.format("Application Reset by %s",member.getAsMention()));
+                String.format("Application Reset by %s", member.getAsMention()));
 
         event.deferEdit().queue();
 
@@ -694,7 +694,7 @@ public class Onboarding extends ListenerAdapter {
                         .addOptions(selectOptions)
                         .addOption("Custom", "Custom", "THIS WILL OVERWRITE ALL OTHER SELECTED OPTIONS")
                         .build()),
-                ActionRow.of( Button.primary(ButtonIds.ACCEPT, "Accept")
+                ActionRow.of(Button.primary(ButtonIds.ACCEPT, "Accept")
                                 .withEmoji(Emoji.fromFormatted("✅")),
                         Button.danger(ButtonIds.BAN, "Ban")
                                 .withEmoji(Emoji.fromFormatted("🦵")))
@@ -704,7 +704,7 @@ public class Onboarding extends ListenerAdapter {
     private void handleBanButtonInteraction(ButtonInteractionEvent event) {
         Application application;
 
-        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+        if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
             event.reply("Insufficient Permissions").queue();
             return;
         }
@@ -721,7 +721,7 @@ public class Onboarding extends ListenerAdapter {
 
         Member member = event.getGuild().getMemberById(application.getDiscordId());
 
-        if(member == null) {
+        if (member == null) {
             LOGGER.error("There was an error while getting the member to ban, are they still in the server ?");
 
             event.reply("There was an error while getting the member to ban, are they still in the server ?").setEphemeral(true).queue();
@@ -746,21 +746,11 @@ public class Onboarding extends ListenerAdapter {
         MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
 
         EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.RED).setFooter(
-                String.format("Application Banned by %s",member.getAsMention()));
+                String.format("Application Banned by %s", member.getAsMention()));
 
         event.deferEdit().queue();
 
         event.getMessage().editMessageEmbeds(embedBuilder.build()).setComponents().queue();
-    }
-
-    private class QuestionAnswers {
-        public String question;
-        public String answer;
-
-        public QuestionAnswers(String question, String answer) {
-            this.question = question;
-            this.answer = answer;
-        }
     }
 
     private String getConversationStateAsString(List<QuestionAnswers> state) {
@@ -782,6 +772,16 @@ public class Onboarding extends ListenerAdapter {
         } catch (Exception e) {
             LOGGER.error("Error while parsing Application Conversation {}", e.getMessage());
             return null;
+        }
+    }
+
+    private class QuestionAnswers {
+        public String question;
+        public String answer;
+
+        public QuestionAnswers(String question, String answer) {
+            this.question = question;
+            this.answer = answer;
         }
     }
 }

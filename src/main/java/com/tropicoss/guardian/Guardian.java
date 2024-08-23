@@ -7,16 +7,15 @@ import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.discord.Bot;
 import com.tropicoss.guardian.minecraft.Commands;
 import com.tropicoss.guardian.minecraft.event.AdvancementEvent;
-import com.tropicoss.guardian.minecraft.event.PlayerDeathEvents;
-import com.tropicoss.guardian.networking.messaging.*;
-import com.tropicoss.guardian.utils.PlayerInfoFetcher;
-import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import com.tropicoss.guardian.minecraft.event.EntityDeathEvents;
-
+import com.tropicoss.guardian.minecraft.event.PlayerDeathEvents;
 import com.tropicoss.guardian.networking.Client;
 import com.tropicoss.guardian.networking.Server;
+import com.tropicoss.guardian.networking.messaging.*;
+import com.tropicoss.guardian.utils.PlayerInfoFetcher;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -43,13 +42,13 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 
 public class Guardian implements DedicatedServerModInitializer {
-    public static Server SOCKET_SERVER;
-    public static Client SOCKET_CLIENT;
     private static final String MOD_ID = "Guardian";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public Config config = Config.getInstance();
+    public static Server SOCKET_SERVER;
+    public static Client SOCKET_CLIENT;
     public static MinecraftServer MINECRAFT_SERVER;
     private final Gson gson = new Gson();
+    public Config config = Config.getInstance();
 
     @Override
     public void onInitializeServer() {
@@ -66,8 +65,7 @@ public class Guardian implements DedicatedServerModInitializer {
                 }
             }
 
-            if(guardianConfigPath.toFile().exists())
-            {
+            if (guardianConfigPath.toFile().exists()) {
                 DatabaseManager.createDatabases();
             }
 
@@ -155,7 +153,8 @@ public class Guardian implements DedicatedServerModInitializer {
             long uptime = rb.getUptime();
 
             switch (config.getConfig().getGeneric().getMode()) {
-                case "server", "standalone" -> Bot.getBotInstance().sendServerStartedMessage(config.getConfig().getGeneric().getName(), uptime);
+                case "server", "standalone" ->
+                        Bot.getBotInstance().sendServerStartedMessage(config.getConfig().getGeneric().getName(), uptime);
 
                 case "client" -> {
 
@@ -186,12 +185,12 @@ public class Guardian implements DedicatedServerModInitializer {
 
                 case "client" -> SOCKET_CLIENT.send(json);
 
-                case "standalone" -> Bot.getBotInstance().sendServerStoppingMessage(config.getConfig().getGeneric().getName());
+                case "standalone" ->
+                        Bot.getBotInstance().sendServerStoppingMessage(config.getConfig().getGeneric().getName());
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             try {
                 DatabaseManager.closeConnection();
             } catch (SQLException e) {
@@ -234,7 +233,7 @@ public class Guardian implements DedicatedServerModInitializer {
                     Bot.getBotInstance().shutdown();
                 }
             }
-        }catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             LOGGER.error("Error closing client: {}", e.getMessage());
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
@@ -248,7 +247,7 @@ public class Guardian implements DedicatedServerModInitializer {
 
         String json = gson.toJson(loginMessage);
 
-        switch(config.getConfig().getGeneric().getMode()) {
+        switch (config.getConfig().getGeneric().getMode()) {
             case "server" -> {
                 if (profile != null) {
                     Bot.getBotInstance().sendJoinMessage(profile, (config.getConfig().getGeneric().getName()));
@@ -274,7 +273,7 @@ public class Guardian implements DedicatedServerModInitializer {
 
         String json = gson.toJson(logoutMessage);
 
-        switch(config.getConfig().getGeneric().getMode()) {
+        switch (config.getConfig().getGeneric().getMode()) {
             case "server" -> {
                 if (profile != null) {
                     Bot.getBotInstance().sendLeaveMessage(profile, (config.getConfig().getGeneric().getName()));
@@ -301,12 +300,13 @@ public class Guardian implements DedicatedServerModInitializer {
 
             switch (config.getConfig().getGeneric().getMode()) {
                 case "server" -> {
-                    Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(),(config.getConfig().getGeneric().getName()));
+                    Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), (config.getConfig().getGeneric().getName()));
 
                     SOCKET_SERVER.broadcast(json);
                 }
 
-                case "standalone" -> Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), (config.getConfig().getGeneric().getName()));
+                case "standalone" ->
+                        Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), (config.getConfig().getGeneric().getName()));
 
                 case "client" -> SOCKET_CLIENT.send(json);
             }
@@ -356,7 +356,8 @@ public class Guardian implements DedicatedServerModInitializer {
 
             case "client" -> SOCKET_CLIENT.send(json);
 
-            case "standalone" ->  Bot.getBotInstance().sendDeathMessage(config.getConfig().getGeneric().getName(), message, coordinates);
+            case "standalone" ->
+                    Bot.getBotInstance().sendDeathMessage(config.getConfig().getGeneric().getName(), message, coordinates);
         }
     }
 
@@ -384,14 +385,15 @@ public class Guardian implements DedicatedServerModInitializer {
 
             case "client" -> SOCKET_CLIENT.send(json);
 
-            case "standalone" ->  Bot.getBotInstance().sendDeathMessage(config.getConfig().getGeneric().getName(), message, coordinates);
+            case "standalone" ->
+                    Bot.getBotInstance().sendDeathMessage(config.getConfig().getGeneric().getName(), message, coordinates);
         }
     }
 
     public void onGrantCriterion(ServerPlayerEntity player, AdvancementEntry advancement, String criterion) {
         AdvancementDisplay advancementDisplay = advancement.value().display().get();
 
-        if(!advancementDisplay.shouldAnnounceToChat()) return;
+        if (!advancementDisplay.shouldAnnounceToChat()) return;
 
         AdvancementMessage advancementMessage = new AdvancementMessage(advancementDisplay.getTitle().getString(),
                 advancementDisplay.getDescription().getString(), player.getUuidAsString(),
@@ -399,7 +401,7 @@ public class Guardian implements DedicatedServerModInitializer {
 
         String json = new Gson().toJson(advancementMessage);
 
-        switch (config.getConfig().getGeneric().getName()){
+        switch (config.getConfig().getGeneric().getName()) {
             case "server" -> {
                 SOCKET_SERVER.broadcast(json);
 
@@ -408,7 +410,8 @@ public class Guardian implements DedicatedServerModInitializer {
 
             case "client" -> SOCKET_CLIENT.send(json);
 
-            case "standalone" -> Bot.getBotInstance().sendAchievementMessage(advancementMessage.getProfile(), advancementMessage.origin, advancementMessage.title, advancementMessage.description);
+            case "standalone" ->
+                    Bot.getBotInstance().sendAchievementMessage(advancementMessage.getProfile(), advancementMessage.origin, advancementMessage.title, advancementMessage.description);
         }
     }
 }

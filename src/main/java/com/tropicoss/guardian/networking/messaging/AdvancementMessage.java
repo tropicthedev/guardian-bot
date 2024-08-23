@@ -4,16 +4,13 @@ import com.tropicoss.guardian.utils.PlayerInfoFetcher;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.text.Text;
 
-public class AdvancementMessage implements WebsocketMessage{
-
-    private final String type = "advancement";
-    public String title;
-
-    public String description;
-
-    public String uuid;
+public class AdvancementMessage implements WebsocketMessage {
 
     public final String origin;
+    private final String type = "advancement";
+    public String title;
+    public String description;
+    public String uuid;
 
     public AdvancementMessage(String title, String description, String uuid, String origin) {
         this.title = title;
@@ -29,7 +26,7 @@ public class AdvancementMessage implements WebsocketMessage{
 
     @Override
     public String toConsoleString() {
-        return String.format("[%s] [%s] %s got an achievement: %s ", this.origin, this.title, getProfile().data.player.username , this.description);
+        return String.format("[%s] [%s] %s got an achievement: %s ", this.origin, this.title, getProfile().data.player.username, this.description);
     }
 
     @Override
