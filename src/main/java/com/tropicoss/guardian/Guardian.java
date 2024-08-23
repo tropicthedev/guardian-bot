@@ -2,6 +2,7 @@ package com.tropicoss.guardian;
 
 
 import com.google.gson.Gson;
+import com.tropicoss.guardian.api.JavalinServer;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.discord.Bot;
@@ -100,8 +101,10 @@ public class Guardian implements DedicatedServerModInitializer {
 
     public void onServerStarting(MinecraftServer server) {
         MINECRAFT_SERVER = server;
+        JavalinServer javalinServer = new JavalinServer();
 
         try {
+            javalinServer.startServer(config.getConfig().getServer().getPort());
             switch (config.getConfig().getGeneric().getMode()) {
                 case "server" -> {
                     Bot.getBotInstance().sendServerStartingMessage(config.getConfig().getGeneric().getMode());
