@@ -6,65 +6,19 @@ export const Route = createLazyFileRoute('/')({
 
 function Index() {
     return (
-        <div className="bg-no-repeat bg-cover bg-center relative ">
-            <div className="absolute bg-gradient-to-b from-green-500 to-green-400 opacity-75 inset-0 z-0"></div>
-            <div className="min-h-screen sm:flex sm:flex-row mx-0 justify-center">
-                <div className="flex-col flex  self-center p-10 sm:max-w-5xl xl:max-w-2xl  z-10">
-                    <div className="self-start hidden lg:flex flex-col  text-white">
-                        <img src="" className="mb-3" />
-                        <h1 className="mb-3 font-bold text-5xl">Welcome to Guardian </h1>
-                        <p className="pr-3">Guardian is a Discord bot designed to simplify the management of Minecraft server applications, interviews, and whitelist management.</p>
+        <main className="w-full h-screen flex flex-col items-center justify-center px-4">
+            <div className="max-w-sm w-full text-gray-600">
+                <div className="text-center">
+                    <img src="../src/assets/guardian.png" width={150} className="mx-auto rounded-full" />
+                    <div className="mt-5 space-y-2">
+                        <h3 className="text-white text-2xl font-bold sm:text-3xl">Welcome to Guardian</h3>
                     </div>
                 </div>
-                <div className="flex justify-center self-center  z-10">
-                    <div className="p-12 bg-base-200 mx-auto rounded-2xl w-100 ">
-                        <div className="mb-4">
-                            <h3 className="font-semibold text-2xl text-gray-100">Sign In </h3>
-                            <p className="text-gray-300">Please sign in to your account.</p>
-                        </div>
-
-                        <div className="space-y-5">
-                            <button type="submit" className="w-full flex justify-center bg-blue-700  hover:bg-blue-500 text-gray-100 p-3  rounded-full tracking-wide font-semibold  shadow-lg cursor-pointer transition ease-in duration-500">
-                                Login With Discord
-                            </button>
-                            <div className="divider"></div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-300 tracking-wide">Email</label>
-                                <input className=" w-full text-base px-4 py-2 border  border-gray-300 rounded-lg focus:outline-none focus:border-green-400" type="" placeholder="mail@gmail.com" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="mb-5 text-sm font-medium text-gray-300 tracking-wide">
-                                    Password
-                                </label>
-                                <input className="w-full content-center text-base px-4 py-2 border  border-gray-300 rounded-lg focus:outline-none focus:border-green-400" type="" placeholder="Enter your password" />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                    <input id="remember_me" name="remember_me" type="checkbox" className="h-4 w-4 bg-blue-500 focus:ring-blue-400 border-gray-300 rounded" />
-                                    <label htmlFor="remember_me" className="ml-2 block text-sm text-gray-300">
-                                        Remember me
-                                    </label>
-                                </div>
-                                <div className="text-sm">
-                                    <a href="#" className="text-green-400 hover:text-green-500">
-                                        Forgot your password?
-                                    </a>
-                                </div>
-                            </div>
-                            <div>
-                                <button type="submit" className="w-full flex justify-center bg-green-400  hover:bg-green-500 text-gray-100 p-3  rounded-full tracking-wide font-semibold  shadow-lg cursor-pointer transition ease-in duration-500">
-                                    Sign in
-                                </button>
-                            </div>
-                        </div>
-                        <div className="pt-5 text-center text-gray-400 text-xs">
-                            <span>
-                                Copyright © 2021-2022
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                <button className="w-full flex items-center justify-center gap-x-3 py-2.5 mt-5 border rounded-lg text-lg text-white font-medium hover:bg-gray-50 duration-150 active:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36" height={30}><path fill="#5865f2" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z" /></svg>
+                    Continue with Discord
+                </button>
             </div>
-        </div>
+        </main>
     )
 }
