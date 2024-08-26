@@ -11,6 +11,7 @@ import {
 import mockData from '../../data.json';
 import React from 'react';
 import { ScrollArea } from '../scroll-area';
+import { HiChevronDoubleLeft, HiChevronLeft, HiChevronRight, HiChevronDoubleRight } from 'react-icons/hi';
 
 type Person = {
     id: number;
@@ -34,7 +35,7 @@ const columns = [
     columnHelper.accessor((row) => row.status, {
         id: 'action',
         cell: () => <div className="dropdown">
-            <div tabIndex={0} role="button" className="btn m-1">Click</div>
+            <div tabIndex={0} role="button" className="btn btn-primary m-1 text-white">Click</div>
             <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
                 <li><a className='text-lg font-semibold'>Accept</a></li>
                 <li><a className='text-lg font-semibold'>Deny</a></li>
@@ -130,7 +131,7 @@ export default function DataTable() {
                 <div className="sm:mr-auto sm:mb-0 mb-2">
                     <span className="mr-2">Items per page</span>
                     <select
-                        className="border p-2 rounded w-20"
+                        className="p-2 rounded w-20 select select-bordered select-lg"
                         value={table.getState().pagination.pageSize}
                         onChange={(e) => {
                             table.setPageSize(Number(e.target.value));
@@ -149,14 +150,14 @@ export default function DataTable() {
                         onClick={() => table.setPageIndex(0)}
                         disabled={!table.getCanPreviousPage()}
                     >
-                        {'<<'}
+                        <HiChevronDoubleLeft />
                     </button>
                     <button
                         className="btn btn-md btn-primary text-lg text-white"
                         onClick={() => table.previousPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
-                        {'<'}
+                        <HiChevronLeft />
                     </button>
                     <span className="flex items-center gap-2">
                         <input
@@ -168,7 +169,7 @@ export default function DataTable() {
                                 const page = e.target.value ? Number(e.target.value) - 1 : 0;
                                 table.setPageIndex(page);
                             }}
-                            className="border p-2 rounded w-16 text-center"
+                            className="input input-bordered p-2 rounded w-16 text-center"
                         />
                         of {table.getPageCount()}
                     </span>
@@ -177,14 +178,14 @@ export default function DataTable() {
                         onClick={() => table.nextPage()}
                         disabled={!table.getCanNextPage()}
                     >
-                        {'>'}
+                        <HiChevronRight />
                     </button>
                     <button
                         className="btn btn-md btn-primary text-lg text-white"
                         onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                         disabled={!table.getCanNextPage()}
                     >
-                        {'>>'}
+                        <HiChevronDoubleRight />
                     </button>
                 </div>
             </div>
