@@ -10,11 +10,14 @@ public class JavalinServer {
     public JavalinServer() {
         // Initialize Javalin
         app = Javalin.create(config -> {
+            config.spaRoot.addFile("/", "/static/index.html");
+
             config.staticFiles.add(staticFiles -> {
-                staticFiles.directory = "/static"; // The folder inside resources to serve files from
+                staticFiles.directory = "/static";
                 staticFiles.location = Location.CLASSPATH;
             });
-        });
+
+        }).get("/api/*", ctx -> ctx.status(400));
     }
 
     // Method to start the server
@@ -27,11 +30,5 @@ public class JavalinServer {
     public void stopServer() {
         app.stop();
         System.out.println("Javalin server stopped.");
-    }
-
-    // Optional: Add routes or other configurations here
-    public void addRoutes() {
-        app.get("/", ctx -> ctx.result("Hello, Javalin!"));
-        // Add more routes here
     }
 }

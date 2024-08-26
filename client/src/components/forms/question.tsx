@@ -3,10 +3,10 @@ import { HiArrowSmUp, HiArrowSmDown, HiOutlineX } from "react-icons/hi";
 import { ScrollArea } from '../scroll-area';
 
 function QuestionForm() {
-    const [questions, setQuestions] = useState([]);
-    const [question, setQuestion] = useState('');
+    const [questions, setQuestions] = useState<string[]>([]);
+    const [question, setQuestion] = useState<string>('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         if (question.trim()) {
             setQuestions([...questions, question.trim()]);
@@ -14,14 +14,14 @@ function QuestionForm() {
         }
     };
 
-    const handleRearrange = (index, direction) => {
+    const handleRearrange = (index: number, direction: number) => {
         const newQuestions = [...questions];
         const [removed] = newQuestions.splice(index, 1);
         newQuestions.splice(index + direction, 0, removed);
         setQuestions(newQuestions);
     };
 
-    const handleDelete = (index) => {
+    const handleDelete = (index: number) => {
         const newQuestions = questions.filter((_, i) => i !== index);
         setQuestions(newQuestions);
     };
