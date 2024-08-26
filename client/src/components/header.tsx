@@ -7,6 +7,9 @@ export default function Header() {
     const isInterviews = location.pathname === '/interviews';
     const isServers = location.pathname === '/servers';
 
+    const serverName = "Tropics Server"
+    const currentUser = "Tropic"
+
     return (
         <div className="navbar bg-base-100">
             <div className="navbar-start">
@@ -39,7 +42,17 @@ export default function Header() {
                         <li className={`${isServers ? 'bg-blue-900 rounded-xl' : ''}`}><a href="/servers">Servers</a></li>
                     </ul>
                 </div>
-                <a className="btn btn-ghost text-xl">Server Name Here</a>
+
+                <a className="btn btn-ghost text-xl">
+                    <div tabIndex={0} role="button" className="avatar">
+                        <div className="w-10 rounded-full">
+                            <img
+                                alt={serverName}
+                                src="https://cdn.discordapp.com/icons/1048945862551818310/82de8248952122686c6f89eb092db897.webp" />
+                        </div>
+                    </div>
+                    {serverName}
+                </a>
             </div>
             <div className="navbar-center hidden lg:flex">
                 <ul className="menu menu-horizontal px-1 gap-2">
@@ -61,20 +74,13 @@ export default function Header() {
                     <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
                         <div className="w-10 rounded-full">
                             <img
-                                alt="Tailwind CSS Navbar component"
-                                src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+                                alt={currentUser}
+                                src="https://cdn.discordapp.com/avatars/203121159393247232/6239725d6f05f1e6ddfc8ba1c3c26520?size=1024" />
                         </div>
                     </div>
                     <ul
                         tabIndex={0}
                         className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-                        <li>
-                            <a className="justify-between">
-                                Profile
-                                <span className="badge">New</span>
-                            </a>
-                        </li>
-                        <li><a>Settings</a></li>
                         <li><a>Logout</a></li>
                     </ul>
                 </div>
