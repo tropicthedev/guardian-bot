@@ -5,6 +5,7 @@ import '../index.css'
 export const Route = createRootRoute({
     component: () => (
         <>
+
             <Outlet />
             <TanStackRouterDevtools />
         </>

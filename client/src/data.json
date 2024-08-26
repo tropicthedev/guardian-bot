@@ -1,0 +1,152 @@
+[
+    {
+        "id": 1,
+        "name": "ShadowFox#1234",
+        "status": "PENDING"
+    },
+    {
+        "id": 2,
+        "name": "LunaWolf#5678",
+        "status": "ACCEPTED"
+    },
+    {
+        "id": 3,
+        "name": "PixelMage#9012",
+        "status": "BANNED"
+    },
+    {
+        "id": 4,
+        "name": "FireDragon#3456",
+        "status": "PENDING"
+    },
+    {
+        "id": 5,
+        "name": "ElectricTiger#7890",
+        "status": "ACCEPTED"
+    },
+    {
+        "id": 6,
+        "name": "SilentPhantom#2345",
+        "status": "BANNED"
+    },
+    {
+        "id": 7,
+        "name": "GalaxyKnight#6789",
+        "status": "PENDING"
+    },
+    {
+        "id": 8,
+        "name": "MysticElf#0123",
+        "status": "ACCEPTED"
+    },
+    {
+        "id": 9,
+        "name": "DarkVortex#4567",
+        "status": "BANNED"
+    },
+    {
+        "id": 10,
+        "name": "QuantumNinja#8901",
+        "status": "PENDING"
+    },
+    {
+        "id": 1,
+        "name": "ShadowFox#1234",
+        "status": "PENDING"
+    },
+    {
+        "id": 2,
+        "name": "LunaWolf#5678",
+        "status": "ACCEPTED"
+    },
+    {
+        "id": 3,
+        "name": "PixelMage#9012",
+        "status": "BANNED"
+    },
+    {
+        "id": 4,
+        "name": "FireDragon#3456",
+        "status": "PENDING"
+    },
+    {
+        "id": 5,
+        "name": "ElectricTiger#7890",
+        "status": "ACCEPTED"
+    },
+    {
+        "id": 6,
+        "name": "SilentPhantom#2345",
+        "status": "BANNED"
+    },
+    {
+        "id": 7,
+        "name": "GalaxyKnight#6789",
+        "status": "PENDING"
+    },
+    {
+        "id": 8,
+        "name": "MysticElf#0123",
+        "status": "ACCEPTED"
+    },
+    {
+        "id": 9,
+        "name": "DarkVortex#4567",
+        "status": "BANNED"
+    },
+    {
+        "id": 10,
+        "name": "QuantumNinja#8901",
+        "status": "PENDING"
+    },
+    {
+        "id": 1,
+        "name": "ShadowFox#1234",
+        "status": "PENDING"
+    },
+    {
+        "id": 2,
+        "name": "LunaWolf#5678",
+        "status": "ACCEPTED"
+    },
+    {
+        "id": 3,
+        "name": "PixelMage#9012",
+        "status": "BANNED"
+    },
+    {
+        "id": 4,
+        "name": "FireDragon#3456",
+        "status": "PENDING"
+    },
+    {
+        "id": 5,
+        "name": "ElectricTiger#7890",
+        "status": "ACCEPTED"
+    },
+    {
+        "id": 6,
+        "name": "SilentPhantom#2345",
+        "status": "BANNED"
+    },
+    {
+        "id": 7,
+        "name": "GalaxyKnight#6789",
+        "status": "PENDING"
+    },
+    {
+        "id": 8,
+        "name": "MysticElf#0123",
+        "status": "ACCEPTED"
+    },
+    {
+        "id": 9,
+        "name": "DarkVortex#4567",
+        "status": "BANNED"
+    },
+    {
+        "id": 10,
+        "name": "QuantumNinja#8901",
+        "status": "PENDING"
+    }
+]
