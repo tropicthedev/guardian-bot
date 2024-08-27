@@ -12,6 +12,7 @@ import mockData from '../../data.json';
 import React from 'react';
 import { ScrollArea } from '../ui/scroll-area';
 import { HiChevronDoubleLeft, HiChevronLeft, HiChevronRight, HiChevronDoubleRight } from 'react-icons/hi';
+import { Link } from '@tanstack/react-router';
 
 type Person = {
     id: number;
@@ -34,17 +35,26 @@ const columns = [
     }),
     columnHelper.accessor((row) => row.status, {
         id: 'action',
-        cell: () => <div className="dropdown">
+        cell: (info) => <div className="dropdown">
             <div tabIndex={0} role="button" className="btn btn-primary m-1 text-white">More</div>
             <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
                 <li><a className='text-lg font-semibold'>Accept</a></li>
                 <li><a className='text-lg font-semibold'>Deny</a></li>
                 <li><a className='text-lg font-semibold'>Ban</a></li>
                 <div className="divider"></div>
+                <li>
+                    <Link
+                        to='/applications/$postId'
+                        params={{ postId: info.row.original.id.toString() }}
+                        className='text-lg font-semibold'
+                    >
+                        Details
+                    </Link>
+                </li>
                 <li><a className='text-lg font-semibold'>Copy Link</a></li>
 
             </ul>
-        </div>,
+        </div >,
         header: () => <span>Action</span>,
         enableSorting: false
     }),
