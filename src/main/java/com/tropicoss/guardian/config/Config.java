@@ -101,6 +101,8 @@ public final class Config {
         private String channel = "channel-id";
         private String token = "bot-token";
         private String guild = "guild-id";
+        private String clientId = "oauth-client-id";
+        private String redirectUri = "oauth-redirect-uri";
 
         // Getters and Setters
         public String getChannel() {
@@ -121,6 +123,20 @@ public final class Config {
 
         public String getGuild() {
             return guild;
+        }
+
+        public void setGuild(String guild) {
+            this.guild = guild;
+        }
+
+        public String getClientId() {return clientId;}
+
+        public void setClientId(String clientId) {this.clientId = clientId;}
+
+        public String getRedirectUri() {return  redirectUri;}
+
+        public void setRedirectUri(String clientSecret) {
+            this.redirectUri = clientSecret;
         }
     }
 

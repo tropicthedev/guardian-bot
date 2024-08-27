@@ -4,7 +4,6 @@ export default function Header() {
     const location = useLocation()
     const isPlayers = location.pathname === '/players';
     const isApplications = location.pathname === '/applications';
-    const isInterviews = location.pathname === '/interviews';
     const isServers = location.pathname === '/servers';
 
     const serverName = "Tropics Server"
@@ -33,13 +32,7 @@ export default function Header() {
                             tabIndex={0}
                             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
                             <li className={`${isPlayers ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}><a href="/players">Players</a></li>
-                            <li>
-                                <a>Onboarding</a>
-                                <ul className="p-2">
-                                    <li className={`${isApplications ? 'bg-blue-900 rounded-xl' : ''} text-lg`}><a href="/applications">Applications</a></li>
-                                    <li className={`${isInterviews ? 'bg-blue-900 rounded-xl' : ''} text-lg`}><a href="/interviews">Interviews</a></li>
-                                </ul>
-                            </li>
+                            <li className={`${isApplications ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}><a href="/applications">Applications</a></li>
                             <li className={`${isServers ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}><a href="/servers">Servers</a></li>
                         </ul>
                     </div>
@@ -58,15 +51,7 @@ export default function Header() {
                 <div className="navbar-center hidden lg:flex">
                     <ul className="menu menu-horizontal px-1 gap-2">
                         <li className={`${isPlayers ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}><a href="/players">Players</a></li>
-                        <li>
-                            <details>
-                                <summary className={`${isApplications || isInterviews ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}>Onboarding</summary>
-                                <ul className="p-2">
-                                    <li className={`${isApplications ? 'bg-blue-900 rounded-xl' : ''} text-lg`}><a href="/applications">Applications</a></li>
-                                    <li className={`${isInterviews ? 'bg-blue-900 rounded-xl' : ''} text-lg`}><a href="/interviews">Interviews</a></li>
-                                </ul>
-                            </details>
-                        </li>
+                        <li className={`${isApplications ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}><a href="/applications">Applications</a></li>
                         <li className={`${isServers ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}><a href="/servers">Servers</a></li>
                     </ul>
                 </div>

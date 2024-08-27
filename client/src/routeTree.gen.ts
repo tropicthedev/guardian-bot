@@ -14,13 +14,12 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as ApplicationsIndexImport } from './routes/applications/index'
-import { Route as ApplicationsCreateImport } from './routes/applications/create'
+import { Route as ApplicationsPostIdImport } from './routes/applications/$postId'
 
 // Create Virtual Routes
 
 const ServersLazyImport = createFileRoute('/servers')()
 const PlayersLazyImport = createFileRoute('/players')()
-const InterviewsLazyImport = createFileRoute('/interviews')()
 const IndexLazyImport = createFileRoute('/')()
 
 // Create/Update Routes
@@ -35,11 +34,6 @@ const PlayersLazyRoute = PlayersLazyImport.update({
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/players.lazy').then((d) => d.Route))
 
-const InterviewsLazyRoute = InterviewsLazyImport.update({
-  path: '/interviews',
-  getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/interviews.lazy').then((d) => d.Route))
-
 const IndexLazyRoute = IndexLazyImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
@@ -50,8 +44,8 @@ const ApplicationsIndexRoute = ApplicationsIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const ApplicationsCreateRoute = ApplicationsCreateImport.update({
-  path: '/applications/create',
+const ApplicationsPostIdRoute = ApplicationsPostIdImport.update({
+  path: '/applications/$postId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -64,13 +58,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexLazyImport
-      parentRoute: typeof rootRoute
-    }
-    '/interviews': {
-      id: '/interviews'
-      path: '/interviews'
-      fullPath: '/interviews'
-      preLoaderRoute: typeof InterviewsLazyImport
       parentRoute: typeof rootRoute
     }
     '/players': {
@@ -87,11 +74,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServersLazyImport
       parentRoute: typeof rootRoute
     }
-    '/applications/create': {
-      id: '/applications/create'
-      path: '/applications/create'
-      fullPath: '/applications/create'
-      preLoaderRoute: typeof ApplicationsCreateImport
+    '/applications/$postId': {
+      id: '/applications/$postId'
+      path: '/applications/$postId'
+      fullPath: '/applications/$postId'
+      preLoaderRoute: typeof ApplicationsPostIdImport
       parentRoute: typeof rootRoute
     }
     '/applications/': {
@@ -108,10 +95,9 @@ declare module '@tanstack/react-router' {
 
 export const routeTree = rootRoute.addChildren({
   IndexLazyRoute,
-  InterviewsLazyRoute,
   PlayersLazyRoute,
   ServersLazyRoute,
-  ApplicationsCreateRoute,
+  ApplicationsPostIdRoute,
   ApplicationsIndexRoute,
 })
 
@@ -124,18 +110,14 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/interviews",
         "/players",
         "/servers",
-        "/applications/create",
+        "/applications/$postId",
         "/applications/"
       ]
     },
     "/": {
       "filePath": "index.lazy.tsx"
-    },
-    "/interviews": {
-      "filePath": "interviews.lazy.tsx"
     },
     "/players": {
       "filePath": "players.lazy.tsx"
@@ -143,8 +125,8 @@ export const routeTree = rootRoute.addChildren({
     "/servers": {
       "filePath": "servers.lazy.tsx"
     },
-    "/applications/create": {
-      "filePath": "applications/create.tsx"
+    "/applications/$postId": {
+      "filePath": "applications/$postId.tsx"
     },
     "/applications/": {
       "filePath": "applications/index.tsx"

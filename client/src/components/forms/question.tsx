@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { HiArrowSmUp, HiArrowSmDown, HiOutlineX } from "react-icons/hi";
-import { ScrollArea } from '../scroll-area';
+import { ScrollArea } from '../ui/scroll-area';
 
-function QuestionForm() {
+export default function QuestionForm() {
     const [questions, setQuestions] = useState<string[]>([]);
     const [question, setQuestion] = useState<string>('');
 
@@ -83,5 +83,3 @@ function QuestionForm() {
         </div>
     );
 }
-
-export default QuestionForm;

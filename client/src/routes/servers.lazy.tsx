@@ -1,5 +1,4 @@
 import { createLazyFileRoute } from '@tanstack/react-router'
-import Header from '../components/header'
 
 export const Route = createLazyFileRoute('/servers')({
   component: ServersPage
@@ -7,6 +6,7 @@ export const Route = createLazyFileRoute('/servers')({
 
 function ServersPage() {
   return (
-    <Header />
+    <>
+    </>
   )
 }

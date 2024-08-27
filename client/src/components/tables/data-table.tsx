@@ -10,7 +10,7 @@ import {
 
 import mockData from '../../data.json';
 import React from 'react';
-import { ScrollArea } from '../scroll-area';
+import { ScrollArea } from '../ui/scroll-area';
 import { HiChevronDoubleLeft, HiChevronLeft, HiChevronRight, HiChevronDoubleRight } from 'react-icons/hi';
 
 type Person = {
@@ -35,7 +35,7 @@ const columns = [
     columnHelper.accessor((row) => row.status, {
         id: 'action',
         cell: () => <div className="dropdown">
-            <div tabIndex={0} role="button" className="btn btn-primary m-1 text-white">Click</div>
+            <div tabIndex={0} role="button" className="btn btn-primary m-1 text-white">More</div>
             <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
                 <li><a className='text-lg font-semibold'>Accept</a></li>
                 <li><a className='text-lg font-semibold'>Deny</a></li>
@@ -118,7 +118,7 @@ export default function DataTable() {
                         {table.getRowModel().rows.map((row) => (
                             <tr key={row.id} className="border-b hover:bg-slate-600">
                                 {row.getVisibleCells().map((cell) => (
-                                    <td key={cell.id} className="px-4 pt-[14px] pb-[18px]">
+                                    <td key={cell.id} className="px-4 pt-[7px] pb-[7px]">
                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                     </td>
                                 ))}

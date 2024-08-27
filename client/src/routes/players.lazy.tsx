@@ -1,5 +1,4 @@
 import { createLazyFileRoute } from '@tanstack/react-router'
-import Header from '../components/header'
 
 export const Route = createLazyFileRoute('/players')({
   component: PlayersPage
@@ -25,7 +24,7 @@ function ExampleCards({ uuid }: { uuid: string }) {
   for (let i = 0; i < totalElements; i++) {
     const currentStatus = status[Math.floor(Math.random() * status.length)];
     items.push(
-      <div className="card card-compact bg-base-100 w-80 shadow-xl" key={i}>
+      <div className="card card-compact card-bordered bg-base-100 w-80 shadow-xl" key={i}>
         <figure>
           <img
             src={`https://api.mineatar.io/body/full/${uuid}`}
@@ -40,7 +39,8 @@ function ExampleCards({ uuid }: { uuid: string }) {
               {currentStatus}
             </div>
           </h2>
-          <p className='font-bold'>Purge Date: December 31, 2024</p>
+          <p className='font-bold'>Join Date: December 1, 2024</p>
+          <p className='font-bold text-red-300'>Purge Date: December 31, 2024</p>
           <div className="card-actions justify-end">
             <button className='btn btn-secondary'>Vacation</button>
             <button className="btn btn-warning">Kick</button>
@@ -58,7 +58,6 @@ function ExampleCards({ uuid }: { uuid: string }) {
 function PlayersPage() {
   return (
     <>
-      <Header />
       <div className=' flex flex-wrap w-full justify-center'>
         <form>
           <input
