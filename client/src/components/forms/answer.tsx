@@ -9,6 +9,8 @@ interface Answer {
 }
 
 export default function AnswerForm() {
+    // @ts-expect-error This is temporary
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [answers, setAnswers] = useState<Answer[]>([
         {
             "id": 1,
@@ -76,6 +78,8 @@ export default function AnswerForm() {
             "answer": "I’m a huge cat lover, and I have a cat named Whiskers who often watches me play Minecraft!"
         }
     ]);
+    // @ts-expect-error This is temporary
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [denyReason, setDenyReason] = useState<string>('');
     const [customReason, setCustomReason] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -197,8 +201,8 @@ export default function AnswerForm() {
                                 </label>
                             </div>
                             <div className="modal-action">
-                                <button onClick={handleDenySubmit} className="btn btn-error">Submit</button>
-                                <label onClick={() => setIsModalOpen(false)} htmlFor="deny-modal" className="btn">Close</label>
+                                <button onClick={handleDenySubmit} className="btn btn-error text-white">Submit</button>
+                                <label onClick={() => setIsModalOpen(false)} htmlFor="deny-modal" className="btn text-white">Close</label>
                             </div>
                         </div>
                     </div>

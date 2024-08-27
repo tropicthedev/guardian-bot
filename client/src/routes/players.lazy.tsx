@@ -35,7 +35,7 @@ function ExampleCards({ uuid }: { uuid: string }) {
           <h2 className="card-title">
             Notch
             {/* @ts-expect-error Badge Colors */}
-            <div className={`badge ${statusMapping[currentStatus]}`}>
+            <div className={`badge ${statusMapping[currentStatus]} text-white`}>
               {currentStatus}
             </div>
           </h2>
