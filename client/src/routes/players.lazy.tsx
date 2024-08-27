@@ -40,11 +40,11 @@ function ExampleCards({ uuid }: { uuid: string }) {
             </div>
           </h2>
           <p className='font-bold'>Join Date: December 1, 2024</p>
-          <p className='font-bold text-red-300'>Purge Date: December 31, 2024</p>
+          <p className='font-bold'>Purge Date: December 31, 2024</p>
           <div className="card-actions justify-end">
-            <button className='btn btn-secondary'>Vacation</button>
-            <button className="btn btn-warning">Kick</button>
-            <button className="btn btn-error">Ban</button>
+            <button className='btn btn-secondary text-white'>Vacation</button>
+            <button className="btn btn-warning text-white">Kick</button>
+            <button className="btn btn-error text-white">Ban</button>
           </div>
         </div>
       </div>
@@ -64,11 +64,6 @@ function PlayersPage() {
             type="text"
             placeholder="Search Members"
             className="input input-bordered input-primary w-full max-w-xs " />
-          <div className="join mt-5">
-            <button className="join-item btn">«</button>
-            <button className="join-item btn">Page 22</button>
-            <button className="join-item btn">»</button>
-          </div>
         </form >
       </div >
       <div className="flex flex-wrap gap-4 p-10  justify-center" >
