@@ -1,4 +1,4 @@
-import { useLocation } from "@tanstack/react-router";
+import { useLocation, Link } from "@tanstack/react-router";
 
 export default function Header() {
     const location = useLocation()
@@ -31,9 +31,17 @@ export default function Header() {
                         <ul
                             tabIndex={0}
                             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-                            <li className={`${isPlayers ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}><a href="/players">Players</a></li>
-                            <li className={`${isApplications ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}><a href="/applications">Applications</a></li>
-                            <li className={`${isServers ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}><a href="/servers">Servers</a></li>
+                            <li className={`${isPlayers ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}>
+                                <Link to="/players">Players</Link>
+                            </li>
+                            <li className={`${isApplications ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}>
+                                <Link to="/applications">Applications</Link>
+                            </li>
+                            <li className={`${isServers ? 'bg-blue-900 rounded-xl' : ''} text-lg font-semibold`}>
+                                <Link to="/servers">
+                                    Servers
+                                </Link>
+                            </li>
                         </ul>
                     </div>
 

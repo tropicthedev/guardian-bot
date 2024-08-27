@@ -13,7 +13,7 @@ function ApplicationsPage() {
 
       <div className='flex flex-col justify-center items-center w-full overflow-hidden'>
         {/* @ts-expect-error This is a document error its fine */}
-        <button className="btn btn-primary p-4 max-w-sm md:w-full md:max-w-4xl mx-auto text-white" onClick={() => document?.getElementById('my_modal_1').showModal()}>Application Questions</button>
+        <button className="btn btn-primary max-w-sm md:w-full md:max-w-4xl mx-auto text-white text-lg" onClick={() => document?.getElementById('my_modal_1').showModal()}>Application Questions</button>
         <dialog id="my_modal_1" className="modal">
           <div className="modal-box">
             <QuestionForm />
