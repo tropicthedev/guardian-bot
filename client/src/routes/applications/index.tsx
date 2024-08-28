@@ -10,10 +10,9 @@ function ApplicationsPage() {
 
   return (
     <>
-
-      <div className='flex flex-col justify-center items-center w-full overflow-hidden'>
+      <div className='flex flex-col justify-center items-center w-full'>
         {/* @ts-expect-error This is a document error its fine */}
-        <button className="btn btn-primary max-w-sm md:w-full md:max-w-4xl mx-auto text-white text-lg" onClick={() => document?.getElementById('my_modal_1').showModal()}>Application Questions</button>
+        <button className="btn btn-secondary fixed bottom-4 right-4 " onClick={() => document?.getElementById('my_modal_1').showModal()}>Application Questions</button>
         <dialog id="my_modal_1" className="modal">
           <div className="modal-box">
             <QuestionForm />

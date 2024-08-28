@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { HiArrowSmUp, HiArrowSmDown, HiOutlineX } from "react-icons/hi";
-import { ScrollArea } from '../ui/scroll-area';
 
 export default function QuestionForm() {
     const [questions, setQuestions] = useState<string[]>([]);
@@ -42,44 +41,44 @@ export default function QuestionForm() {
                         placeholder="Type your question here..."
                     />
                 </div>
-                <button type="submit" className="btn btn-primary w-full text-xl text-white">Add Question</button>
+                <button type="submit" className="btn btn-secondary w-full text-xl">Add Question</button>
             </form>
-            <ScrollArea className='h-[60vh] max-h-[400px] mt-5'>
-                <div className="mt-6">
-                    <h2 className="text-3xl font-semibold">Submitted Questions</h2>
-                    <ul className="list-disc pl-5 mt-2">
-                        {questions.map((q, index) => (
-                            <li key={index} className="flex items-center space-x-2 mb-10">
-                                <span className='text-2xl'>{q}</span>
-                                <button
-                                    onClick={() => handleRearrange(index, -1)}
-                                    disabled={index === 0}
-                                    className="btn btn-sm btn-primary text-lg text-white"
-                                >
-                                    <HiArrowSmUp />
-                                </button>
-                                <button
-                                    onClick={() => handleRearrange(index, 1)}
-                                    disabled={index === questions.length - 1}
-                                    className="btn btn-sm btn-secondary text-lg text-white"
-                                >
-                                    <HiArrowSmDown />
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(index)}
-                                    disabled={false}
-                                    className="btn btn-sm btn-error text-lg text-white"
-                                >
-                                    <HiOutlineX />
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </ScrollArea>
+            <div className="mt-6">
+                <h2 className="text-3xl font-semibold">Submitted Questions</h2>
+                {questions.length === 0 ? <p className='text-lg my-5 font-semibold'>No Questions Found</p> : <ul className="list-disc pl-5 mt-2">
+                    {questions.map((q, index) => (
+                        <li key={index} className="flex items-center space-x-2 mb-10">
+                            <span className='text-2xl'>{q}</span>
+                            <button
+                                onClick={() => handleRearrange(index, -1)}
+                                disabled={index === 0}
+                                className="btn btn-sm btn-secondary text-lg"
+                            >
+                                <HiArrowSmUp />
+                            </button>
+                            <button
+                                onClick={() => handleRearrange(index, 1)}
+                                disabled={index === questions.length - 1}
+                                className="btn btn-sm btn-secondary text-lg"
+                            >
+                                <HiArrowSmDown />
+                            </button>
+                            <button
+                                onClick={() => handleDelete(index)}
+                                disabled={false}
+                                className="btn btn-sm btn-error text-lg"
+                            >
+                                <HiOutlineX />
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+                }
+
+            </div>
             <form>
-                <button type="submit" className="btn btn-success w-full text-xl text-white">Save</button>
+                <button type="submit" className="btn btn-success w-full text-xl">Save</button>
             </form>
-        </div>
+        </div >
     );
 }

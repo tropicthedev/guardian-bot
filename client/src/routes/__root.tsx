@@ -15,10 +15,10 @@ function Root() {
     const isLoginPage = location.pathname === '/'
 
     return (
-        <>
+        <div className='mb-5'>
             {isLoginPage ? <></> : <Header />}
             <Outlet />
             <TanStackRouterDevtools />
-        </>
+        </div>
     )
 }

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 .td-class {
-    @apply px-4 py-3 text-gray-900 bg-gray-200 first:rounded-t-lg last:rounded-b-lg sm:first:rounded-t-none sm:last:rounded-b-none sm:first:rounded-tl-lg sm:first:rounded-bl-lg sm:last:rounded-tr-lg sm:last:rounded-br-lg
+    @apply px-4 py-3 text-gray-900 bg-gray-200 first:rounded-t-lg last:rounded-b-lg sm:first:rounded-t-lg sm:last:rounded-b-none sm:first:rounded-tl-lg sm:first:rounded-bl-lg sm:last:rounded-tr-lg sm:last:rounded-br-lg
 }
 
 .tr-class {
@@ -12,4 +12,20 @@
 
 .suspended-text {
     @apply text-gray-500
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: #d6dee1;
+    border-radius: 20px;
+    border: 6px solid transparent;
+    background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: #a8bbbf;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #d6dee1;
 }

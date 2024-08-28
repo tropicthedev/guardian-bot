@@ -10,7 +10,6 @@ import {
 
 import mockData from '../../data.json';
 import React from 'react';
-import { ScrollArea } from '../ui/scroll-area';
 import { HiChevronDoubleLeft, HiChevronLeft, HiChevronRight, HiChevronDoubleRight } from 'react-icons/hi';
 import { Link } from '@tanstack/react-router';
 
@@ -36,7 +35,7 @@ const columns = [
     columnHelper.accessor((row) => row.status, {
         id: 'action',
         cell: (info) => <div className="dropdown">
-            <div tabIndex={0} role="button" className="btn btn-primary m-1 text-white">More</div>
+            <div tabIndex={0} role="button" className="btn btn-secondary m-1">More</div>
             <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
                 <li><a className='text-lg font-semibold'>Accept</a></li>
                 <li><a className='text-lg font-semibold'>Deny</a></li>
@@ -82,61 +81,59 @@ export default function DataTable() {
     });
 
     return (
-        <div className="p-4 max-w-sm md:w-full md:max-w-4xl mx-auto">
+        <div className="p-4 max-w-sm md:w-full md:max-w-4xl">
             <form>
                 <input
                     type="text"
-                    placeholder="Type here"
+                    placeholder="Search"
                     className="input input-bordered w-full text-lg mb-4"
                 />
             </form>
-            <ScrollArea className='h-[80vh] max-h-[600px] w-full'>
-                <table className="border-separate border-spacing-y-2 w-full text-lg">
-                    <thead>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <tr key={headerGroup.id} className="border-b">
-                                {headerGroup.headers.map((header) => (
-                                    <th
-                                        key={header.id}
-                                        className="px-4 py-4 font-semibold text-left"
-                                    >
-                                        {header.isPlaceholder ? null : (
-                                            <div
-                                                {...{
-                                                    className: header.column.getCanSort()
-                                                        ? 'cursor-pointer select-none flex items-center'
-                                                        : '',
-                                                    onClick: header.column.getToggleSortingHandler(),
-                                                }}
-                                            >
-                                                {flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                                {{
-                                                    asc: <span className="pl-2">↑</span>,
-                                                    desc: <span className="pl-2">↓</span>,
-                                                }[header.column.getIsSorted() as string] ?? null}
-                                            </div>
-                                        )}
-                                    </th>
-                                ))}
-                            </tr>
-                        ))}
-                    </thead>
-                    <tbody>
-                        {table.getRowModel().rows.map((row) => (
-                            <tr key={row.id} className="border-b hover:bg-slate-600">
-                                {row.getVisibleCells().map((cell) => (
-                                    <td key={cell.id} className="px-4 pt-[7px] pb-[7px]">
-                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </ScrollArea>
+            <table className="border-separate border-spacing-y-2 border-spacing-x-[0.1] w-full text-sm md:text-lg">
+                <thead>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                        <tr key={headerGroup.id} className="border-b">
+                            {headerGroup.headers.map((header) => (
+                                <th
+                                    key={header.id}
+                                    className="px-4 py-4 font-semibold text-left"
+                                >
+                                    {header.isPlaceholder ? null : (
+                                        <div
+                                            {...{
+                                                className: header.column.getCanSort()
+                                                    ? 'cursor-pointer select-none flex items-center'
+                                                    : '',
+                                                onClick: header.column.getToggleSortingHandler(),
+                                            }}
+                                        >
+                                            {flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
+                                            {{
+                                                asc: <span className="pl-2">↑</span>,
+                                                desc: <span className="pl-2">↓</span>,
+                                            }[header.column.getIsSorted() as string] ?? null}
+                                        </div>
+                                    )}
+                                </th>
+                            ))}
+                        </tr>
+                    ))}
+                </thead>
+                <tbody>
+                    {table.getRowModel().rows.map((row) => (
+                        <tr key={row.id} className="transition ease-in-out hover:bg-slate-600 duration-700 border border-white">
+                            {row.getVisibleCells().map((cell) => (
+                                <td key={cell.id} className="px-4 pt-[7px] pb-[7px]">
+                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
             <div className="flex flex-col sm:flex-row w-full mt-8 items-center gap-2 text-lg">
                 <div className="sm:mr-auto sm:mb-0 mb-2">
                     <span className="mr-2">Items per page</span>
@@ -156,14 +153,14 @@ export default function DataTable() {
                 </div>
                 <div className="flex gap-2">
                     <button
-                        className="btn btn-md btn-primary text-lg text-white"
+                        className="btn btn-md btn-secondary text-lg "
                         onClick={() => table.setPageIndex(0)}
                         disabled={!table.getCanPreviousPage()}
                     >
                         <HiChevronDoubleLeft />
                     </button>
                     <button
-                        className="btn btn-md btn-primary text-lg text-white"
+                        className="btn btn-md btn-secondary text-lg"
                         onClick={() => table.previousPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
@@ -184,14 +181,14 @@ export default function DataTable() {
                         of {table.getPageCount()}
                     </span>
                     <button
-                        className="btn btn-md btn-primary text-lg text-white"
+                        className="btn btn-md btn-secondary text-lg "
                         onClick={() => table.nextPage()}
                         disabled={!table.getCanNextPage()}
                     >
                         <HiChevronRight />
                     </button>
                     <button
-                        className="btn btn-md btn-primary text-lg text-white"
+                        className="btn btn-md btn-secondary text-lg"
                         onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                         disabled={!table.getCanNextPage()}
                     >
