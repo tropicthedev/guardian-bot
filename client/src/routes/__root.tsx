@@ -1,5 +1,4 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { useLocation } from "@tanstack/react-router";
 import Header from '../components/ui/header'
 
@@ -8,6 +7,7 @@ import '../index.css'
 export const Route = createRootRoute({
     component: Root
 })
+
 
 function Root() {
     const location = useLocation()
@@ -18,7 +18,7 @@ function Root() {
         <div className='mb-5'>
             {isLoginPage ? <></> : <Header />}
             <Outlet />
-            <TanStackRouterDevtools />
+            {/* <TanStackRouterDevtools /> */}
         </div>
     )
 }
