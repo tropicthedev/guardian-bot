@@ -254,11 +254,15 @@ function ServersPage() {
           >
             <div className="flex items-center gap-5">
               <FaServer size={50} />
-              <h2 className="text-lg font-bold">{item.name}</h2>
-              {/* @ts-expect-error No no */}
-              <p className={`text-sm font-medium py-1 px-2 rounded-lg w-fit ${statusMapping[item.status]} font-semibold`}>
-                {item.status}
-              </p>
+              <div>
+                <h2 className="text-lg font-bold">{item.name}</h2>
+                {/* @ts-expect-error No no */}
+                <p className={`text-sm font-medium py-1 px-2 rounded-lg w-fit ${statusMapping[item.status]} font-semibold`}>
+                  {item.status}
+                </p>
+                <p className="text-md text-gray-100">Players Online: 1 / 20 </p>
+
+              </div>
             </div>
             <div className="flex gap-2 mt-2 sm:mt-0">
               <button
