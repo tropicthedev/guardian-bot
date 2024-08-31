@@ -41,6 +41,9 @@ dependencies {
 
     include(implementation 'org.xerial:sqlite-jdbc:3.46.0.0')
 
+    // Faker
+    implementation("com.arakelian:faker:4.0.1")
+
     // Javalin
     shade(implementation 'io.javalin:javalin:6.2.0')
     include (implementation 'io.jsonwebtoken:jjwt-api:0.12.6')

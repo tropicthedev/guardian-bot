@@ -1,4 +1,4 @@
-package com.tropicoss.guardian.api.controllers.middleware;
+package com.tropicoss.guardian.api.middleware;
 
 import io.javalin.http.UnauthorizedResponse;
 import io.jsonwebtoken.Claims;

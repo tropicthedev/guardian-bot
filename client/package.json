@@ -13,17 +13,20 @@
     "@radix-ui/react-dropdown-menu": "^2.1.1",
     "@radix-ui/react-scroll-area": "^1.1.0",
     "@tanstack/match-sorter-utils": "^8.19.4",
+    "@tanstack/react-query": "^5.53.1",
     "@tanstack/react-router": "^1.50.0",
     "@tanstack/react-table": "^8.20.5",
     "lucide-react": "^0.436.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",
-    "tailwind-merge": "^2.5.2"
+    "tailwind-merge": "^2.5.2",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@faker-js/faker": "^8.4.1",
+    "@tanstack/eslint-plugin-query": "^5.53.0",
     "@tanstack/router-devtools": "^1.49.2",
     "@tanstack/router-plugin": "^1.49.3",
     "@types/react": "^18.3.3",

@@ -2,14 +2,14 @@ package com.tropicoss.guardian.api.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.gson.JsonObject;
 import com.tropicoss.guardian.api.DiscordURLHandler;
-import com.tropicoss.guardian.api.controllers.middleware.JWTMiddleware;
 import com.tropicoss.guardian.config.Config;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import io.javalin.http.HttpStatus;
+
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -31,32 +31,28 @@ public class AuthController {
     private final String redirectUri = config.getConfig().getBot().getRedirectUri();
     private final String scope = "identify email";
 
-    private final DiscordURLHandler discordURLHandler = new DiscordURLHandler();
-
     public void registerRoutes(Javalin app) {
-        app.get("/api/login", this::handleLogin);
-        app.get("/api/callback", this::handleCallback);
-        app.get("/api/protected/test", this::testEndpoint);
+        app.get("/auth/login", this::handleLogin);
+        app.get("/auth/callback", this::handleCallback);
     }
 
+    private String generateOAuthUrl(String clientId, String redirectUri, String scope) {
+        try {
+            String encodedRedirectUri = URLEncoder.encode(redirectUri, "UTF-8");
+            String encodedScope = URLEncoder.encode(scope, "UTF-8");
 
-    private void testEndpoint(Context ctx) {
+            return String.format(
+                    "https://discord.com/oauth2/authorize?client_id=%s&response_type=code&redirect_uri=%s&scope=%s",
+                    clientId, encodedRedirectUri, encodedScope
+            );
 
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        // Create a JsonObject (ObjectNode)
-        ObjectNode jsonObject = objectMapper.createObjectNode();
-
-        // Add primitive properties
-        jsonObject.put("name", "Jordan McKoy");
-        jsonObject.put("age", 22);
-        jsonObject.put("isStudent", true);
-
-        ctx.json(jsonObject);
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        }
     }
 
     private void handleLogin(Context ctx) {
-        String oauthUrl = discordURLHandler.generateOAuthUrl(clientId, redirectUri, scope);
+        String oauthUrl = generateOAuthUrl(clientId, redirectUri, scope);
         ctx.redirect(oauthUrl);
     }
 
@@ -105,13 +101,13 @@ public class AuthController {
                     1,
                     true,
                     null,
-                    null,
+                    "http://localhost",
                     SameSite.NONE
             );
 
             ctx.cookie(jwtCookie);
 
-            ctx.redirect("/players", HttpStatus.PERMANENT_REDIRECT);
+            ctx.redirect("http://localhost:5173/players", HttpStatus.PERMANENT_REDIRECT);
 
         } else {
             ctx.status(400).result("Authorization code missing");
