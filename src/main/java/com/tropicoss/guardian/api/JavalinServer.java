@@ -1,5 +1,7 @@
 package com.tropicoss.guardian.api;
 
+import com.tropicoss.guardian.api.controllers.AuthController;
+import com.tropicoss.guardian.api.controllers.middleware.JWTMiddleware;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 
@@ -8,6 +10,7 @@ public class JavalinServer {
     private final Javalin app;
 
     public JavalinServer() {
+
         app = Javalin.create(config -> {
             config.spaRoot.addFile("/", "/static/index.html");
 
@@ -16,7 +19,13 @@ public class JavalinServer {
                 staticFiles.location = Location.CLASSPATH;
             });
 
-        }).get("/api/*", ctx -> ctx.status(400));
+        });
+
+        app.before("/api/protected/*", new JWTMiddleware());
+
+        AuthController authController = new AuthController();
+
+        authController.registerRoutes(app);
     }
 
     public void startServer(int port) {

@@ -43,6 +43,9 @@ dependencies {
 
     // Javalin
     shade(implementation 'io.javalin:javalin:6.2.0')
+    include (implementation 'io.jsonwebtoken:jjwt-api:0.12.6')
+    include(  runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6')
+    include(runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6')
 
     include('org.eclipse.jetty:jetty-server:12.0.12')
 
@@ -146,7 +149,7 @@ shadowJar {
     configurations = [project.configurations.shade]
 
     //Exclude META-INF entries of shaded deps
-    exclude('META-INF/**', '**/*.pdn','**/*.bbmodel')
+    exclude('META-INF/**', '**/*.pdn', '**/*.bbmodel')
 
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}" }
