@@ -125,9 +125,7 @@ public class MemberDAOImpl implements MemberDAO {
             statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
-        }
-
-       finally {
+        } finally {
             DatabaseManager.closeResultSet(statement.getResultSet());
             DatabaseManager.closeStatement(statement);
         }
@@ -146,8 +144,7 @@ public class MemberDAOImpl implements MemberDAO {
             statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
-        }
-        finally {
+        } finally {
             DatabaseManager.closeResultSet(statement.getResultSet());
             DatabaseManager.closeStatement(statement);
         }
