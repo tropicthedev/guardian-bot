@@ -104,7 +104,7 @@ public class Guardian implements DedicatedServerModInitializer {
         JavalinServer javalinServer = new JavalinServer();
 
         try {
-            javalinServer.startServer(config.getConfig().getServer().getPort());
+            javalinServer.startServer();
             switch (config.getConfig().getGeneric().getMode()) {
                 case "server" -> {
                     Bot.getBotInstance().sendServerStartingMessage(config.getConfig().getGeneric().getMode());

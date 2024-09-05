@@ -8,7 +8,7 @@ import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 
-public class JavalinServer {
+public class  JavalinServer {
 
     private final Javalin app;
 
@@ -40,9 +40,9 @@ public class JavalinServer {
         applicationsController.registerRoutes(app);
     }
 
-    public void startServer(int port) {
-        app.start(port);
-        System.out.println("Javalin server started on port " + port);
+    public void startServer() {
+        app.start(10109);
+        System.out.println("Javalin server started on port: " + 10109);
     }
 
     public void stopServer() {

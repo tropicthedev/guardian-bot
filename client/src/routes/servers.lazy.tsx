@@ -1,11 +1,10 @@
 import { createLazyFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HiChevronDoubleLeft, HiChevronDoubleRight, HiChevronLeft, HiChevronRight, HiOutlineClipboardCopy } from "react-icons/hi";
 import { FaServer } from "react-icons/fa6";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { ServerListSchema } from '../lib/types';
 import { z } from 'zod';
-
 
 const fetchServers = async (): Promise<z.infer<typeof ServerListSchema>> => {
   const response = await fetch('http://localhost:1234/api/servers');
@@ -38,13 +37,11 @@ function ServersPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [modalData, setModalData] = useState<{ id: number; name: string; apiToken: string } | null>(null);
 
-  // Fetching server data
   const { data: serverList, isLoading, error } = useQuery({
     queryKey: ['servers'],
     queryFn: fetchServers
   });
 
-  // Mutation hooks
   const { mutate: mutateRegenerateApiKey, isPending: isRegeneratingKey } = useMutation({
     mutationFn: regenerateApiKey
   });
@@ -53,28 +50,28 @@ function ServersPage() {
     mutationFn: deleteServer
   });
 
-  const statusMapping = {
-    "ONLINE": "text-green-100 bg-green-600",
-    "OFFLINE": "text-yellow-100 bg-yellow-600"
-  };
+  const [filteredItems, setFilteredItems] = useState<z.infer<typeof ServerListSchema> | null>(null);
 
-  const filteredItems = serverList?.filter(item =>
-    item.status.toLowerCase().includes(searchQuery.toLowerCase()) || item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ) ?? [];
+  useEffect(() => {
+    if (serverList) {
+      const filtered = serverList.filter(item =>
+        item.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredItems(filtered);
+      setCurrentPage(1);
+    }
+  }, [searchQuery, serverList]);
 
+  const actualFilteredItems = filteredItems || [];
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = actualFilteredItems.slice(startIndex, startIndex + itemsPerPage);
+  const totalPages = Math.ceil(actualFilteredItems.length / itemsPerPage);
 
   const handleFirstPage = () => setCurrentPage(1);
   const handlePreviousPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
   const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
   const handleLastPage = () => setCurrentPage(totalPages);
-
-  const handlePageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const page = e.target.value ? Number(e.target.value) : 1;
-    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
-  };
 
   const openModal = (id: number, name: string, apiToken: string) => {
     setModalData({ id, name, apiToken });
@@ -85,111 +82,110 @@ function ServersPage() {
   };
 
   return (
-    <>
-      <div className="flex justify-center items-center p-4">
-        <form className="w-full max-w-xs">
-          <input
-            type="text"
-            placeholder="Search Servers"
-            className="input input-bordered input-primary w-full rounded-full focus:ring-2 focus:ring-primary focus:outline-none"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </form>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <input
+          type="text"
+          placeholder="Search Servers"
+          className="input input-bordered w-full max-w-xs"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
-      <div className="pl-5 pr-5 w-full max-w-4xl mx-auto">
-        {isLoading && <p>Loading...</p>}
-        {error && <p>An error occurred: {error.message}</p>}
-        {paginatedItems?.map(item => (
-          <div
-            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-700 shadow-sm rounded-lg mb-2 hover:shadow-md transition-shadow duration-300"
-            key={item.id}
-          >
-            <div className="flex items-center gap-5">
-              <FaServer size={50} />
-              <div>
-                <h2 className="text-lg font-bold">{item.name}</h2>
-                {/* @ts-expect-error ignore whatever this is bitching about */}
-                <p className={`text-sm font-medium py-1 px-2 rounded-lg w-fit ${statusMapping[item.status]} font-semibold`}>
-                  {item.status}
-                </p>
-                <p className="text-md text-gray-100">Players Online: 1 / 20 </p>
+
+      {isLoading ? (
+        <div className="flex justify-center items-center">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      ) : error ? (
+        <div className="alert alert-error">
+          <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <span>Error: {error instanceof Error ? error.message : 'An error occurred'}</span>
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {paginatedItems.map(item => (
+              <div className="card bg-base-200 shadow-xl" key={item.id}>
+                <div className="card-body">
+                  <div className="flex items-center mb-4">
+                    <FaServer size={40} className="mr-4" />
+                    <div>
+                      <h2 className="card-title">{item.name}</h2>
+                      <span className={`badge ${item.status === 'ONLINE' ? 'badge-success' : 'badge-warning'}`}>
+                        {item.status}
+                      </span>
+                    </div>
+                  </div>
+                  <p>Players Online: 1 / 20</p>
+                  <div className="card-actions justify-end mt-4">
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => openModal(item.id, item.name, item.apiToken)}
+                    >
+                      Manage Server
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex gap-2 mt-2 sm:mt-0">
-              <button
-                className="btn btn-md btn-secondary"
-                onClick={() => openModal(item.id, item.name, item.apiToken)}
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-8">
+            <div className="mb-4 sm:mb-0">
+              <span className="mr-2">Items per page</span>
+              <select
+                className="select select-bordered"
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
               >
-                Manage Server
+                {[10, 25, 50, 100].map((pageSize) => (
+                  <option key={pageSize} value={pageSize}>
+                    {pageSize}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="btn-group">
+              <button
+                className="btn btn-sm"
+                onClick={handleFirstPage}
+                disabled={currentPage === 1}
+              >
+                <HiChevronDoubleLeft />
+              </button>
+              <button
+                className="btn btn-sm"
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+              >
+                <HiChevronLeft />
+              </button>
+              <button className="btn btn-sm">
+                Page {currentPage} of {totalPages}
+              </button>
+              <button
+                className="btn btn-sm"
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+              >
+                <HiChevronRight />
+              </button>
+              <button
+                className="btn btn-sm"
+                onClick={handleLastPage}
+                disabled={currentPage === totalPages}
+              >
+                <HiChevronDoubleRight />
               </button>
             </div>
           </div>
+        </>
+      )}
 
-        ))}
-        <div className="flex flex-col sm:flex-row w-full mt-8 items-center gap-2 text-lg">
-          <div className="sm:mr-auto sm:mb-0 mb-2">
-            <span className="mr-2">Items per page</span>
-            <select
-              className="p-2 rounded w-20 select select-bordered select-lg"
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-            >
-              {[10, 25, 50, 100].map((pageSize) => (
-                <option key={pageSize} value={pageSize}>
-                  {pageSize}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <button
-              className="btn btn-md btn-secondary text-lg"
-              onClick={handleFirstPage}
-              disabled={currentPage === 1}
-            >
-              <HiChevronDoubleLeft />
-            </button>
-            <button
-              className="btn btn-md btn-secondary text-lg"
-              onClick={handlePreviousPage}
-              disabled={currentPage === 1}
-            >
-              <HiChevronLeft />
-            </button>
-            <span className="flex items-center gap-2">
-              <input
-                min={1}
-                max={totalPages}
-                type="number"
-                value={currentPage}
-                onChange={handlePageInputChange}
-                className="input input-bordered p-2 rounded w-16 text-center"
-              />
-              of {totalPages}
-            </span>
-            <button
-              className="btn btn-md btn-secondary text-lg"
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-            >
-              <HiChevronRight />
-            </button>
-            <button
-              className="btn btn-md btn-secondary text-lg"
-              onClick={handleLastPage}
-              disabled={currentPage === totalPages}
-            >
-              <HiChevronDoubleRight />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Modal for managing server */}
       {modalData && (
         <div className="modal modal-open">
           <div className="modal-box">
@@ -222,12 +218,11 @@ function ServersPage() {
         </div>
       )}
 
-      {/* Add Server Button */}
       <div className="fixed bottom-4 right-4">
-        <button className="btn btn-secondary" onClick={() => { /* Handle opening add server modal */ }}>
+        <button className="btn btn-primary" onClick={() => { /* Handle opening add server modal */ }}>
           Add Server
         </button>
       </div>
-    </>
+    </div>
   );
 }

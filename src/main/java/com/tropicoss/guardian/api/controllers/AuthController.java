@@ -1,15 +1,11 @@
 package com.tropicoss.guardian.api.controllers;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.tropicoss.guardian.api.DiscordURLHandler;
 import com.tropicoss.guardian.config.Config;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import io.javalin.http.HttpStatus;
 
-import java.io.UnsupportedEncodingException;
+//import org.json.JSONObject;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -23,6 +19,7 @@ import java.util.concurrent.ExecutionException;
 
 import com.tropicoss.guardian.api.utils.JWTUtil;
 import io.javalin.http.SameSite;
+import org.json.JSONObject;
 
 public class AuthController {
     private final Config config = Config.getInstance();
@@ -36,82 +33,83 @@ public class AuthController {
         app.get("/auth/callback", this::handleCallback);
     }
 
-    private String generateOAuthUrl(String clientId, String redirectUri, String scope) {
-        try {
-            String encodedRedirectUri = URLEncoder.encode(redirectUri, "UTF-8");
-            String encodedScope = URLEncoder.encode(scope, "UTF-8");
-
-            return String.format(
-                    "https://discord.com/oauth2/authorize?client_id=%s&response_type=code&redirect_uri=%s&scope=%s",
-                    clientId, encodedRedirectUri, encodedScope
-            );
-
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
-    }
-
     private void handleLogin(Context ctx) {
-        String oauthUrl = generateOAuthUrl(clientId, redirectUri, scope);
-        ctx.redirect(oauthUrl);
+        String authUrl = "https://discord.com/api/oauth2/authorize" +
+                "?client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8) +
+                "&redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8) +
+                "&response_type=code" +
+                "&scope=identify";
+        ctx.redirect(authUrl);
     }
 
     private void handleCallback(Context ctx) throws ExecutionException, InterruptedException {
         String code = ctx.queryParam("code");
 
-        if (code != null) {
-            String tokenUrl = "https://discord.com/api/v10/oauth2/token";
-
-            // Prepare the request body with URL encoding
-            String body = String.format(
-                    "client_id=%s&client_secret=%s&grant_type=authorization_code&code=%s&redirect_uri=%s",
-                    URLEncoder.encode(clientId, StandardCharsets.UTF_8),
-                    URLEncoder.encode(clientSecret, StandardCharsets.UTF_8),
-                    URLEncoder.encode(code, StandardCharsets.UTF_8),
-                    URLEncoder.encode(redirectUri, StandardCharsets.UTF_8)
-            );
-
-            // Build the request
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(tokenUrl))
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build();
-
-            // Send the request
-            CompletableFuture<HttpResponse<String>> response;
-
-            try (HttpClient client = HttpClient.newHttpClient()) {
-                response = client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
-            }
-
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("userId", "1234567890");
-            claims.put("username", "John Doe");
-            claims.put("response", response.get().body());
-
-            String jwt = JWTUtil.generateToken(claims, "jwt");
-
-            Cookie jwtCookie = new Cookie(
-                    "token",
-                    jwt,
-                    "/",
-                    86400,
-                    true,
-                    1,
-                    true,
-                    null,
-                    "http://localhost",
-                    SameSite.NONE
-            );
-
-            ctx.cookie(jwtCookie);
-
-            ctx.redirect("http://localhost:5173/players", HttpStatus.PERMANENT_REDIRECT);
-
-        } else {
-            ctx.status(400).result("Authorization code missing");
+        if (code == null) {
+            ctx.result("Authentication failed");
+            return;
         }
+
+        JSONObject tokenResponse = exchangeCodeForToken(code);
+        if (tokenResponse == null) {
+            ctx.result("Token exchange failed");
+            return;
+        }
+
+        String accessToken = tokenResponse.getString("access_token");
+        JSONObject userInfo = fetchUserInfo(accessToken);
+
+        // Here you would typically create a session, store user info, etc.
+        ctx.result("Authentication successful for user: " + userInfo.getString("username"));
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", "1234567890");
+        claims.put("username", "John Doe");
+        claims.put("response", response.get().body());
+
+        String jwt = JWTUtil.generateToken(claims, "jwt");
+
+        Cookie jwtCookie = new Cookie(
+                "token",
+                jwt,
+                "/",
+                86400,
+                true,
+                1,
+                true,
+                null,
+                "http://localhost",
+                SameSite.NONE
+        );
+
+        ctx.cookie(jwtCookie);
+
+        ctx.redirect("http://localhost:5173/players", HttpStatus.PERMANENT_REDIRECT);
+
+    }
+
+    private static JSONObject exchangeCodeForToken(String code) {
+        HttpRequest tokenRequest = HttpRequest.post("https://discord.com/api/oauth2/token")
+                .form("client_id", CLIENT_ID)
+                .form("client_secret", CLIENT_SECRET)
+                .form("grant_type", "authorization_code")
+                .form("code", code)
+                .form("redirect_uri", REDIRECT_URI);
+
+        if (tokenRequest.code() == 200) {
+            return new JSONObject(tokenRequest.body());
+        }
+        return null;
+    }
+
+    private static JSONObject fetchUserInfo(String accessToken) {
+        HttpRequest userRequest = HttpRequest.get("https://discord.com/api/users/@me")
+                .header("Authorization", "Bearer " + accessToken);
+
+        if (userRequest.code() == 200) {
+            return new JSONObject(userRequest.body());
+        }
+        return null;
     }
 }
 
