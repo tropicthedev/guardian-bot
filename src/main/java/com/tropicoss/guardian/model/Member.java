@@ -1,7 +1,10 @@
 package com.tropicoss.guardian.model;
 
+import com.tropicoss.guardian.utils.PlayerInfoFetcher;
+
 public class Member {
     private String discordId;
+    private String mojangId;
     private int isAdmin;
     private String createdAt;
     private String modifiedAt;
@@ -14,6 +17,14 @@ public class Member {
 
     public void setDiscordId(String discordId) {
         this.discordId = discordId;
+    }
+
+    public String getMojangId() {
+        return mojangId;
+    }
+
+    public void setMojangId(String mojangId) {
+        this.mojangId = mojangId;
     }
 
     public int getIsAdmin() {
@@ -38,6 +49,10 @@ public class Member {
 
     public void setModifiedAt(String modifiedAt) {
         this.modifiedAt = modifiedAt;
+    }
+
+    public PlayerInfoFetcher.Profile getPlayerProfile() {
+        return PlayerInfoFetcher.getProfile(mojangId);
     }
 }
 
