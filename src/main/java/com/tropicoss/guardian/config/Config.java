@@ -183,6 +183,10 @@ public final class Config {
     public static class MemberConfiguration {
         @Comment("Amount of time in days until someone is considered inactive")
         private int inactivityThreshold = 30;
+        @Comment("Amount of time in days until someone has to login if a new joiner to not be purged for inactivity")
+        private int gracePeriod = 7;
+        @Comment("The frequency in which this check is done, use this website to determine that https://crontab.guru/")
+        private String cron = "0 16 * * *";
         private String role = "role-id";
         @Comment("The channel that the welcome to the server message will be sent to")
         private String channel = "channel-id";
@@ -218,6 +222,22 @@ public final class Config {
 
         public void setMessage(String message) {
             this.message = message;
+        }
+
+        public int getGracePeriod() {
+            return gracePeriod;
+        }
+
+        public void setGracePeriod(int gracePeriod) {
+            this.gracePeriod = gracePeriod;
+        }
+
+        public String getCron() {
+            return cron;
+        }
+
+        public void setCron(String cron) {
+            this.cron = cron;
         }
     }
 
