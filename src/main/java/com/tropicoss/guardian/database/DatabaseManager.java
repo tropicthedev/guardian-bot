@@ -1,161 +1,159 @@
 package com.tropicoss.guardian.database;
 
 import net.fabricmc.loader.api.FabricLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DatabaseManager {
-    public static final Logger LOGGER = LoggerFactory.getLogger("Guardian");
-    private static final String DEFAULT_FILEPATH = "jdbc:sqlite:" + FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("guardian.db").toString();
-    private static String filePath = "";
-    private static Connection connection = null;
+    private static final String URL = "jdbc:sqlite:" + FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("guardian.sqlite").toString();
+    private final Connection connection;
 
-    private DatabaseManager(String filepath) throws SQLException {
-        filePath = filepath;
+    public DatabaseManager() throws SQLException {
+        connection = DriverManager.getConnection(URL);
+        connection.setAutoCommit(false);
     }
 
-    private DatabaseManager() throws SQLException {
-        filePath = DEFAULT_FILEPATH;
-    }
-
-    public static Connection getConnection() throws SQLException {
-
-        if (Objects.equals(filePath, "")) {
-            filePath = DEFAULT_FILEPATH;
-        }
-
-        if (connection == null) {
-            connection = DriverManager.getConnection(filePath);
-        }
-
-        return connection;
-    }
-
-    public static void closeConnection() throws SQLException {
-        if (connection != null) {
+    public void close() throws SQLException {
+        if (connection != null && !connection.isClosed()) {
             connection.close();
         }
     }
 
-    public static void createDatabases() throws SQLException {
+    public void runMigrations(String migrationsDir) throws SQLException, IOException {
+        MigrationManager migrationManager = new MigrationManager(connection, migrationsDir);
+        migrationManager.runMigrations();
+    }
 
-        String sqlCreateMemberTable = """
-                    CREATE TABLE IF NOT EXISTS `members` (
-                        `member_id` INTEGER NOT NULL,
-                        `discord_id` TEXT NOT NULL,
-                        `isAdmin` REAL NOT NULL DEFAULT 'FALSE',
-                        `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        PRIMARY KEY (member_id, discord_id)
-                    );
-                """;
+    public void addUser(String discordId, boolean isAdmin) throws SQLException {
+        String sql = "INSERT INTO members (discord_id, is_admin, created_at, modified_at) VALUES (?, ?, datetime('now'), datetime('now'))";
 
-        String sqlCreateApplicationTable = """
-                        CREATE TABLE IF NOT EXISTS `applications` (
-                        `application_id` INTEGER PRIMARY KEY,
-                        `content` TEXT NOT NULL,
-                        `message_id` TEXT NOT NULL UNIQUE,
-                        `discord_id` TEXT NOT NULL,
-                        `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    );
-                """;
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, discordId);
+            pstmt.setInt(2, isAdmin ? 1 : 0);
 
-        String sqlCreateInterviewTable = """
-                    CREATE TABLE IF NOT EXISTS `interviews` (
-                        `interview_id` INTEGER PRIMARY KEY,
-                        `application_id` INTEGER NOT NULL UNIQUE,
-                        `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY(`application_id`) REFERENCES `applications`(`application_id`)
-                    );
-                """;
+            int affectedRows = pstmt.executeUpdate();
 
-        String sqlCreateApplicationResponseTable = """
-                    CREATE TABLE IF NOT EXISTS `application_responses` (
-                        `application_response_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
-                        `admin_id` INTEGER NOT NULL,
-                        `application_id` INTEGER NOT NULL UNIQUE,
-                        `content` TEXT,
-                        `status` TEXT NOT NULL,
-                        `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY(`admin_id`) REFERENCES `members`(`member_id`),
-                        FOREIGN KEY(`application_id`) REFERENCES `applications`(`application_id`)
-                    );
-                """;
-
-        String sqlCreateInterviewResponseTable = """
-                    CREATE TABLE IF NOT EXISTS `interview_responses` (
-                        `interview_response_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
-                        `admin_id` INTEGER NOT NULL,
-                        `interview_id` INTEGER NOT NULL UNIQUE,
-                        `content` TEXT,
-                        `status` TEXT NOT NULL,
-                        `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY(`admin_id`) REFERENCES `members`(`member_id`),
-                        FOREIGN KEY(`interview_id`) REFERENCES `interviews`(`interview_id`)
-                    );
-                """;
-
-        String sqlCreateServerTable = """
-                    CREATE TABLE IF NOT EXISTS `servers` (
-                        `server_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
-                        `name` TEXT NOT NULL,
-                        `token` TEXT NOT NULL,
-                        `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    );
-                """;
-
-        String sqlCreateSessionTable = """
-                CREATE TABLE IF NOT EXISTS `sessions` (
-                `session_id` INTEGER PRIMARY KEY NOT NULL UNIQUE,
-                `member_id` INTEGER NOT NULL,
-                `server_id` INTEGER NOT NULL,
-                `session_start` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                `session_end` REAL,
-                FOREIGN KEY(`member_id`) REFERENCES `members`(`member_id`),
-                FOREIGN KEY(`server_id`) REFERENCES `servers`(`server_id`)
-                );
-                """;
-        
-        Statement statement = getConnection().createStatement();
-
-        try {
-            connection.setAutoCommit(false);
-
-            statement.execute(sqlCreateMemberTable);
-            statement.execute(sqlCreateApplicationTable);
-            statement.execute(sqlCreateInterviewTable);
-            statement.execute(sqlCreateApplicationResponseTable);
-            statement.execute(sqlCreateInterviewResponseTable);
-            statement.execute(sqlCreateServerTable);
-            statement.execute(sqlCreateSessionTable);
+            if (affectedRows == 0) {
+                throw new SQLException("Creating user failed, no rows affected.");
+            }
 
             connection.commit();
-
         } catch (SQLException e) {
             connection.rollback();
-            LOGGER.error("An error occurred while checking database tables: {}", e.getMessage());
-        } finally {
-            closeStatement(statement);
+            throw e;
         }
     }
 
-    public static void closeStatement(Statement statement) throws SQLException {
-        if (statement != null) {
-            statement.close();
+    public void updateUser(String discordId, boolean isAdmin) throws SQLException {
+        String sql = "UPDATE members SET is_admin = ?, modified_at = datetime('now') WHERE discord_id = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, isAdmin ? 1 : 0);
+            pstmt.setString(2, discordId);
+
+            int affectedRows = pstmt.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Updating user failed, no rows affected.");
+            }
+
+            connection.commit();
+        } catch (SQLException e) {
+            connection.rollback();
+            throw e;
+        }
+    }
+}
+
+class MigrationManager {
+    private final Connection connection;
+    private final String migrationsDir;
+
+    public MigrationManager(Connection connection, String migrationsDir) {
+        this.connection = connection;
+        this.migrationsDir = migrationsDir;
+    }
+
+    public void runMigrations() throws SQLException, IOException {
+        createMigrationsTableIfNotExists();
+        List<String> appliedMigrations = getAppliedMigrations();
+        List<Path> migrationFiles = getMigrationFiles();
+
+        for (Path migrationFile : migrationFiles) {
+            String migrationName = migrationFile.getFileName().toString();
+            if (!appliedMigrations.contains(migrationName)) {
+                executeMigration(migrationFile);
+                recordMigration(migrationName);
+                System.out.println("Applied migration: " + migrationName);
+            }
         }
     }
 
-    public static void closeResultSet(ResultSet resultSet) throws SQLException {
-        if (resultSet != null) {
-            resultSet.close();
+    private void createMigrationsTableIfNotExists() throws SQLException {
+        String sql = "CREATE TABLE IF NOT EXISTS migrations ("
+                + "id INT AUTO_INCREMENT PRIMARY KEY,"
+                + "name VARCHAR(255) NOT NULL,"
+                + "applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                + ")";
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(sql);
         }
+        connection.commit();
+    }
+
+    private List<String> getAppliedMigrations() throws SQLException {
+        List<String> migrations = new ArrayList<>();
+        String sql = "SELECT name FROM migrations ORDER BY applied_at";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                migrations.add(rs.getString("name"));
+            }
+        }
+        connection.commit();
+        return migrations;
+    }
+
+    private List<Path> getMigrationFiles() throws IOException {
+        try (Stream<Path> paths = Files.walk(Paths.get(migrationsDir))) {
+            return paths
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.toString().endsWith(".sql"))
+                    .sorted()
+                    .collect(Collectors.toList());
+        }
+    }
+
+    private void executeMigration(Path migrationFile) throws IOException, SQLException {
+        String sql = new String(Files.readAllBytes(migrationFile));
+        String[] statements = sql.split(";");
+
+        try (Statement stmt = connection.createStatement()) {
+            for (String statement : statements) {
+                // Trim to remove any leading/trailing whitespace
+                statement = statement.trim();
+                if (!statement.isEmpty()) {
+                    stmt.execute(statement);
+                }
+            }
+        }
+        connection.commit();
+    }
+
+    private void recordMigration(String migrationName) throws SQLException {
+        String sql = "INSERT INTO migrations (name) VALUES (?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, migrationName);
+            pstmt.executeUpdate();
+        }
+        connection.commit();
     }
 }

@@ -2,7 +2,7 @@ package com.tropicoss.guardian.discord;
 
 import com.google.gson.JsonObject;
 import com.tropicoss.guardian.config.Config;
-import com.tropicoss.guardian.discord.commands.Onboarding;
+//import com.tropicoss.guardian.discord.commands.Onboarding;
 import com.tropicoss.guardian.discord.commands.ResetCommand;
 import com.tropicoss.guardian.discord.events.ChatAdapter;
 import com.tropicoss.guardian.discord.events.UserAdapter;
@@ -47,7 +47,7 @@ public class Bot {
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
                     .addEventListeners(
-                            new Onboarding(),
+//                            new Onboarding(),
                             new ResetCommand(),
                             new UserAdapter(),
                             new ChatAdapter(

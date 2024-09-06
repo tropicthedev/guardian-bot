@@ -2,7 +2,7 @@ package com.tropicoss.guardian.api;
 
 import com.tropicoss.guardian.api.controllers.ApplicationsController;
 import com.tropicoss.guardian.api.controllers.AuthController;
-import com.tropicoss.guardian.api.controllers.PlayersController;
+//import com.tropicoss.guardian.api.controllers.PlayersController;
 import com.tropicoss.guardian.api.controllers.ServersController;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
@@ -32,12 +32,12 @@ public class  JavalinServer {
 //        app.before("/api/*", new JWTMiddleware());
 
         AuthController authController = new AuthController();
-        PlayersController playersController = new PlayersController();
+//        PlayersController playersController = new PlayersController();
         ServersController serversController = new ServersController();
         ApplicationsController applicationsController = new ApplicationsController();
 
         authController.registerRoutes(app);
-        playersController.registerRoutes(app);
+//        playersController.registerRoutes(app);
         serversController.registerRoutes(app);
         applicationsController.registerRoutes(app);
     }

@@ -67,7 +67,12 @@ public class Guardian implements DedicatedServerModInitializer {
             }
 
             if (guardianConfigPath.toFile().exists()) {
-                DatabaseManager.createDatabases();
+                DatabaseManager db = new DatabaseManager();
+                ClassLoader classLoader = getClass().getClassLoader();
+
+                db.runMigrations(classLoader.getResource("migrations").getPath());
+
+                db.close();
             }
 
             ServerLifecycleEvents.SERVER_STARTING.register(server -> {
@@ -199,12 +204,6 @@ public class Guardian implements DedicatedServerModInitializer {
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
-        } finally {
-            try {
-                DatabaseManager.closeConnection();
-            } catch (SQLException e) {
-                LOGGER.error("Error shutting down sql connection {}", e.getMessage());
-            }
         }
     }
 
