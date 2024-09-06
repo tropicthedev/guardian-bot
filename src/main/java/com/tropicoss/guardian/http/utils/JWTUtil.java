@@ -1,4 +1,4 @@
-package com.tropicoss.guardian.api.utils;
+package com.tropicoss.guardian.http.utils;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

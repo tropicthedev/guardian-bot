@@ -1,4 +1,4 @@
-package com.tropicoss.guardian.api.controllers;
+package com.tropicoss.guardian.http.controllers;
 import com.tropicoss.guardian.config.Config;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -14,11 +14,9 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import com.tropicoss.guardian.api.utils.JWTUtil;
+import com.tropicoss.guardian.http.utils.JWTUtil;
 import io.javalin.http.SameSite;
 import org.json.JSONObject;
 
