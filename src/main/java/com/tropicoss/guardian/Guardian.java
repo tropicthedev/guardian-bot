@@ -2,7 +2,7 @@ package com.tropicoss.guardian;
 
 
 import com.google.gson.Gson;
-import com.tropicoss.guardian.api.JavalinServer;
+import com.tropicoss.guardian.http.JavalinServer;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.discord.Bot;
