@@ -16,16 +16,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import com.tropicoss.guardian.api.utils.JWTUtil;
 import io.javalin.http.SameSite;
 import org.json.JSONObject;
 
 public class AuthController {
-    private final Config config = Config.getInstance();
-    private final String clientId = config.getConfig().getBot().getClientId();
-    private final String clientSecret = config.getConfig().getBot().getClientSecret();
-    private final String redirectUri = config.getConfig().getBot().getRedirectUri();
+    private static final Config config = Config.getInstance();
+    private static final String clientId = config.getConfig().getBot().getClientId();
+    private static final String clientSecret = config.getConfig().getBot().getClientSecret();
+    private static final String redirectUri = config.getConfig().getBot().getRedirectUri();
     private final String scope = "identify email";
 
     public void registerRoutes(Javalin app) {
@@ -42,7 +43,7 @@ public class AuthController {
         ctx.redirect(authUrl);
     }
 
-    private void handleCallback(Context ctx) throws ExecutionException, InterruptedException {
+    private void handleCallback(Context ctx) throws Exception {
         String code = ctx.queryParam("code");
 
         if (code == null) {
@@ -65,7 +66,7 @@ public class AuthController {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", "1234567890");
         claims.put("username", "John Doe");
-        claims.put("response", response.get().body());
+        claims.put("response", tokenResponse.get("access_token"));
 
         String jwt = JWTUtil.generateToken(claims, "jwt");
 
@@ -88,28 +89,51 @@ public class AuthController {
 
     }
 
-    private static JSONObject exchangeCodeForToken(String code) {
-        HttpRequest tokenRequest = HttpRequest.post("https://discord.com/api/oauth2/token")
-                .form("client_id", CLIENT_ID)
-                .form("client_secret", CLIENT_SECRET)
-                .form("grant_type", "authorization_code")
-                .form("code", code)
-                .form("redirect_uri", REDIRECT_URI);
+    private static JSONObject exchangeCodeForToken(String code) throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
 
-        if (tokenRequest.code() == 200) {
-            return new JSONObject(tokenRequest.body());
+        String form = Map.of(
+                        "client_id", clientId,
+                        "client_secret", clientSecret,
+                        "grant_type", "authorization_code",
+                        "code", code,
+                        "redirect_uri", redirectUri
+                ).entrySet().stream()
+                .map(entry -> URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8) + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
+                .collect(Collectors.joining("&"));
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://discord.com/api/oauth2/token"))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(form))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            return new JSONObject(response.body());
         }
+
         return null;
     }
 
-    private static JSONObject fetchUserInfo(String accessToken) {
-        HttpRequest userRequest = HttpRequest.get("https://discord.com/api/users/@me")
-                .header("Authorization", "Bearer " + accessToken);
+    private static JSONObject fetchUserInfo(String accessToken) throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
 
-        if (userRequest.code() == 200) {
-            return new JSONObject(userRequest.body());
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://discord.com/api/users/@me"))
+                .header("Authorization", "Bearer " + accessToken)
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            return new JSONObject(response.body());
         }
+
         return null;
     }
+
 }
 

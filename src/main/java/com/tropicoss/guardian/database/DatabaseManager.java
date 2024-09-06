@@ -70,7 +70,7 @@ public class DatabaseManager {
                         `application_id` INTEGER NOT NULL UNIQUE,
                         `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY(`application_id`) REFERENCES `application`(`application_id`)
+                        FOREIGN KEY(`application_id`) REFERENCES `applications`(`application_id`)
                     );
                 """;
 
@@ -83,8 +83,8 @@ public class DatabaseManager {
                         `status` TEXT NOT NULL,
                         `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY(`admin_id`) REFERENCES `member`(`member_id`),
-                        FOREIGN KEY(`application_id`) REFERENCES `application`(`application_id`)
+                        FOREIGN KEY(`admin_id`) REFERENCES `members`(`member_id`),
+                        FOREIGN KEY(`application_id`) REFERENCES `applications`(`application_id`)
                     );
                 """;
 
@@ -97,8 +97,8 @@ public class DatabaseManager {
                         `status` TEXT NOT NULL,
                         `created_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         `modified_at` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY(`admin_id`) REFERENCES `member`(`member_id`),
-                        FOREIGN KEY(`interview_id`) REFERENCES `interview`(`interview_id`)
+                        FOREIGN KEY(`admin_id`) REFERENCES `members`(`member_id`),
+                        FOREIGN KEY(`interview_id`) REFERENCES `interviews`(`interview_id`)
                     );
                 """;
 
@@ -119,10 +119,11 @@ public class DatabaseManager {
                 `server_id` INTEGER NOT NULL,
                 `session_start` REAL NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `session_end` REAL,
-                FOREIGN KEY(`member_id`) REFERENCES `member`(`member_id`),
-                FOREIGN KEY(`server_id`) REFERENCES `server`(`server_id`)
+                FOREIGN KEY(`member_id`) REFERENCES `members`(`member_id`),
+                FOREIGN KEY(`server_id`) REFERENCES `servers`(`server_id`)
                 );
                 """;
+        
         Statement statement = getConnection().createStatement();
 
         try {

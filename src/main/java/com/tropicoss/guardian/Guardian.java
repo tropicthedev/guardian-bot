@@ -70,7 +70,13 @@ public class Guardian implements DedicatedServerModInitializer {
                 DatabaseManager.createDatabases();
             }
 
-            ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
+            ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+                try {
+                    onServerStarting(server);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
             ServerLifecycleEvents.SERVER_STARTED.register(this::onServerStarted);
 
@@ -99,7 +105,7 @@ public class Guardian implements DedicatedServerModInitializer {
         }
     }
 
-    public void onServerStarting(MinecraftServer server) {
+    public void onServerStarting(MinecraftServer server) throws SQLException {
         MINECRAFT_SERVER = server;
         JavalinServer javalinServer = new JavalinServer();
 

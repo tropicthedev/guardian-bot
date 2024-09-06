@@ -25,7 +25,7 @@ public class InterviewDAOImpl implements InterviewDAO {
 
 
     @Override
-    public void addInterview(Interview interview) {
+    public void addInterview(Interview interview) throws SQLException {
         String sql = "INSERT INTO interviews (interview_id, application_id, created_at, modified_at) VALUES (?, ?, ?, ?)";
 
         PreparedStatement statement = null;
@@ -41,10 +41,13 @@ public class InterviewDAOImpl implements InterviewDAO {
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }
+        finally {
+            DatabaseManager.closeStatement(statement);
+        }
     }
 
     @Override
-    public Interview getInterviewById(int interviewId) {
+    public Interview getInterviewById(int interviewId) throws SQLException {
         String sql = "SELECT * FROM interviews WHERE interview_id = ?";
         Interview interview = null;
         PreparedStatement statement = null;
@@ -65,12 +68,15 @@ public class InterviewDAOImpl implements InterviewDAO {
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }
+        finally {
+            DatabaseManager.closeStatement(statement);
+        }
 
         return interview;
     }
 
     @Override
-    public List<Interview> getAllInterviews() {
+    public List<Interview> getAllInterviews() throws SQLException {
         String sql = "SELECT * FROM interviews";
         List<Interview> interviews = new ArrayList<>();
 
@@ -92,12 +98,15 @@ public class InterviewDAOImpl implements InterviewDAO {
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }
+        finally {
+            DatabaseManager.closeStatement(statement);
+        }
 
         return interviews;
     }
 
     @Override
-    public void updateInterview(Interview interview) {
+    public void updateInterview(Interview interview) throws SQLException {
         String sql = "UPDATE interviews SET application_id = ?, modified_at = ? WHERE interview_id = ?";
 
         PreparedStatement statement = null;
@@ -112,6 +121,9 @@ public class InterviewDAOImpl implements InterviewDAO {
             statement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
+        }
+        finally {
+            DatabaseManager.closeStatement(statement);
         }
     }
 
@@ -129,5 +141,6 @@ public class InterviewDAOImpl implements InterviewDAO {
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }
+
     }
 }

@@ -1,0 +1,30 @@
+services:
+  fabric_service_1:
+    image: itzg/minecraft-server
+    container_name: fabric_container_1
+    ports:
+      - '25565:25565'
+    environment:
+      - TYPE=FABRIC
+      - EULA=TRUE
+      - VERSION=1.21
+      - FABRIC_LAUNCHER_VERSION=0.10.2
+      - FABRIC_LOADER_VERSION=0.15.11
+    volumes:
+      - ./minecraft_server_1:/data
+
+  fabric_service_2:
+    image: itzg/minecraft-server
+    container_name: fabric_container_2
+    depends_on:
+      - fabric_service_1
+    ports:
+      - '25566:25566'
+    environment:
+      - TYPE=FABRIC
+      - EULA=TRUE
+      - VERSION=1.21
+      - FABRIC_LAUNCHER_VERSION=0.10.2
+      - FABRIC_LOADER_VERSION=0.15.11
+    volumes:
+      - ./minecraft_server_2:/data

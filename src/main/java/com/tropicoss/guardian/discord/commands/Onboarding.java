@@ -6,14 +6,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.dao.InterviewDAO;
 import com.tropicoss.guardian.database.dao.InterviewResponseDAO;
-import com.tropicoss.guardian.database.dao.impl.ApplicationDAOImpl;
-import com.tropicoss.guardian.database.dao.impl.ApplicationResponseDAOImpl;
-import com.tropicoss.guardian.database.dao.impl.InterviewDAOImpl;
-import com.tropicoss.guardian.database.dao.impl.InterviewResponseDAOImpl;
+import com.tropicoss.guardian.database.dao.impl.*;
 import com.tropicoss.guardian.database.model.*;
 import com.tropicoss.guardian.ids.ButtonIds;
 import com.tropicoss.guardian.ids.ModalIds;
 import com.tropicoss.guardian.utils.Cache;
+import com.tropicoss.guardian.utils.PlayerInfoFetcher;
+import com.tropicoss.guardian.utils.PlayerInfoFetcher.Profile;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
@@ -28,6 +27,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
@@ -56,6 +56,7 @@ public class Onboarding extends ListenerAdapter {
     private final InterviewDAO interviewDAO = new InterviewDAOImpl();
     private final InterviewResponseDAO interviewResponseDao = new InterviewResponseDAOImpl();
     private final ApplicationResponseDAOImpl applicationResponseDAO = new ApplicationResponseDAOImpl();
+    private final MemberDAOImpl memberDAO = new MemberDAOImpl();
     private final Map<String, List<QuestionAnswers>> conversationState = new ConcurrentHashMap<>();
 
     public Onboarding() throws SQLException {
@@ -99,7 +100,18 @@ public class Onboarding extends ListenerAdapter {
             return;
         }
 
+        OptionMapping optionMapping = event.getOption("ign");
+
+        if (optionMapping == null) return;
+
         try {
+
+            Profile playerProfile = PlayerInfoFetcher.getProfile(optionMapping.getAsString());
+
+            if (playerProfile == null) {
+                event.reply("Member could not be found, is the IGN correct ?").setEphemeral(true).queue();
+                return;
+            }
 
             Guild guild = event.getGuild();
 
@@ -138,11 +150,18 @@ public class Onboarding extends ListenerAdapter {
 
             channel.sendMessage(config.getConfig().getMember().getMessage().replace("{member}", member.getAsMention())).queue();
 
-            interviewResponseDao.addInterviewResponse(interviewResponse);
+            com.tropicoss.guardian.database.model.Member newMember = new com.tropicoss.guardian.database.model.Member(
+                    playerProfile.data.player.id,
+                    memberId.toString(),
+                    false
+            );
 
-            event.reply("Member Accepted").queue();
+            interviewResponseDao.addInterviewResponse(interviewResponse);
+            memberDAO.addMember(newMember);
+
+            event.reply("Member Accepted").setEphemeral(true).queue();
         } catch (Exception e) {
-            LOGGER.error("There was an error trying to accept member");
+            LOGGER.error("There was an error trying to accept member: {}",e.getMessage());
             event.reply("There was an error trying to accept member").setEphemeral(true).queue();
         }
     }
@@ -178,6 +197,39 @@ public class Onboarding extends ListenerAdapter {
     }
 
     private void handleDenyCommand(SlashCommandInteractionEvent event) {
+        if (event.getChannel().getType() != ChannelType.GUILD_PRIVATE_THREAD) {
+            event.reply("This can only be ran in a private guild thread (Interview Thread)").queue();
+            return;
+        }
+        OptionMapping reasonMapping = event.getOption("reason");
+
+        if (reasonMapping == null) return;
+
+        try {
+            InterviewResponse interviewResponse = new InterviewResponse(event.getMember().getIdLong(),
+                    event.getChannelIdLong(),
+                    "Member Denied", Status.DENIED);
+
+            Long memberId = applicationDAO.getMemberFromChannelId(event.getChannelIdLong());
+
+            Member member = event.getGuild().getMemberById(memberId);
+
+            if (member == null) {
+                event.reply("User could not be found, are they still in the server ?").setEphemeral(true).queue();
+                return;
+            }
+
+            Objects.requireNonNull(event.getMember()).getUser().openPrivateChannel().flatMap(channel ->
+                    channel.sendMessage("You have been denied for the reason: " + reasonMapping.getAsString())
+            ).queue();
+
+            interviewResponseDao.addInterviewResponse(interviewResponse);
+
+            event.reply("Member Denied").setEphemeral(true).queue();
+        } catch (Exception e) {
+            LOGGER.error("There was an error trying to deny member");
+            event.reply("There was an error trying to deny member").setEphemeral(true).queue();
+        }
     }
 
     @Override
@@ -394,6 +446,7 @@ public class Onboarding extends ListenerAdapter {
 
                 return;
             }
+
             if (interviewChannel == null) {
                 event.reply("Interview channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL").setEphemeral(true).queue();
 
@@ -640,19 +693,19 @@ public class Onboarding extends ListenerAdapter {
         Application application;
         Member member;
 
-        if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("Insufficient Permissions").queue();
+        if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("Insufficient Permissions").setEphemeral(true).queue();
             return;
         }
 
         try {
             applicationResponse = applicationResponseDAO.getApplicationResponseByMessageId(event.getMessageIdLong());
             application = applicationDAO.getApplicationByMessageId(event.getMessageId());
-            member = event.getGuild().getMemberById(application.getDiscordId());
+            member = Objects.requireNonNull(event.getGuild()).getMemberById(application.getDiscordId());
             applicationResponseDAO.resetApplication(event.getMessageIdLong());
 
-        } catch (SQLException e) {
-            LOGGER.error("There was an error while getting the application response");
+        } catch (Exception e) {
+            LOGGER.error("There was an error while getting the application response: {}", e.getMessage());
             event.reply("There was an error while trying to get the application response").setEphemeral(true).queue();
             return;
         }

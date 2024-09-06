@@ -1,6 +1,10 @@
 package com.tropicoss.guardian.database.model;
 
+import com.tropicoss.guardian.utils.PlayerInfoFetcher;
+
 import java.time.LocalDateTime;
+
+import static com.tropicoss.guardian.utils.PlayerInfoFetcher.*;
 
 public class Member {
     private String memberId;
@@ -60,5 +64,10 @@ public class Member {
 
     public void setModifiedAt(LocalDateTime modifiedAt) {
         this.modifiedAt = modifiedAt;
+    }
+
+    public Profile getPlayerProfile() {
+
+        return getProfile(this.memberId);
     }
 }

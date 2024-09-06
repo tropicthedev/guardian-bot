@@ -20,7 +20,7 @@ function ApplicationsPage() {
   const { isPending, error, data } = useQuery({
     queryKey: ['applicationData'],
     queryFn: async () => {
-      const response = await fetch('http://localhost:1234/api/applications');
+      const response = await fetch('/api/applications');
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }

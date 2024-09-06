@@ -6,7 +6,7 @@ import { Player, PlayerListSchema } from '../lib/types';
 
 export const Route = createLazyFileRoute('/players')({
   component: PlayersPage
-}); 
+});
 
 function PlayersPage() {
   const statusMapping = {
@@ -19,7 +19,7 @@ function PlayersPage() {
   const { isPending, error, data } = useQuery({
     queryKey: ['playerData'],
     queryFn: async () => {
-      const response = await fetch('http://localhost:1234/api/players');
+      const response = await fetch('/api/players');
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }

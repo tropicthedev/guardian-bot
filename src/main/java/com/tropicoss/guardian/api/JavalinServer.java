@@ -8,11 +8,13 @@ import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 
+import java.sql.SQLException;
+
 public class  JavalinServer {
 
     private final Javalin app;
 
-    public JavalinServer() {
+    public JavalinServer() throws SQLException {
 
         app = Javalin.create(config -> {
             config.spaRoot.addFile("/", "/static/index.html");

@@ -120,3 +120,5 @@ run/
 config.json
 
 /src/main/resources/static/
+/minecraft_server_1/
+/minecraft_server_2/

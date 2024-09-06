@@ -7,7 +7,7 @@ import { ServerListSchema } from '../lib/types';
 import { z } from 'zod';
 
 const fetchServers = async (): Promise<z.infer<typeof ServerListSchema>> => {
-  const response = await fetch('http://localhost:1234/api/servers');
+  const response = await fetch('/api/servers');
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }

@@ -2,6 +2,20 @@ plugins {
     id 'fabric-loom' version '1.6-SNAPSHOT'
     id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id "com.github.node-gradle.node" version "7.0.2"
+}
+
+node {
+    download = true
+    version = "20.17.0"
+    distBaseUrl = "https://nodejs.org/dist"
+    allowInsecureProtocol = null
+    npmInstallCommand = "install"
+    workDir = file("${project.projectDir}/.gradle/nodejs")
+    npmWorkDir = file("${project.projectDir}/.gradle/npm")
+    yarnWorkDir = file("${project.projectDir}/.gradle/yarn")
+    nodeProjectDir = file("${project.projectDir}")
+    nodeProxySettings = ProxySettings.SMART
 }
 
 version = project.mod_version
@@ -34,7 +48,6 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     implementation "com.google.code.gson:gson:2.10.1"
-    include(implementation 'org.json:json:20240303')
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
     testImplementation 'org.mockito:mockito-core:5.12.0'
@@ -50,7 +63,7 @@ dependencies {
     include (implementation 'io.jsonwebtoken:jjwt-api:0.12.6')
     include(  runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6')
     include(runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6')
-
+    include(implementation 'org.json:json:20240303')
     include('org.eclipse.jetty:jetty-server:12.0.12')
 
     // Java-WebSocket (Websocket API)
@@ -96,21 +109,20 @@ def viteDir = "${projectDir}/client"
 def viteDistDir = "${viteDir}/dist"
 def modResourcesDir = "${projectDir}/src/main/resources/static" // Adjust this path if necessary
 
-task buildVite(type: Exec) {
-    workingDir viteDir
-    commandLine 'C:/Program Files/nodejs/npm.cmd', 'run', 'build'
-    doLast {
-        println "Vite build complete."
-    }
+tasks.register('buildVite', NpmTask) {
+    npmCommand = ['run', 'build']
+    workingDir = file(viteDir)
+    outputs.dir(viteDistDir)
 }
 
-task copyViteBuild(type: Copy) {
-    dependsOn buildVite
+tasks.register('cleanModResourcesDir', Delete) {
+    delete modResourcesDir
+}
+
+tasks.register('copyViteBuild', Copy) {
+    dependsOn buildVite, cleanModResourcesDir
     from viteDistDir
     into modResourcesDir
-    doLast {
-        println "Copied Vite build to resources directory."
-    }
 }
 
 compileJava.dependsOn(copyViteBuild)
@@ -180,4 +192,24 @@ tasks.named('test', Test) {
         events "passed"
     }
 }
+
+tasks.register('copyJarToDocker', Copy) {
+    dependsOn 'build'
+    def jarFile = file("${buildDir}/libs/")
+
+    // Copy to the first directory
+    from(jarFile)
+    into('minecraft_server_1/mods')
+
+    // Additional copying step
+    doLast {
+        copy {
+            from(jarFile)
+            into('minecraft_server_2/mods')
+        }
+    }
+}
+
+build.finalizedBy(copyJarToDocker)
+
 sourcesJar.dependsOn(copyViteBuild)

@@ -81,6 +81,10 @@ public class Bot {
                 guild.upsertCommand("reset", "Resets user application timeout allowing them to submit another application")
                         .addOption(OptionType.USER, "member", "The user that you want to reset their application timeout", true)
                         .queue();
+
+                guild.upsertCommand("accept", "Accepts a user within an interview channel")
+                        .addOption(OptionType.STRING, "ign", "The Minecraft username of the user that you want to accept", true)
+                        .queue();
             }
 
         } catch (Exception e) {
