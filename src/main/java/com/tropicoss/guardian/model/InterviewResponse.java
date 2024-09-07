@@ -9,7 +9,8 @@ public class InterviewResponse {
     private String createdAt;
     private String modifiedAt;
 
-    public InterviewResponse() {}
+    public InterviewResponse() {
+    }
 
     public String getInterviewResponseId() {
         return interviewResponseId;

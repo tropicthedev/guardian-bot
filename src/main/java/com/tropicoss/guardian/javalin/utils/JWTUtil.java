@@ -3,8 +3,8 @@ package com.tropicoss.guardian.javalin.utils;
 import io.jsonwebtoken.Jwts;
 
 import javax.crypto.SecretKey;
-import java.util.Map;
 import java.util.Date;
+import java.util.Map;
 
 public class JWTUtil {
 

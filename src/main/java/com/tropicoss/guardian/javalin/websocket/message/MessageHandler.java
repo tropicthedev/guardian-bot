@@ -70,7 +70,7 @@ public class MessageHandler {
                         throw new IllegalStateException("Unexpected value: " + messageType);
                 }
             } else {
-                System.out.println("No messageType in JSON object");
+                LOGGER.error("No messageType in JSON object");
             }
 
         } catch (Exception e) {

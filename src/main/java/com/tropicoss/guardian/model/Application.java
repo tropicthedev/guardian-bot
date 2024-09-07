@@ -7,7 +7,8 @@ public class Application {
     private String createdAt;
     private String modifiedAt;
 
-    public Application() {}
+    public Application() {
+    }
 
     public String getApplicationId() {
         return applicationId;

@@ -17,6 +17,12 @@ public class ServersController {
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final Base64.Encoder base64Encoder = Base64.getUrlEncoder();
 
+    public static String generateNewToken() {
+        byte[] randomBytes = new byte[24];
+        secureRandom.nextBytes(randomBytes);
+        return base64Encoder.encodeToString(randomBytes);
+    }
+
     public void registerRoutes(Javalin app) {
         app.get("/api/servers", this::handlePlayers);
         app.delete("/api/servers/{id}", this::handleDelete);
@@ -52,15 +58,8 @@ public class ServersController {
         ctx.status(200);
     }
 
-    public String getRandomElement(List<String> strings)
-    {
+    public String getRandomElement(List<String> strings) {
         Random rand = new Random();
         return strings.get(rand.nextInt(strings.size()));
-    }
-
-    public static String generateNewToken() {
-        byte[] randomBytes = new byte[24];
-        secureRandom.nextBytes(randomBytes);
-        return base64Encoder.encodeToString(randomBytes);
     }
 }

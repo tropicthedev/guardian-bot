@@ -10,7 +10,8 @@ public class Member {
     private String createdAt;
     private String modifiedAt;
 
-    public Member() {}
+    public Member() {
+    }
 
     public String getDiscordId() {
         return discordId;

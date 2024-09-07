@@ -50,7 +50,7 @@ public class PlayersController {
             jsonObject.put("id", discordId);
             jsonObject.put("name", profile.data.player.username);
             jsonObject.put("status", status);
-            jsonObject.put("joinDate", member.getCreatedAt().toString());
+            jsonObject.put("joinDate", member.getCreatedAt());
             jsonObject.put("purgeDate", purgeDate.toString());
             jsonObject.put("avatar", profile.data.player.avatar);
 
@@ -60,8 +60,7 @@ public class PlayersController {
         ctx.json(players);
     }
 
-    public String getRandomElement(List<String> strings)
-    {
+    public String getRandomElement(List<String> strings) {
         Random rand = new Random();
         return strings.get(rand.nextInt(strings.size()));
     }

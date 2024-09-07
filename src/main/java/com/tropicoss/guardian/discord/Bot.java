@@ -2,7 +2,6 @@ package com.tropicoss.guardian.discord;
 
 import com.google.gson.JsonObject;
 import com.tropicoss.guardian.config.Config;
-//import com.tropicoss.guardian.discord.commands.Onboarding;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.discord.commands.Onboarding;
 import com.tropicoss.guardian.discord.commands.ResetCommand;

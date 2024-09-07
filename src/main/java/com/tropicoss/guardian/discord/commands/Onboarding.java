@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.model.*;
-import com.tropicoss.guardian.model.ButtonId;
-import com.tropicoss.guardian.model.ModalId;
 import com.tropicoss.guardian.utils.Cache;
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
 import com.tropicoss.guardian.utils.PlayerInfoFetcher.Profile;
@@ -39,8 +37,8 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -144,11 +142,11 @@ public class Onboarding extends ListenerAdapter {
             databaseManager.addInterviewResponse(UUID.randomUUID().toString(), event.getMember().getId(), event.getChannelId(),
                     "Member Accepted", Status.ACCEPTED);
 
-            databaseManager.addMember(memberId.toString(), playerProfile.data.player.id, false);
+            databaseManager.addMember(memberId, playerProfile.data.player.id, false);
 
             event.reply("Member Accepted").setEphemeral(true).queue();
         } catch (Exception e) {
-            LOGGER.error("There was an error trying to accept member: {}",e.getMessage());
+            LOGGER.error("There was an error trying to accept member: {}", e.getMessage());
             event.reply("There was an error trying to accept member please try again. If the problem persists check the console for any errors that may occur.").setEphemeral(true).queue();
         }
     }
@@ -392,14 +390,17 @@ public class Onboarding extends ListenerAdapter {
                 return;
             }
 
-            ApplicationResponse existingApplicationResponse = databaseManager.getApplicationResponseByApplicationId(application.getApplicationId());
+            try {
+                ApplicationResponse existingApplicationResponse = databaseManager.getApplicationResponseByApplicationId(application.getApplicationId());
 
-            if (existingApplicationResponse != null && !Objects.equals(existingApplicationResponse.getStatus(), Status.RESET)) {
-                event.reply("This application has already been updated").setEphemeral(true).queue();
+                if (existingApplicationResponse != null && !Objects.equals(existingApplicationResponse.getStatus(), Status.RESET)) {
+                    event.reply("This application has already been updated").setEphemeral(true).queue();
 
-                LOGGER.error("This application has already been updated: {}", application.getApplicationId());
+                    LOGGER.error("This application has already been updated: {}", application.getApplicationId());
 
-                return;
+                    return;
+                }
+            } catch (SQLException ignored) {
             }
 
             Member member = Objects.requireNonNull(event.getGuild()).getMemberById(application.getDiscordId());
@@ -574,7 +575,7 @@ public class Onboarding extends ListenerAdapter {
             return;
         }
 
-        databaseManager.upsertApplicationResponse(UUID.randomUUID().toString() ,event.getMember().getId(), application.getApplicationId(), reason, Status.DENIED);
+        databaseManager.upsertApplicationResponse(UUID.randomUUID().toString(), event.getMember().getId(), application.getApplicationId(), reason, Status.DENIED);
 
         member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessage("Your application has been denied for the following reason(s):\n" + reason)).queue();
 

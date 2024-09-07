@@ -1,10 +1,10 @@
 package com.tropicoss.guardian.javalin.middleware;
 
-import io.javalin.http.UnauthorizedResponse;
-import io.jsonwebtoken.Claims;
+import com.tropicoss.guardian.javalin.utils.JWTUtil;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
-import com.tropicoss.guardian.javalin.utils.JWTUtil;
+import io.javalin.http.UnauthorizedResponse;
+import io.jsonwebtoken.Claims;
 import org.jetbrains.annotations.NotNull;
 
 public class JWTMiddleware implements Handler {

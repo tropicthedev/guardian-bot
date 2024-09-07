@@ -42,8 +42,7 @@ public class ApplicationsController {
         ctx.json(applications);
     }
 
-    public String getRandomElement(List<String> strings)
-    {
+    public String getRandomElement(List<String> strings) {
         Random rand = new Random();
         return strings.get(rand.nextInt(strings.size()));
     }

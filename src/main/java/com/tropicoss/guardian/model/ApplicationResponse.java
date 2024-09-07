@@ -9,7 +9,8 @@ public class ApplicationResponse {
     private String createdAt;
     private String modifiedAt;
 
-    public ApplicationResponse() {}
+    public ApplicationResponse() {
+    }
 
     public String getApplicationResponseId() {
         return applicationResponseId;

@@ -4,13 +4,7 @@ import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.model.*;
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.*;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -19,11 +13,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class DatabaseManager {
-    private static final String URL = "jdbc:sqlite:" + FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("guardian.sqlite").toString();
+    private static final String URL = "jdbc:sqlite:" + FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("guardian.sqlite");
     private final Connection connection;
 
     public DatabaseManager() throws SQLException {
@@ -1074,108 +1066,3 @@ public class DatabaseManager {
     //endregion
 }
 
-class MigrationManager {
-    private final Connection connection;
-    private final String migrationsDir;
-
-    public MigrationManager(Connection connection, String migrationsDir) {
-        this.connection = connection;
-        this.migrationsDir = migrationsDir;
-    }
-
-    public void runMigrations() throws SQLException, IOException {
-        createMigrationsTableIfNotExists();
-        List<String> appliedMigrations = getAppliedMigrations();
-        List<String> migrationFiles = getMigrationFileNames();
-
-        for (String migrationFile : migrationFiles) {
-            if (!appliedMigrations.contains(migrationFile)) {
-                try (InputStream migrationStream = getClass().getClassLoader().getResourceAsStream(migrationsDir + "/" + migrationFile)) {
-                    if (migrationStream != null) {
-                        executeMigration(migrationStream);
-                        recordMigration(migrationFile);
-                        System.out.println("Applied migration: " + migrationFile);
-                    } else {
-                        System.out.println("Migration file not found: " + migrationFile);
-                    }
-                }
-            }
-        }
-    }
-
-    private void createMigrationsTableIfNotExists() throws SQLException {
-        String sql = "CREATE TABLE IF NOT EXISTS migrations ("
-                + "id INT AUTO_INCREMENT PRIMARY KEY,"
-                + "name VARCHAR(255) NOT NULL,"
-                + "applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-                + ")";
-        try (Statement stmt = connection.createStatement()) {
-            stmt.execute(sql);
-        }
-        connection.commit();
-    }
-
-    private List<String> getAppliedMigrations() throws SQLException {
-        List<String> migrations = new ArrayList<>();
-        String sql = "SELECT name FROM migrations ORDER BY applied_at";
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                migrations.add(rs.getString("name"));
-            }
-        }
-        connection.commit();
-        return migrations;
-    }
-
-    // This method returns the list of migration file names
-    private List<String> getMigrationFileNames() throws IOException {
-        List<String> migrationFiles = new ArrayList<>();
-        try (InputStream resourceStream = getClass().getClassLoader().getResourceAsStream(migrationsDir)) {
-            if (resourceStream != null) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(resourceStream));
-                String fileName;
-                while ((fileName = reader.readLine()) != null) {
-                    if (fileName.endsWith(".sql")) {
-                        System.out.println(fileName);
-                        migrationFiles.add(fileName);
-                    }
-                }
-            } else {
-                System.out.println("Migrations directory not found in the JAR!");
-            }
-        }
-        return migrationFiles;
-    }
-
-    // Updated method to execute migration from InputStream instead of Path
-    private void executeMigration(InputStream migrationStream) throws IOException, SQLException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(migrationStream));
-        StringBuilder sqlBuilder = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sqlBuilder.append(line).append("\n");
-        }
-        String sql = sqlBuilder.toString();
-        String[] statements = sql.split(";");
-
-        try (Statement stmt = connection.createStatement()) {
-            for (String statement : statements) {
-                statement = statement.trim();
-                if (!statement.isEmpty()) {
-                    stmt.execute(statement);
-                }
-            }
-        }
-        connection.commit();
-    }
-
-    private void recordMigration(String migrationName) throws SQLException {
-        String sql = "INSERT INTO migrations (name) VALUES (?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, migrationName);
-            pstmt.executeUpdate();
-        }
-        connection.commit();
-    }
-}

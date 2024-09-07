@@ -7,7 +7,8 @@ public class Server {
     private String createdAt;
     private String modifiedAt;
 
-    public Server() {}
+    public Server() {
+    }
 
     public String getServerId() {
         return serverId;

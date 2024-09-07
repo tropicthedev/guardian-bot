@@ -118,7 +118,13 @@ def viteDir = "${projectDir}/client"
 def viteDistDir = "${viteDir}/dist"
 def modResourcesDir = "${projectDir}/src/main/resources/static" // Adjust this path if necessary
 
+tasks.register('installDeps', NpmTask) {
+    npmCommand = ['install']
+    workingDir = file(viteDir)
+}
+
 tasks.register('buildVite', NpmTask) {
+    dependsOn installDeps
     npmCommand = ['run', 'build']
     workingDir = file(viteDir)
     outputs.dir(viteDistDir)

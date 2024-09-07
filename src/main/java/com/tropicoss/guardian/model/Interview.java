@@ -6,7 +6,8 @@ public class Interview {
     private String createdAt;
     private String modifiedAt;
 
-    public Interview() {}
+    public Interview() {
+    }
 
     public String getInterviewId() {
         return interviewId;

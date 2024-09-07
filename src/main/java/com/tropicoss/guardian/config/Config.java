@@ -52,7 +52,7 @@ public final class Config {
     // Create the Server configuration
     @Configuration
     public static class ServerConfiguration {
-        private boolean https= false;
+        private boolean https = false;
         private String host = "127.0.0.1";
         private int port = 1234;
         @Comment("THIS CANNOT BE THE SAME AS PORT")
@@ -65,6 +65,7 @@ public final class Config {
         public void setHttps(boolean https) {
             this.https = https;
         }
+
         // Getters and Setters
         public String getHost() {
             return host;

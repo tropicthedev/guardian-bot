@@ -7,7 +7,8 @@ public class Session {
     private String sessionStart;
     private String sessionEnd;
 
-    public Session() {}
+    public Session() {
+    }
 
     public String getSessionId() {
         return sessionId;

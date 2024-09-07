@@ -4,7 +4,7 @@ import net.minecraft.text.Text;
 
 public interface Message {
 
-    public String toConsoleString();
+    String toConsoleString();
 
-    public Text toChatText();
+    Text toChatText();
 }
