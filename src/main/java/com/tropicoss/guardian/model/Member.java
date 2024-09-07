@@ -6,6 +6,7 @@ public class Member {
     private String discordId;
     private String mojangId;
     private int isAdmin;
+    private int onVacation;
     private String createdAt;
     private String modifiedAt;
 
@@ -33,6 +34,14 @@ public class Member {
 
     public void setIsAdmin(int isAdmin) {
         this.isAdmin = isAdmin;
+    }
+
+    public int getOnVacation() {
+        return onVacation;
+    }
+
+    public void setOnVacation(int onVacation) {
+        this.onVacation = onVacation;
     }
 
     public String getCreatedAt() {

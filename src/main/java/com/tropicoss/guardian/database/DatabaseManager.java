@@ -4,7 +4,10 @@ import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.model.*;
 import net.fabricmc.loader.api.FabricLoader;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -216,6 +219,76 @@ public class DatabaseManager {
             return purgeDates;
         }
     }
+
+    public String getMemberFromChannelId(String channelId) throws SQLException {
+        String sql = "SELECT a.discord_id " +
+                "FROM interviews i " +
+                "JOIN applications a ON i.application_id = a.application_id " +
+                "WHERE i.interview_id = ?;";
+
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, channelId);
+            ResultSet rs = pstmt.executeQuery();
+            String discordId = "";
+
+            if (rs.next()) {
+                discordId = rs.getString("discord_id");
+            } else {
+                throw new SQLException("Member not found.");
+            }
+
+            return discordId;
+        }
+    }
+
+    public List<Member> removeInactiveMembers(int daysInactive) throws SQLException {
+        List<Member> removedMembers = new ArrayList<>();
+
+        String sqlInsert = "INSERT INTO removed_members (discord_id, mojang_id, login_count, join_date, leave_date)\n" +
+                "SELECT m.discord_id, m.mojang_id, COUNT(s.session_id) AS login_count, MIN(m.created_at) AS join_date, datetime('now') AS leave_date\n" +
+                "FROM members m\n" +
+                "LEFT JOIN sessions s ON m.discord_id = s.discord_id\n" +
+                "WHERE (s.session_end IS NULL OR s.session_end < datetime('now', ?))\n" +
+                "GROUP BY m.discord_id;";
+
+        String sqlSelect = "SELECT m.discord_id, m.mojang_id, m.is_admin, m.on_vacation, m.created_at, m.modified_at\n" +
+                "FROM members m\n" +
+                "WHERE m.discord_id IN (\n" +
+                "    SELECT discord_id\n" +
+                "    FROM removed_members\n" +
+                ");";
+
+        String sqlDelete = "DELETE FROM members\n" +
+                "WHERE discord_id IN (\n" +
+                "    SELECT discord_id\n" +
+                "    FROM removed_members\n" +
+                ");";
+
+        try (PreparedStatement pstmtInsert = connection.prepareStatement(sqlInsert);
+             PreparedStatement pstmtSelect = connection.prepareStatement(sqlSelect);
+             PreparedStatement pstmtDelete = connection.prepareStatement(sqlDelete)) {
+
+            pstmtInsert.setString(1, "-" + daysInactive + " days");
+
+            pstmtInsert.executeUpdate();
+
+            ResultSet rs = pstmtSelect.executeQuery();
+            while (rs.next()) {
+                Member member = new Member();
+                member.setDiscordId(rs.getString("discord_id"));
+                member.setMojangId(rs.getString("mojang_id"));
+                member.setIsAdmin(rs.getInt("is_admin"));
+                member.setOnVacation(rs.getInt("on_vacation"));
+                member.setCreatedAt(rs.getString("created_at"));
+                member.setModifiedAt(rs.getString("modified_at"));
+                removedMembers.add(member);
+            }
+
+            pstmtDelete.executeUpdate();
+        }
+        return removedMembers;
+    }
     //endregion
 
     //region Application Methods
@@ -281,11 +354,11 @@ public class DatabaseManager {
         }
     }
 
-    public void updateApplication(String applicationId, String content) throws SQLException {
-        String sql = "UPDATE applications SET content = ?, modified_at = datetime('now') WHERE application_id = ?";
+    public void updateApplication(String applicationId, String newId) throws SQLException {
+        String sql = "UPDATE applications SET application_id = ?, modified_at = datetime('now') WHERE application_id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, content);
+            pstmt.setString(1, newId);
             pstmt.setString(2, applicationId);
 
             int affectedRows = pstmt.executeUpdate();
@@ -317,6 +390,69 @@ public class DatabaseManager {
         } catch (SQLException e) {
             connection.rollback();
             throw e;
+        }
+    }
+
+    public Application getPendingApplicationByDiscordId(String discordId) throws SQLException {
+        String sql = "SELECT a.application_id, a.content, a.discord_id, a.created_at\n" +
+                "FROM applications a\n" +
+                "LEFT JOIN application_responses ar ON a.application_id = ar.application_id\n" +
+                "WHERE a.discord_id = ? AND (ar.status IS NULL OR ar.status = 'RESET')\n" +
+                "LIMIT 1;";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            // Bind the discordId parameter to the query
+            pstmt.setString(1, discordId);
+
+            // Execute the query
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                // Create a map to store the application details
+                Application application = new Application();
+                application.setApplicationId(rs.getString("application_id"));
+                application.setContent(rs.getString("content"));
+                application.setDiscordId(rs.getString("discord_id"));
+                application.setCreatedAt(rs.getString("created_at"));
+
+                return application;
+            } else {
+                throw new SQLException("No pending application found for the given Discord ID.");
+            }
+        }
+    }
+
+    public boolean hasPendingApplication(String discordId) throws SQLException {
+        String sql = "SELECT 1\n" +
+                "FROM applications a\n" +
+                "LEFT JOIN application_responses ar ON a.application_id = ar.application_id\n" +
+                "WHERE a.discord_id = ? AND (ar.status IS NULL OR ar.status = 'RESET')\n" +
+                "LIMIT 1;";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, discordId);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            return rs.next();
+        }
+    }
+
+    public void resetApplication(String applicationId) throws SQLException {
+        String sql = "UPDATE application_responses " +
+                "SET status = 'RESET', modified_at = datetime('now') " +
+                "WHERE application_id = ?;";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            // Bind the applicationId parameter to the query
+            pstmt.setString(1, applicationId);
+
+            // Execute the update
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new SQLException("No application response found with the given application ID.");
+            }
         }
     }
 
@@ -533,6 +669,87 @@ public class DatabaseManager {
         }
     }
 
+    public ApplicationResponse getApplicationResponseByApplicationId(String applicationId) throws SQLException {
+        String sql = "SELECT application_response_id, admin_id, application_id, content, status, created_at, modified_at\n" +
+                "FROM application_responses\n" +
+                "WHERE application_id = ?;";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            // Bind the applicationId parameter to the query
+            pstmt.setString(1, applicationId);
+
+            // Execute the query
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                // Create a map to store the application response details
+                ApplicationResponse response = new ApplicationResponse();
+                response.setApplicationResponseId(rs.getString("application_response_id"));
+                response.setAdminId(rs.getString("admin_id"));
+                response.setApplicationId(rs.getString("application_id"));
+                response.setContent(rs.getString("content"));
+                response.setStatus(rs.getString("status"));
+                response.setCreatedAt(rs.getString("created_at"));
+                response.setModifiedAt(rs.getString("modified_at"));
+
+                return response;
+            } else {
+                throw new SQLException("Application response not found for the given application ID.");
+            }
+        }
+    }
+
+    public void upsertApplicationResponse(String applicationResponseId, String adminId, String applicationId, String content, String status) throws SQLException {
+        String sql = "INSERT INTO application_responses (application_response_id, admin_id, application_id, content, status, created_at, modified_at)\n" +
+                "VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))\n" +
+                "ON CONFLICT(application_id) DO UPDATE SET\n" +
+                "admin_id = excluded.admin_id,\n" +
+                "content = excluded.content,\n" +
+                "status = excluded.status,\n" +
+                "modified_at = datetime('now');";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            // Bind parameters to the prepared statement
+            pstmt.setString(1, applicationResponseId);
+            pstmt.setString(2, adminId);
+            pstmt.setString(3, applicationId);
+            pstmt.setString(4, content);
+            pstmt.setString(5, status);
+
+            // Execute the query
+            pstmt.executeUpdate();
+        }
+    }
+
+    public ApplicationResponse getApplicationResponseByMessageId(String messageId) throws SQLException {
+        String sql = "SELECT application_response_id, admin_id, application_id, content, status, created_at, modified_at\n" +
+                "FROM application_responses\n" +
+                "WHERE application_id = ?;";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            // Bind the messageId (which is application_id) to the query
+            pstmt.setString(1, messageId);
+
+            // Execute the query
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                // Create a map to store the application response details
+                ApplicationResponse response = new ApplicationResponse();
+                response.setApplicationResponseId(rs.getString("application_response_id"));
+                response.setAdminId(rs.getString("admin_id"));
+                response.setApplicationId(rs.getString("application_id"));
+                response.setContent(rs.getString("content"));
+                response.setStatus(rs.getString("status"));
+                response.setCreatedAt(rs.getString("created_at"));
+                response.setModifiedAt(rs.getString("modified_at"));
+
+                return response;
+            } else {
+                throw new SQLException("No application response found for the given message ID.");
+            }
+        }
+    }
     //endregion
 
     //region Interview Response Methods
@@ -869,14 +1086,19 @@ class MigrationManager {
     public void runMigrations() throws SQLException, IOException {
         createMigrationsTableIfNotExists();
         List<String> appliedMigrations = getAppliedMigrations();
-        List<Path> migrationFiles = getMigrationFiles();
+        List<String> migrationFiles = getMigrationFileNames();
 
-        for (Path migrationFile : migrationFiles) {
-            String migrationName = migrationFile.getFileName().toString();
-            if (!appliedMigrations.contains(migrationName)) {
-                executeMigration(migrationFile);
-                recordMigration(migrationName);
-                System.out.println("Applied migration: " + migrationName);
+        for (String migrationFile : migrationFiles) {
+            if (!appliedMigrations.contains(migrationFile)) {
+                try (InputStream migrationStream = getClass().getClassLoader().getResourceAsStream(migrationsDir + "/" + migrationFile)) {
+                    if (migrationStream != null) {
+                        executeMigration(migrationStream);
+                        recordMigration(migrationFile);
+                        System.out.println("Applied migration: " + migrationFile);
+                    } else {
+                        System.out.println("Migration file not found: " + migrationFile);
+                    }
+                }
             }
         }
     }
@@ -906,23 +1128,39 @@ class MigrationManager {
         return migrations;
     }
 
-    private List<Path> getMigrationFiles() throws IOException {
-        try (Stream<Path> paths = Files.walk(Paths.get(migrationsDir))) {
-            return paths
-                    .filter(Files::isRegularFile)
-                    .filter(path -> path.toString().endsWith(".sql"))
-                    .sorted()
-                    .collect(Collectors.toList());
+    // This method returns the list of migration file names
+    private List<String> getMigrationFileNames() throws IOException {
+        List<String> migrationFiles = new ArrayList<>();
+        try (InputStream resourceStream = getClass().getClassLoader().getResourceAsStream(migrationsDir)) {
+            if (resourceStream != null) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(resourceStream));
+                String fileName;
+                while ((fileName = reader.readLine()) != null) {
+                    if (fileName.endsWith(".sql")) {
+                        System.out.println(fileName);
+                        migrationFiles.add(fileName);
+                    }
+                }
+            } else {
+                System.out.println("Migrations directory not found in the JAR!");
+            }
         }
+        return migrationFiles;
     }
 
-    private void executeMigration(Path migrationFile) throws IOException, SQLException {
-        String sql = new String(Files.readAllBytes(migrationFile));
+    // Updated method to execute migration from InputStream instead of Path
+    private void executeMigration(InputStream migrationStream) throws IOException, SQLException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(migrationStream));
+        StringBuilder sqlBuilder = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            sqlBuilder.append(line).append("\n");
+        }
+        String sql = sqlBuilder.toString();
         String[] statements = sql.split(";");
 
         try (Statement stmt = connection.createStatement()) {
             for (String statement : statements) {
-                // Trim to remove any leading/trailing whitespace
                 statement = statement.trim();
                 if (!statement.isEmpty()) {
                     stmt.execute(statement);

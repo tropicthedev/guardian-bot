@@ -52,9 +52,19 @@ public final class Config {
     // Create the Server configuration
     @Configuration
     public static class ServerConfiguration {
+        private boolean https= false;
         private String host = "127.0.0.1";
         private int port = 1234;
+        @Comment("THIS CANNOT BE THE SAME AS PORT")
+        private int websocketPort = 12345;
 
+        public boolean getHttps() {
+            return https;
+        }
+
+        public void setHttps(boolean https) {
+            this.https = https;
+        }
         // Getters and Setters
         public String getHost() {
             return host;
@@ -70,6 +80,14 @@ public final class Config {
 
         public void setPort(int port) {
             this.port = port;
+        }
+
+        public int getWebsocketPort() {
+            return websocketPort;
+        }
+
+        public void setWebsocketPort(int websocketPort) {
+            this.websocketPort = websocketPort;
         }
     }
 

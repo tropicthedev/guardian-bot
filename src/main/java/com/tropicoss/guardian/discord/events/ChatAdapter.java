@@ -1,7 +1,7 @@
 package com.tropicoss.guardian.discord.events;
 
 import com.google.gson.Gson;
-import com.tropicoss.guardian.networking.messaging.DiscordMessage;
+import com.tropicoss.guardian.javalin.websocket.message.DiscordMessage;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.minecraft.server.MinecraftServer;

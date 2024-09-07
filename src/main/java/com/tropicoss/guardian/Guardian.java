@@ -2,17 +2,19 @@ package com.tropicoss.guardian;
 
 
 import com.google.gson.Gson;
-import com.tropicoss.guardian.http.JavalinServer;
+import com.tropicoss.guardian.cron.CronManager;
+import com.tropicoss.guardian.cron.tasks.PurgeTask;
+import com.tropicoss.guardian.javalin.JavalinServer;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.discord.Bot;
+import com.tropicoss.guardian.javalin.websocket.message.*;
 import com.tropicoss.guardian.minecraft.Commands;
 import com.tropicoss.guardian.minecraft.event.AdvancementEvent;
 import com.tropicoss.guardian.minecraft.event.EntityDeathEvents;
 import com.tropicoss.guardian.minecraft.event.PlayerDeathEvents;
-import com.tropicoss.guardian.networking.Client;
-import com.tropicoss.guardian.networking.Server;
-import com.tropicoss.guardian.networking.messaging.*;
+import com.tropicoss.guardian.javalin.websocket.Client;
+import com.tropicoss.guardian.javalin.websocket.Server;
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -45,6 +47,7 @@ import java.sql.SQLException;
 public class Guardian implements DedicatedServerModInitializer {
     private static final String MOD_ID = "Guardian";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    private JavalinServer javalinServer;
     public static Server SOCKET_SERVER;
     public static Client SOCKET_CLIENT;
     public static MinecraftServer MINECRAFT_SERVER;
@@ -53,6 +56,7 @@ public class Guardian implements DedicatedServerModInitializer {
 
     @Override
     public void onInitializeServer() {
+
         try {
 
             Path guardianConfigPath = FabricLoader.getInstance().getConfigDir().resolve("guardian");
@@ -68,12 +72,17 @@ public class Guardian implements DedicatedServerModInitializer {
 
             if (guardianConfigPath.toFile().exists()) {
                 DatabaseManager db = new DatabaseManager();
-                ClassLoader classLoader = getClass().getClassLoader();
 
-                db.runMigrations(classLoader.getResource("migrations").getPath());
+                db.runMigrations("migrations");
 
                 db.close();
             }
+
+            CronManager cronManager = new CronManager();
+
+            cronManager.addTask(new PurgeTask());
+
+            cronManager.start();
 
             ServerLifecycleEvents.SERVER_STARTING.register(server -> {
                 try {
@@ -112,26 +121,27 @@ public class Guardian implements DedicatedServerModInitializer {
 
     public void onServerStarting(MinecraftServer server) throws SQLException {
         MINECRAFT_SERVER = server;
-        JavalinServer javalinServer = new JavalinServer();
+        javalinServer = new JavalinServer();
 
         try {
-            javalinServer.startServer();
             switch (config.getConfig().getGeneric().getMode()) {
                 case "server" -> {
                     Bot.getBotInstance().sendServerStartingMessage(config.getConfig().getGeneric().getMode());
 
-                    SOCKET_SERVER = new Server(new InetSocketAddress(config.getConfig().getServer().getPort()));
+                    SOCKET_SERVER = new Server(new InetSocketAddress(config.getConfig().getServer().getWebsocketPort()));
 
                     SOCKET_SERVER.start();
 
                     LOGGER.info("Running in Server Mode");
+
+                    javalinServer.startServer();
                 }
 
                 case "client" -> {
                     Commands.register();
 
-                    String uri = String.format("ws://%s:%s", config.getConfig().getServer().getHost(), config.getConfig().getServer().getPort());
-
+                    String uri = String.format("ws://%s:%s", config.getConfig().getServer().getHost(), config.getConfig().getServer().getWebsocketPort());
+                    System.out.println(uri);
                     SOCKET_CLIENT = new Client(URI.create(uri));
 
                     try {
@@ -150,6 +160,8 @@ public class Guardian implements DedicatedServerModInitializer {
                 }
 
                 case "standalone" -> {
+                    javalinServer.startServer();
+
                     Bot.getBotInstance().sendServerStartingMessage(config.getConfig().getGeneric().getName());
 
                     LOGGER.info("Running in Standalone Mode");
@@ -195,12 +207,16 @@ public class Guardian implements DedicatedServerModInitializer {
                     Bot.getBotInstance().sendServerStoppingMessage(config.getConfig().getGeneric().getName());
 
                     SOCKET_SERVER.broadcast(json);
+                    javalinServer.stopServer();
                 }
 
                 case "client" -> SOCKET_CLIENT.send(json);
 
-                case "standalone" ->
-                        Bot.getBotInstance().sendServerStoppingMessage(config.getConfig().getGeneric().getName());
+                case "standalone" -> {
+                    Bot.getBotInstance().sendServerStoppingMessage(config.getConfig().getGeneric().getName());
+                    javalinServer.stopServer();
+                }
+
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage());

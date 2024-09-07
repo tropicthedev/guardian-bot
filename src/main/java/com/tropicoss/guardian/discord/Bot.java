@@ -3,6 +3,8 @@ package com.tropicoss.guardian.discord;
 import com.google.gson.JsonObject;
 import com.tropicoss.guardian.config.Config;
 //import com.tropicoss.guardian.discord.commands.Onboarding;
+import com.tropicoss.guardian.database.DatabaseManager;
+import com.tropicoss.guardian.discord.commands.Onboarding;
 import com.tropicoss.guardian.discord.commands.ResetCommand;
 import com.tropicoss.guardian.discord.events.ChatAdapter;
 import com.tropicoss.guardian.discord.events.UserAdapter;
@@ -33,13 +35,14 @@ import static com.tropicoss.guardian.Guardian.MINECRAFT_SERVER;
 
 public class Bot {
     private static Bot BOT_INSTANCE;
-
+    private final DatabaseManager databaseManager;
     private final JDA bot;
     private final TextChannel textChannel;
     private final String iconUrl = "https://cdn2.iconfinder.com/data/icons/whcompare-isometric-web-hosting-servers/50/value-server-512.png";
     private Webhook webhook = null;
 
     private Bot() throws InterruptedException, SQLException {
+        this.databaseManager = new DatabaseManager();
         try {
             Config config = Config.getInstance();
             bot = JDABuilder.createDefault(config.getConfig().getBot().getToken())
@@ -47,7 +50,7 @@ public class Bot {
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
                     .addEventListeners(
-//                            new Onboarding(),
+                            new Onboarding(databaseManager),
                             new ResetCommand(),
                             new UserAdapter(),
                             new ChatAdapter(
@@ -116,11 +119,13 @@ public class Bot {
         return BOT_INSTANCE;
     }
 
-    public void shutdown() throws InterruptedException {
-
+    public void shutdown() {
+        try {
+            databaseManager.close();
+        } catch (SQLException e) {
+            LOGGER.error(e.getMessage());
+        }
         bot.shutdown();
-
-        bot.awaitShutdown();
     }
 
     public void sendWebhook(String message, PlayerInfoFetcher.Profile profile, String serverName) {

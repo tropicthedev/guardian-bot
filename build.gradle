@@ -37,7 +37,6 @@ configurations {
     }
 }
 
-
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -82,6 +81,7 @@ dependencies {
     include("com.neovisionaries:nv-websocket-client:2.14")
     include("com.squareup.okio:okio-jvm:3.9.0")
 
+    // Utilities
     include(implementation "com.fasterxml.jackson.core:jackson-core:2.14.1")
     include(implementation "com.fasterxml.jackson.core:jackson-databind:2.14.1")
     include(implementation "com.fasterxml.jackson.core:jackson-annotations:2.14.1")
@@ -89,6 +89,12 @@ dependencies {
     include(implementation 'de.exlll:configlib-yaml:4.5.0')
     include('de.exlll:configlib-core:4.5.0')
     include('org.snakeyaml:snakeyaml-engine:2.7')
+
+    // Cron Utils
+    include(implementation 'com.cronutils:cron-utils:9.2.1')
+
+    // Google Guava Utils
+    include(implementation 'com.google.guava:guava:33.3.0-jre')
 }
 
 processResources {
@@ -104,6 +110,9 @@ processResources {
     }
 }
 
+tasks.withType(Copy) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
 
 def viteDir = "${projectDir}/client"
 def viteDistDir = "${viteDir}/dist"
