@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.tropicoss.guardian.Guardian.LOGGER;
 
@@ -376,7 +377,7 @@ public class Onboarding extends ListenerAdapter {
     private void handleAcceptButtonInteraction(ButtonInteraction event) {
         try {
             if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-                event.reply("Insufficient Permissions").queue();
+                event.reply("Insufficient Permissions").setEphemeral(true).queue();
                 return;
             }
 
@@ -481,7 +482,7 @@ public class Onboarding extends ListenerAdapter {
         if (event.getComponentId().equals(ButtonId.DENY) && !event.getMember().getUser().isBot()) {
 
             if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-                event.reply("Insufficient Permissions").queue();
+                event.reply("Insufficient Permissions").setEphemeral(true).queue();
                 return;
             }
 
@@ -497,14 +498,8 @@ public class Onboarding extends ListenerAdapter {
                 return;
             }
 
-            StringBuilder denialReasons = new StringBuilder();
-
-            for (String value : selectedValues) {
-                denialReasons.append(value).append("\n");
-            }
-            reason = denialReasons.toString();
             try {
-                handleDeny(event, reason);
+                handleDeny(event, selectedValues);
             } catch (SQLException e) {
                 LOGGER.error("Error handling denial: {}", e.getMessage());
 
@@ -518,7 +513,7 @@ public class Onboarding extends ListenerAdapter {
         if (event.getModalId().equals(ModalId.REASON)) {
 
             if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-                event.reply("Insufficient Permissions").queue();
+                event.reply("Insufficient Permissions").setEphemeral(true).queue();
                 return;
             }
 
@@ -534,9 +529,9 @@ public class Onboarding extends ListenerAdapter {
         }
     }
 
-    private void handleDeny(StringSelectInteractionEvent event, String reason) throws SQLException {
+    private void handleDeny(StringSelectInteractionEvent event, List<String> reason) throws SQLException {
         if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("Insufficient Permissions").queue();
+            event.reply("Insufficient Permissions").setEphemeral(true).queue();
             return;
         }
 
@@ -575,14 +570,31 @@ public class Onboarding extends ListenerAdapter {
             return;
         }
 
-        databaseManager.upsertApplicationResponse(UUID.randomUUID().toString(), event.getMember().getId(), application.getApplicationId(), reason, Status.DENIED);
+        EmbedBuilder denyEmbedBuilder = new EmbedBuilder()
+                .setTitle("Your application has been denied for the following reason(s):")
+                .setColor(Color.RED)
+                .setFooter(event.getMember().getUser().getAsTag());
 
-        member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessage("Your application has been denied for the following reason(s):\n" + reason)).queue();
+        int count = 1;
+
+        for(String denyReason: reason) {
+            denyEmbedBuilder.addField("Reason " + count, denyReason,false);
+            count++;
+        }
+
+        String listOfReasons = reason.stream().map(Object::toString)
+                .collect(Collectors.joining(", "));
+
+        databaseManager.upsertApplicationResponse(UUID.randomUUID().toString(), event.getMember().getId(), application.getApplicationId(), listOfReasons, Status.DENIED);
+
+        member.getUser().openPrivateChannel().flatMap(channel ->
+                channel.sendMessageEmbeds(denyEmbedBuilder.build())
+        ).queue();
 
         MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
 
         EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.RED).setFooter(
-                String.format("User Denied By %s \nReason %b\n", event.getMember().getUser().getAsTag(), reason));
+                String.format("User Denied By %s", event.getMember().getUser().getAsTag()));
 
         event.deferEdit().queue();
 
@@ -596,7 +608,7 @@ public class Onboarding extends ListenerAdapter {
 
     private void handleDeny(ModalInteractionEvent event, String reason) throws SQLException {
         if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("Insufficient Permissions").queue();
+            event.reply("Insufficient Permissions").setEphemeral(true).queue();
             return;
         }
 
@@ -646,7 +658,13 @@ public class Onboarding extends ListenerAdapter {
 
         databaseManager.upsertApplicationResponse(UUID.randomUUID().toString(), event.getMember().getId(), application.getApplicationId(), reason, Status.DENIED);
 
-        member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessage("Your application has been denied for the following reason(s):\n" + reason)).queue();
+        MessageEmbed denyEmbed = new EmbedBuilder()
+                .setTitle("Your application has been denied for the following reason:")
+                .setColor(Color.RED)
+                .setDescription(reason)
+                .setFooter(event.getMember().getUser().getAsTag()).build();
+
+        member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessageEmbeds(denyEmbed)).queue();
 
         MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
 
@@ -735,7 +753,7 @@ public class Onboarding extends ListenerAdapter {
         Application application;
 
         if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("Insufficient Permissions").queue();
+            event.reply("Insufficient Permissions").setEphemeral(true).queue();
             return;
         }
 
