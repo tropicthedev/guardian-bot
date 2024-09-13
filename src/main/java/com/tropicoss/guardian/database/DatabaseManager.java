@@ -445,6 +445,10 @@ public class DatabaseManager {
             if (rowsAffected == 0) {
                 throw new SQLException("No application response found with the given application ID.");
             }
+            connection.commit();
+        } catch (SQLException e) {
+            connection.rollback();
+            throw e;
         }
     }
 

@@ -37,6 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -453,7 +454,14 @@ public class Onboarding extends ListenerAdapter {
 
             member.getGuild().addRoleToMember(UserSnowflake.fromId(member.getId()), role).queue();
 
-            member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessage(String.format("You have been accepted for an interview in %s", interviewChannel.getAsMention()))).queue();
+            MessageEmbed notificationEmbed = new EmbedBuilder()
+                    .setTitle("You have been accepted for an interview")
+                    .setColor(Color.GREEN)
+                    .addField("Interview Tread", interviewChannel.getAsMention(), false )
+                    .setTimestamp(LocalDateTime.now())
+                    .build();
+
+            member.getUser().openPrivateChannel().flatMap(channel -> channel.sendMessageEmbeds(notificationEmbed)).queue();
 
             MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
 
@@ -546,7 +554,7 @@ public class Onboarding extends ListenerAdapter {
         try {
             ApplicationResponse existingApplicationResponse = databaseManager.getApplicationResponseByApplicationId(application.getApplicationId());
 
-            if (existingApplicationResponse != null && existingApplicationResponse.getStatus() != Status.RESET) {
+            if (existingApplicationResponse != null && !Objects.equals(existingApplicationResponse.getStatus(), Status.RESET)) {
                 event.reply("This application has already been updated").setEphemeral(true).queue();
 
                 LOGGER.error("This application has already been updated");
@@ -669,7 +677,7 @@ public class Onboarding extends ListenerAdapter {
         MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
 
         EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.RED).setFooter(
-                String.format("User Denied By %s \nReason %b\n", event.getMember().getUser().getAsTag(), reason));
+                String.format("User Denied By %s \nReason %s\n", event.getMember().getUser().getName(), reason));
 
         event.deferEdit().queue();
 
@@ -679,8 +687,6 @@ public class Onboarding extends ListenerAdapter {
                         "Reset"
                 ).withEmoji(Emoji.fromFormatted("🔙"))
         ).queue();
-
-        event.reply("Application has been denied and the user has been notified.").setEphemeral(true).queue();
     }
 
     private void handleResetButtonInteraction(ButtonInteractionEvent event) {
@@ -719,7 +725,14 @@ public class Onboarding extends ListenerAdapter {
             }
         }
 
-        member.getUser().openPrivateChannel().flatMap(privateChannel -> privateChannel.sendMessage("Your application is being reconsidered, once a decision is made you will be updated")).queue();
+        MessageEmbed notificationEmbed = new EmbedBuilder()
+                .setTitle("Your application is being reconsidered")
+                .setDescription("Once a decision is made you will be updated")
+                .setColor(Color.ORANGE)
+                .setTimestamp(LocalDateTime.now())
+                .build();
+
+        member.getUser().openPrivateChannel().flatMap(privateChannel -> privateChannel.sendMessageEmbeds(notificationEmbed)).queue();
 
         List<SelectOption> selectOptions = new ArrayList<>();
 
@@ -729,8 +742,8 @@ public class Onboarding extends ListenerAdapter {
 
         MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
 
-        EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.YELLOW).setFooter(
-                String.format("Application Reset by %s", member.getAsMention()));
+        EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.CYAN).setFooter(
+                String.format("Application was reset by %s", member.getUser().getName()));
 
         event.deferEdit().queue();
 
@@ -787,12 +800,18 @@ public class Onboarding extends ListenerAdapter {
             return;
         }
 
-        member.getUser().openPrivateChannel().flatMap(privateChannel -> privateChannel.sendMessage("You have been banned")).queue();
+        MessageEmbed notificationEmbed = new EmbedBuilder()
+                .setTitle("Your have been banned")
+                .setColor(Color.BLACK)
+                .setTimestamp(LocalDateTime.now())
+                .build();
+
+        member.getUser().openPrivateChannel().flatMap(privateChannel -> privateChannel.sendMessageEmbeds(notificationEmbed)).queue();
 
         MessageEmbed embed = event.getMessage().getEmbeds().getFirst();
 
         EmbedBuilder embedBuilder = new EmbedBuilder(embed).setColor(Color.RED).setFooter(
-                String.format("Application Banned by %s", member.getAsMention()));
+                String.format("Application Banned by %s", member.getUser().getName()));
 
         event.deferEdit().queue();
 
