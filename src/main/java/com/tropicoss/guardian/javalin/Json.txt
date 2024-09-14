@@ -1,9 +1,0 @@
-ObjectMapper objectMapper = new ObjectMapper();
-
-        ObjectNode jsonObject = objectMapper.createObjectNode();
-
-        jsonObject.put("name", "Jordan McKoy");
-        jsonObject.put("age", 22);
-        jsonObject.put("isStudent", true);
-
-        ctx.json(jsonObject);

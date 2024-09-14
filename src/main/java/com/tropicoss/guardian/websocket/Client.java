@@ -1,6 +1,6 @@
-package com.tropicoss.guardian.javalin.websocket;
+package com.tropicoss.guardian.websocket;
 
-import com.tropicoss.guardian.javalin.websocket.message.MessageHandler;
+import com.tropicoss.guardian.websocket.message.MessageHandler;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
@@ -39,13 +39,13 @@ public class Client extends WebSocketClient {
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        LOGGER.info("Disconnected From Guardian's Websocket Server. Reason: " + reason);
+        LOGGER.info("Disconnected From Guardian's Websocket Server. Reason: {}", reason);
         attemptReconnect();
     }
 
     @Override
     public void onError(Exception ex) {
-        LOGGER.error("Error from " + this.getURI().getHost(), ex);
+        LOGGER.error("Error from {}", this.getURI().getHost(), ex);
         attemptReconnect();
     }
 

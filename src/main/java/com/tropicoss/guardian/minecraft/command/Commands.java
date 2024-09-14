@@ -1,4 +1,4 @@
-package com.tropicoss.guardian.minecraft;
+package com.tropicoss.guardian.minecraft.command;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.text.Text;

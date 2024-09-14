@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -29,10 +30,13 @@ import java.net.http.HttpResponse;
 import java.sql.SQLException;
 import java.time.Instant;
 
+
+
 import static com.tropicoss.guardian.Guardian.LOGGER;
 import static com.tropicoss.guardian.Guardian.MINECRAFT_SERVER;
 
 public class Bot {
+
     private static Bot BOT_INSTANCE;
     private final DatabaseManager databaseManager;
     private final JDA bot;
@@ -259,5 +263,28 @@ public class Bot {
                         .setColor(Color.BLUE)
                         .build()
         ).queue();
+    }
+
+    public void removeInactiveMember(com.tropicoss.guardian.model.Member member) {
+        try{
+            Guild guild = bot.getGuildById(Config.getInstance().getConfig().getBot().getGuild());
+
+            if(guild == null) {
+                LOGGER.error("Guild could not be found, check your configuration");
+                return;
+            }
+
+            Member guildMember = guild.getMemberById(member.getDiscordId());
+
+            if(guildMember == null) {
+                LOGGER.error("Member could not be found, are they still apart of the server ?");
+                return;
+            }
+
+            guild.kick(guildMember).reason("Kicked for inactivity").queue();
+
+        } catch (Exception e) {
+            LOGGER.error("There was an error while trying to remove inactive member: {}", e.getMessage());
+        }
     }
 }

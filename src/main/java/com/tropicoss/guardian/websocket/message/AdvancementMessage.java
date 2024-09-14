@@ -1,4 +1,4 @@
-package com.tropicoss.guardian.javalin.websocket.message;
+package com.tropicoss.guardian.websocket.message;
 
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
 import net.fabricmc.loader.api.FabricLoader;

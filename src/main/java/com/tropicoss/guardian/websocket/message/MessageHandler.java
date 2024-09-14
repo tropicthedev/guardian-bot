@@ -1,15 +1,22 @@
-package com.tropicoss.guardian.javalin.websocket.message;
+package com.tropicoss.guardian.websocket.message;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.authlib.GameProfile;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.discord.Bot;
+import com.tropicoss.guardian.minecraft.action.BanAction;
+import com.tropicoss.guardian.minecraft.action.WhitelistAddAction;
+import com.tropicoss.guardian.minecraft.action.WhitelistRemoveAction;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.http.WebSocket;
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageHandler.class);
@@ -65,6 +72,9 @@ public class MessageHandler {
                         break;
                     case "death":
                         handleDeathMessage(gson.fromJson(message, EntityDeathMessage.class));
+                        break;
+                    case "command":
+                        handleCommandMessage(gson.fromJson(message, CommandMessage.class));
                         break;
                     default:
                         throw new IllegalStateException("Unexpected value: " + messageType);
@@ -199,7 +209,7 @@ public class MessageHandler {
                 .getPlayerList()
                 .forEach(player -> player.sendMessage(msg.toChatText(), false));
 
-        if (!isServer()) {
+        if (isServer()) {
             getBot().sendAchievementMessage(msg.getProfile(), msg.origin, msg.title, msg.description);
         }
     }
@@ -214,6 +224,25 @@ public class MessageHandler {
 
         if (isServer()) {
             getBot().sendDeathMessage(msg.origin, msg.message, msg.coordinates);
+        }
+    }
+
+    private void handleCommandMessage(CommandMessage message) {
+        GameProfile profile = new GameProfile(UUID.fromString(message.uuid), message.name);
+
+        switch (message.action) {
+            case "add":
+                WhitelistAddAction whitelistAddAction = new WhitelistAddAction();
+                whitelistAddAction.execute(profile, minecraftServer);
+                break;
+            case "remove":
+                WhitelistRemoveAction whitelistRemoveAction = new WhitelistRemoveAction();
+                whitelistRemoveAction.execute(profile, minecraftServer);
+                break;
+            case "ban":
+                BanAction banAction = new BanAction();
+                banAction.execute(profile, minecraftServer);
+                break;
         }
     }
 }

@@ -210,6 +210,8 @@ public final class Config {
         @Comment("The channel that the welcome to the server message will be sent to")
         private String channel = "channel-id";
         private String message = "Welcome to the server {member}, ip is in <#channel-id>";
+        private String inactivityMessage = "You are {x} days away from being removed for inactivity, please login or ask to be put in vacation mode if your admins allow it";
+        private int notificationPeriod = 7;
 
         public int getInactivityThreshold() {
             return inactivityThreshold;
@@ -257,6 +259,22 @@ public final class Config {
 
         public void setCron(String cron) {
             this.cron = cron;
+        }
+
+        public String getInactivityMessage() {
+            return inactivityMessage;
+        }
+
+        public void setInactivityMessage(String inactivityMessage) {
+            this.inactivityMessage = inactivityMessage;
+        }
+
+        public int getNotificationPeriod() {
+            return notificationPeriod;
+        }
+
+        public void setNotificationPeriod(int notificationPeriod) {
+            this.notificationPeriod = notificationPeriod;
         }
     }
 

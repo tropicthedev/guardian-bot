@@ -3,12 +3,14 @@ package com.tropicoss.guardian.discord.commands;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.Gson;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.model.*;
 import com.tropicoss.guardian.utils.Cache;
 import com.tropicoss.guardian.utils.PlayerInfoFetcher;
 import com.tropicoss.guardian.utils.PlayerInfoFetcher.Profile;
+import com.tropicoss.guardian.websocket.message.CommandMessage;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
@@ -45,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.tropicoss.guardian.Guardian.LOGGER;
+import static com.tropicoss.guardian.Guardian.SOCKET_SERVER;
 
 public class Onboarding extends ListenerAdapter {
     private final Config config = Config.getInstance();
@@ -145,6 +148,12 @@ public class Onboarding extends ListenerAdapter {
                     "Member Accepted", Status.ACCEPTED);
 
             databaseManager.addMember(memberId, playerProfile.data.player.id, false);
+
+            CommandMessage commandMessage = new CommandMessage(playerProfile.data.player.id, playerProfile.data.player.username, "add");
+
+            String json = new Gson().toJson(commandMessage);
+
+            SOCKET_SERVER.broadcast(json);
 
             event.reply("Member Accepted").setEphemeral(true).queue();
         } catch (Exception e) {
