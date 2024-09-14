@@ -118,6 +118,7 @@ public final class Config {
     @Configuration
     public static class BotConfiguration {
         private String channel = "channel-id";
+        private String consoleChannel = "console-channel-id";
         private String token = "bot-token";
         private String guild = "guild-id";
         private String clientId = "oauth-client-id";
@@ -131,6 +132,14 @@ public final class Config {
 
         public void setChannel(String channel) {
             this.channel = channel;
+        }
+
+        public String getConsoleChannel() {
+            return consoleChannel;
+        }
+
+        public void setConsoleChannel(String consoleChannel) {
+            this.consoleChannel = consoleChannel;
         }
 
         public String getToken() {

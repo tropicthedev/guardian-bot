@@ -278,6 +278,9 @@ public class DatabaseManager {
             }
 
             pstmtDelete.executeUpdate();
+            connection.commit();
+        } catch (SQLException e) {
+            connection.rollback();
         }
         return removedMembers;
     }

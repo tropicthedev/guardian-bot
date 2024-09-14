@@ -3,6 +3,7 @@ package com.tropicoss.guardian.discord;
 import com.google.gson.JsonObject;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
+import com.tropicoss.guardian.discord.commands.ChangeCommand;
 import com.tropicoss.guardian.discord.commands.Onboarding;
 import com.tropicoss.guardian.discord.commands.ResetCommand;
 import com.tropicoss.guardian.discord.events.ChatAdapter;
@@ -13,6 +14,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -41,6 +43,7 @@ public class Bot {
     private final DatabaseManager databaseManager;
     private final JDA bot;
     private final TextChannel textChannel;
+    private final TextChannel consoleChannel;
     private final String iconUrl = "https://cdn2.iconfinder.com/data/icons/whcompare-isometric-web-hosting-servers/50/value-server-512.png";
     private Webhook webhook = null;
 
@@ -54,6 +57,7 @@ public class Bot {
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
                     .addEventListeners(
                             new Onboarding(databaseManager),
+                            new ChangeCommand(databaseManager),
                             new ResetCommand(),
                             new UserAdapter(),
                             new ChatAdapter(
@@ -66,6 +70,7 @@ public class Bot {
                     .awaitReady();
 
             textChannel = bot.getTextChannelById(config.getConfig().getBot().getChannel());
+            consoleChannel = bot.getTextChannelById(config.getConfig().getBot().getConsoleChannel());
 
             for (Webhook webhook : textChannel.getGuild().retrieveWebhooks().complete()) {
                 if ("Alfred".equals(webhook.getName())) {
@@ -89,6 +94,10 @@ public class Bot {
                         .queue();
 
                 guild.upsertCommand("accept", "Accepts a user within an interview channel")
+                        .addOption(OptionType.STRING, "ign", "The Minecraft username of the user that you want to accept", true)
+                        .queue();
+
+                guild.upsertCommand("change", "Changes the users linked minecraft account")
                         .addOption(OptionType.STRING, "ign", "The Minecraft username of the user that you want to accept", true)
                         .queue();
             }
@@ -282,6 +291,16 @@ public class Bot {
             }
 
             guild.kick(guildMember).reason("Kicked for inactivity").queue();
+
+            MessageEmbed messageEmbed = new EmbedBuilder()
+                    .setAuthor(this.bot.getSelfUser().getName(), null, iconUrl)
+                    .setTitle("Member Removed")
+                    .addField("Discord Name", guildMember.getUser().getAsMention(), false)
+                    .addField("IGN", member.getPlayerProfile().data.player.username, false)
+                    .setColor(Color.green)
+                    .build();
+
+            consoleChannel.sendMessageEmbeds(messageEmbed).queue();
 
         } catch (Exception e) {
             LOGGER.error("There was an error while trying to remove inactive member: {}", e.getMessage());

@@ -36,10 +36,6 @@ public class ResetCommand extends ListenerAdapter {
 
         } catch (RuntimeException e) {
             LOGGER.error("An error occurred while trying to reset users application timeout {}", e.getMessage());
-
-            event.reply("An error occurred while sending welcome embed, please try again")
-                    .setEphemeral(true)
-                    .queue();
         }
     }
 }

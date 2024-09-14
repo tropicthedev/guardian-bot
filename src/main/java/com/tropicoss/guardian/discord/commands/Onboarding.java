@@ -153,7 +153,9 @@ public class Onboarding extends ListenerAdapter {
 
             String json = new Gson().toJson(commandMessage);
 
-            SOCKET_SERVER.broadcast(json);
+            if(SOCKET_SERVER != null) {
+                SOCKET_SERVER.broadcast(json);
+            }
 
             event.reply("Member Accepted").setEphemeral(true).queue();
         } catch (Exception e) {

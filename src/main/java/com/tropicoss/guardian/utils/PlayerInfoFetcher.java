@@ -60,6 +60,7 @@ public class PlayerInfoFetcher {
         public static class Player {
             public String username;
             public String id;
+            public String raw_id;
             public String avatar;
         }
     }

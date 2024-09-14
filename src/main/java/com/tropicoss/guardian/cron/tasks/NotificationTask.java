@@ -8,8 +8,6 @@ public class NotificationTask implements CronTask{
     @Override
     public void execute() {
         LOGGER.info("Running notification cron task");
-
-
     }
 
     @Override
