@@ -274,6 +274,21 @@ public class Bot {
         ).queue();
     }
 
+    public void sendCompletionMessage(String serverName, String command, String message, boolean success) {
+        Color color = success ? Color.green : Color.red;
+        textChannel
+                .sendMessageEmbeds(
+                        new EmbedBuilder()
+                                .setAuthor(bot.getSelfUser().getAsTag(), null, bot.getSelfUser().getAvatarUrl())
+                                .setTitle("Command: " + command)
+                                .setDescription(message)
+                                .setTimestamp(Instant.now())
+                                .setFooter(serverName, iconUrl)
+                                .setColor(color)
+                                .build())
+                .queue();
+    }
+
     public void removeInactiveMember(com.tropicoss.guardian.model.Member member) {
         try{
             Guild guild = bot.getGuildById(Config.getInstance().getConfig().getBot().getGuild());

@@ -5,5 +5,5 @@ import net.minecraft.server.MinecraftServer;
 
 public interface Action {
 
-    void execute(GameProfile gameProfile, MinecraftServer server);
+    boolean execute(GameProfile gameProfile, MinecraftServer server);
 }

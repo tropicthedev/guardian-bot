@@ -1,5 +1,8 @@
 package com.tropicoss.guardian.websocket;
 
+import com.google.gson.Gson;
+import com.tropicoss.guardian.config.Config;
+import com.tropicoss.guardian.websocket.message.CompletionMessage;
 import com.tropicoss.guardian.websocket.message.MessageHandler;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -13,9 +16,10 @@ import static com.tropicoss.guardian.Guardian.MINECRAFT_SERVER;
 
 public class Client extends WebSocketClient {
 
-    private static final long RETRY_INTERVAL_MS = 60 * 1000; // 1 minute
+    private static final long RETRY_INTERVAL_MS = 10 * 1000; // 1 minute
 
     private Timer reconnectTimer;
+    private final Gson gson  = new Gson();
 
     public Client(URI serverUri) {
         super(serverUri);
@@ -48,6 +52,16 @@ public class Client extends WebSocketClient {
         LOGGER.error("Error from {}", this.getURI().getHost(), ex);
         attemptReconnect();
     }
+
+    public void sendMessage(String message) {
+        if (isOpen()) {
+            send(message);
+        } else {
+            LOGGER.error("Cannot send message. WebSocket is not open.");
+        }
+    }
+
+
 
     private void attemptReconnect() {
         if (reconnectTimer != null) {

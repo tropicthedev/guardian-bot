@@ -11,36 +11,26 @@ import static com.tropicoss.guardian.Guardian.LOGGER;
 public class WhitelistRemoveAction implements Action {
 
     @Override
-    public void execute(GameProfile gameProfile, MinecraftServer server) {
+    public boolean execute(GameProfile gameProfile, MinecraftServer server) {
+
+        Whitelist whitelist = server.getPlayerManager().getWhitelist();
 
         try {
-            Whitelist whitelist = server.getPlayerManager().getWhitelist();
-
-            if (whitelist.isAllowed(gameProfile)) {
-
-                WhitelistEntry whitelistEntry = new WhitelistEntry(gameProfile);
-
-                whitelist.remove(whitelistEntry);
-
-                String msg = gameProfile.getName() + " has been removed from the whitelist";
-
-//                SocketClient.getInstance(server).emitSuccessEvent(msg, true);
-
-                LOGGER.info("Member " + gameProfile.getName() + " has been removed from the whitelist");
-
-            } else {
-                String msg = gameProfile.getName() + " could not be removed from the whitelist";
-
-//                SocketClient.getInstance(server).emitSuccessEvent(msg, false);
-
-                LOGGER.error("Member " + gameProfile.getName() + " could not be removed from the whitelist");
+            if (!whitelist.isAllowed(gameProfile)) {
+                LOGGER.error("Member {} could not be removed from the whitelist, not allowed", gameProfile.getName());
+                return false;
             }
 
-        } catch (Exception e) {
-            String msg = gameProfile.getName() + " could not be removed from the whitelist";
+            WhitelistEntry whitelistEntry = new WhitelistEntry(gameProfile);
+            whitelist.remove(whitelistEntry);
 
-//            SocketClient.getInstance(server).emitSuccessEvent(msg, false);
-            LOGGER.error(e.getMessage());
+            LOGGER.info("Member {} has been removed from the whitelist", gameProfile.getName());
+            return true;
+
+        } catch (Exception e) {
+            LOGGER.error("An error occurred while removing {} from the whitelist: {}", gameProfile.getName(), e.getMessage());
         }
+
+        return false;
     }
 }

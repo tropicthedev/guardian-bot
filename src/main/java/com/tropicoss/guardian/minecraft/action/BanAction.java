@@ -11,50 +11,46 @@ import static com.tropicoss.guardian.Guardian.LOGGER;
 
 public class BanAction implements Action{
     @Override
-    public void execute(GameProfile gameProfile, MinecraftServer server) {
+    public boolean execute(GameProfile gameProfile, MinecraftServer server) {
 
         try {
             BannedPlayerList bannedPlayerList = server.getPlayerManager().getUserBanList();
 
             if (bannedPlayerList.contains(gameProfile)) {
-                String msg = gameProfile.getName() + " is already banned";
 
-//                SocketClient.getInstance(server).emitSuccessEvent(msg, false);
+                LOGGER.info("{} is already banned", gameProfile.getName());
 
-                LOGGER.info(gameProfile.getName() + " is already banned");
-            } else {
-
-                BannedPlayerEntry bannedPlayerEntry = new BannedPlayerEntry(
-                        gameProfile,
-                        null,
-                        null,
-                        null,
-                        null
-                );
-
-                bannedPlayerList.add(bannedPlayerEntry);
-
-                ServerPlayerEntity serverPlayerEntity = server.getPlayerManager().getPlayer(gameProfile.getId());
-
-                if (serverPlayerEntity != null) {
-
-                    serverPlayerEntity.networkHandler.disconnect(Text.translatable("multiplayer.disconnect.banned"));
-
-                }
-
-                String msg = gameProfile.getName() + " Has been Banned From The Server";
-
-//                SocketClient.getInstance(server).emitSuccessEvent(msg, true);
-
-                LOGGER.info(gameProfile.getName() + " has been banned ");
+                return false;
             }
 
+            BannedPlayerEntry bannedPlayerEntry = new BannedPlayerEntry(
+                    gameProfile,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+
+            bannedPlayerList.add(bannedPlayerEntry);
+
+            ServerPlayerEntity serverPlayerEntity = server.getPlayerManager().getPlayer(gameProfile.getId());
+
+            if (serverPlayerEntity != null) {
+
+                serverPlayerEntity.networkHandler.disconnect(Text.translatable("multiplayer.disconnect.banned"));
+
+            }
+
+            LOGGER.info("{} has been banned ", gameProfile.getName());
+
+            return true;
+
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
 
-            String msg = gameProfile.getName() + " Could Not Be Banned From The Server";
+            LOGGER.error("{} Could Not Be Banned From The Server: {}", gameProfile.getName(), e.getMessage());
 
-//            SocketClient.getInstance(server).emitSuccessEvent(msg, false);
         }
+
+        return false;
     }
 }

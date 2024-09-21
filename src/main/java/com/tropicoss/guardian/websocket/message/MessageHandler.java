@@ -9,10 +9,12 @@ import com.tropicoss.guardian.discord.Bot;
 import com.tropicoss.guardian.minecraft.action.BanAction;
 import com.tropicoss.guardian.minecraft.action.WhitelistAddAction;
 import com.tropicoss.guardian.minecraft.action.WhitelistRemoveAction;
+import com.tropicoss.guardian.websocket.Client;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.net.http.WebSocket;
 import java.util.List;
 import java.util.Objects;
@@ -23,9 +25,16 @@ public class MessageHandler {
     private final MinecraftServer minecraftServer;
     private final Config config = Config.getInstance();
     private Bot botInstance;
+    private final Client client;
+
+    public MessageHandler(MinecraftServer minecraftServer, Client client) {
+        this.minecraftServer = minecraftServer;
+        this.client = client;
+    }
 
     public MessageHandler(MinecraftServer minecraftServer) {
         this.minecraftServer = minecraftServer;
+        this.client = null;
     }
 
     private boolean isServer() {
@@ -76,6 +85,9 @@ public class MessageHandler {
                     case "command":
                         handleCommandMessage(gson.fromJson(message, CommandMessage.class));
                         break;
+                    case "completion":
+                       handleCompletionMessage(gson.fromJson(message, CompletionMessage.class));
+                        break;
                     default:
                         throw new IllegalStateException("Unexpected value: " + messageType);
                 }
@@ -122,6 +134,13 @@ public class MessageHandler {
         if (isServer()) {
             getBot().sendServerStartingMessage(msg.origin);
 
+        }
+    }
+
+    private void handleCompletionMessage(CompletionMessage msg) {
+
+        if (isServer()) {
+            getBot().sendCompletionMessage(msg.origin, msg.command, msg.content, msg.success);
         }
     }
 
@@ -233,16 +252,49 @@ public class MessageHandler {
         switch (message.action) {
             case "add":
                 WhitelistAddAction whitelistAddAction = new WhitelistAddAction();
-                whitelistAddAction.execute(profile, minecraftServer);
+                boolean whitelistAddActionSuccess = whitelistAddAction.execute(profile, minecraftServer);
+
+                if(!whitelistAddActionSuccess) {
+                    sendCompletionMessage(profile.getName() + "could not be added to the whitelist", "add", false);
+                }
+
+                sendCompletionMessage(profile.getName() + "was added to the whitelist", "add", whitelistAddActionSuccess);
+
                 break;
             case "remove":
                 WhitelistRemoveAction whitelistRemoveAction = new WhitelistRemoveAction();
-                whitelistRemoveAction.execute(profile, minecraftServer);
+                boolean whitelistRemoveActionSuccess = whitelistRemoveAction.execute(profile, minecraftServer);
+
+                if(!whitelistRemoveActionSuccess) {
+                    sendCompletionMessage(profile.getName() + "could not be removed from the whitelist", "remove", false);
+                }
+
+                sendCompletionMessage(profile.getName() + "was removed from the whitelist", "remove", whitelistRemoveActionSuccess);
+
                 break;
             case "ban":
                 BanAction banAction = new BanAction();
-                banAction.execute(profile, minecraftServer);
+                boolean banActionSucess = banAction.execute(profile, minecraftServer);
+
+                if(!banActionSucess) {
+                    sendCompletionMessage(profile.getName() + "could not be banned from the server", "remove", false);
+                }
+
+                sendCompletionMessage(profile.getName() + "was banned from the server", "remove", banActionSucess);
+
                 break;
         }
     }
+
+    private void sendCompletionMessage(String content, String command, boolean success) {
+        if (client != null) {
+            Gson gson = new Gson();
+            CompletionMessage completionMessage = new CompletionMessage(Config.getInstance().getConfig().getGeneric().getName(), content, success, command);
+            String jsonMessage = gson.toJson(completionMessage);
+            client.sendMessage(jsonMessage);;
+        } else {
+            LOGGER.debug("WebSocket client not available. Skipping completion message for command: {}", command);
+        }
+    }
+
 }
