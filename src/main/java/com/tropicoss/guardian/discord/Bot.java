@@ -12,10 +12,7 @@ import com.tropicoss.guardian.utils.PlayerInfoFetcher;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Webhook;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -31,7 +28,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.sql.SQLException;
 import java.time.Instant;
-
+import java.util.List;
 
 
 import static com.tropicoss.guardian.Guardian.LOGGER;
@@ -302,6 +299,15 @@ public class Bot {
 
             if(guildMember == null) {
                 LOGGER.error("Member could not be found, are they still apart of the server ?");
+                return;
+            }
+
+            List<Role> memberRoles = guildMember.getRoles();
+
+            Role vacationRole = guild.getRoleById(Config.getInstance().getConfig().getMember().getVacationRole());
+
+            if(vacationRole != null && memberRoles.contains(vacationRole)) {
+                LOGGER.info("Skipping member as they have the vacation role");
                 return;
             }
 

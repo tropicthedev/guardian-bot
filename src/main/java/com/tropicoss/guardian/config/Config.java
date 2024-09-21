@@ -221,6 +221,7 @@ public final class Config {
         private String message = "Welcome to the server {member}, ip is in <#channel-id>";
         private String inactivityMessage = "You are {x} days away from being removed for inactivity, please login or ask to be put in vacation mode if your admins allow it";
         private int notificationPeriod = 7;
+        private String vacationRole = "role-id";
 
         public int getInactivityThreshold() {
             return inactivityThreshold;
@@ -244,6 +245,14 @@ public final class Config {
 
         public void setChannel(String channel) {
             this.channel = channel;
+        }
+
+        public String getVacationRole() {
+            return vacationRole;
+        }
+
+        public void setVacationRole(String vacationRole) {
+            this.vacationRole = vacationRole;
         }
 
         public String getMessage() {
