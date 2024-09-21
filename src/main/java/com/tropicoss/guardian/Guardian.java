@@ -43,6 +43,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
 
 public class Guardian implements DedicatedServerModInitializer {
     private static final String MOD_ID = "Guardian";
@@ -145,16 +146,18 @@ public class Guardian implements DedicatedServerModInitializer {
                     SOCKET_CLIENT = new Client(URI.create(uri));
 
                     try {
-                        SOCKET_CLIENT.connectBlocking();
+                        SOCKET_CLIENT.connectBlocking(10, TimeUnit.SECONDS);
+
+                        StartingMessage message = new StartingMessage(config.getConfig().getGeneric().getName());
+
+                        String json = new Gson().toJson(message);
+
+                        if(SOCKET_CLIENT.isOpen()) {
+                            SOCKET_CLIENT.send(json);
+                        }
                     } catch (InterruptedException e) {
                         LOGGER.error("There was an error connecting to Alfred Server is it running ?");
                     }
-
-                    StartingMessage message = new StartingMessage(config.getConfig().getGeneric().getName());
-
-                    String json = new Gson().toJson(message);
-
-                    SOCKET_CLIENT.send(json);
 
                     LOGGER.info("Running in Client Mode");
                 }
@@ -204,7 +207,9 @@ public class Guardian implements DedicatedServerModInitializer {
 
                     String json = new Gson().toJson(message);
 
-                    SOCKET_CLIENT.send(json);
+                    if(SOCKET_CLIENT.isOpen()) {
+                        SOCKET_CLIENT.send(json);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -226,7 +231,11 @@ public class Guardian implements DedicatedServerModInitializer {
                     javalinServer.stopServer();
                 }
 
-                case "client" -> SOCKET_CLIENT.send(json);
+                case "client" -> {
+                    if(SOCKET_CLIENT.isOpen()) {
+                        SOCKET_CLIENT.send(json);
+                    }
+                }
 
                 case "standalone" -> {
                     Bot.getBotInstance().sendServerStoppingMessage(config.getConfig().getGeneric().getName());
@@ -262,7 +271,9 @@ public class Guardian implements DedicatedServerModInitializer {
 
                 case "client" -> {
 
-                    SOCKET_CLIENT.send(json);
+                    if(SOCKET_CLIENT.isOpen()) {
+                        SOCKET_CLIENT.send(json);
+                    }
 
                     SOCKET_CLIENT.closeBlocking();
                 }
@@ -296,7 +307,11 @@ public class Guardian implements DedicatedServerModInitializer {
                 SOCKET_SERVER.broadcast(json);
             }
 
-            case "client" -> SOCKET_CLIENT.send(json);
+            case "client" -> {
+                if(SOCKET_CLIENT.isOpen()) {
+                    SOCKET_CLIENT.send(json);
+                }
+            }
 
             case "standalone" -> {
                 if (profile != null) {
@@ -322,7 +337,11 @@ public class Guardian implements DedicatedServerModInitializer {
                 SOCKET_SERVER.broadcast(json);
             }
 
-            case "client" -> SOCKET_CLIENT.send(json);
+            case "client" -> {
+                if(SOCKET_CLIENT.isOpen()) {
+                    SOCKET_CLIENT.send(json);
+                }
+            }
 
             case "standalone" -> {
                 if (profile != null) {
@@ -348,7 +367,11 @@ public class Guardian implements DedicatedServerModInitializer {
                 case "standalone" ->
                         Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), (config.getConfig().getGeneric().getName()));
 
-                case "client" -> SOCKET_CLIENT.send(json);
+                case "client" -> {
+                    if(SOCKET_CLIENT.isOpen()) {
+                        SOCKET_CLIENT.send(json);
+                    }
+                }
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
@@ -394,7 +417,11 @@ public class Guardian implements DedicatedServerModInitializer {
                 Bot.getBotInstance().sendDeathMessage(config.getConfig().getGeneric().getName(), message, coordinates);
             }
 
-            case "client" -> SOCKET_CLIENT.send(json);
+            case "client" -> {
+                if(SOCKET_CLIENT.isOpen()) {
+                    SOCKET_CLIENT.send(json);
+                }
+            }
 
             case "standalone" ->
                     Bot.getBotInstance().sendDeathMessage(config.getConfig().getGeneric().getName(), message, coordinates);
@@ -423,7 +450,11 @@ public class Guardian implements DedicatedServerModInitializer {
                 Bot.getBotInstance().sendDeathMessage(config.getConfig().getGeneric().getName(), message, coordinates);
             }
 
-            case "client" -> SOCKET_CLIENT.send(json);
+            case "client" -> {
+                if(SOCKET_CLIENT.isOpen()) {
+                    SOCKET_CLIENT.send(json);
+                }
+            }
 
             case "standalone" ->
                     Bot.getBotInstance().sendDeathMessage(config.getConfig().getGeneric().getName(), message, coordinates);
@@ -448,7 +479,11 @@ public class Guardian implements DedicatedServerModInitializer {
                 Bot.getBotInstance().sendAchievementMessage(advancementMessage.getProfile(), advancementMessage.origin, advancementMessage.title, advancementMessage.description);
             }
 
-            case "client" -> SOCKET_CLIENT.send(json);
+            case "client" -> {
+                if(SOCKET_CLIENT.isOpen()) {
+                    SOCKET_CLIENT.send(json);
+                }
+            }
 
             case "standalone" ->
                     Bot.getBotInstance().sendAchievementMessage(advancementMessage.getProfile(), advancementMessage.origin, advancementMessage.title, advancementMessage.description);

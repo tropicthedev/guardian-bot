@@ -29,7 +29,9 @@ public abstract class BanCommandMixin {
             String json = new Gson().toJson(commandMessage);
 
             if(SOCKET_CLIENT != null) {
-                SOCKET_CLIENT.send(json);
+                if(SOCKET_CLIENT.isOpen()) {
+                    SOCKET_CLIENT.send(json);
+                }
             }
 
             if(SOCKET_SERVER != null) {
