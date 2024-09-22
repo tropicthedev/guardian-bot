@@ -1,9 +1,12 @@
 package com.tropicoss.guardian.minecraft.mixin;
 
 import com.tropicoss.guardian.minecraft.event.AdvancementEvent;
+import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementEntry;
 import net.minecraft.advancement.PlayerAdvancementTracker;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.slf4j.Logger;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,9 +20,22 @@ public abstract class PlayerAdvancementTrackerMixin {
     @Shadow
     private ServerPlayerEntity owner;
 
-    @Inject(method = "grantCriterion", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancement/"
+    @Shadow @Final private static Logger LOGGER;
+
+    @Inject(method = "grantCriterion", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/advancement/"
             + "AdvancementRewards;apply(Lnet/minecraft/server/network/ServerPlayerEntity;)V"))
-    public void grantCriterion(AdvancementEntry advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) throws FileNotFoundException {
-        AdvancementEvent.EVENT.invoker().onGrantCriterion(owner, advancement, criterionName);
+    public void grantCriterion(AdvancementEntry advancementEntry, String criterionName, CallbackInfoReturnable<Boolean> cir) {
+        Advancement advancement = advancementEntry.value();
+
+        // Use ifPresent to safely access the value of the Optional
+        advancement.display().ifPresent(display -> {
+            if (display.shouldAnnounceToChat()) {
+                try {
+                    AdvancementEvent.EVENT.invoker().onGrantCriterion(owner, advancementEntry, criterionName);
+                } catch (FileNotFoundException e) {
+                    LOGGER.error("An exception has been thrown  {}", e.getMessage());
+                }
+            }
+        });
     }
 }
