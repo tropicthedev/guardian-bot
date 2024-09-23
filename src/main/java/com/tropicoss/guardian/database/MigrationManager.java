@@ -11,7 +11,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.tropicoss.guardian.Guardian.LOGGER;
+import static com.tropicoss.guardian.Mod.LOGGER;
 
 public class MigrationManager {
     private final Connection connection;

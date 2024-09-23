@@ -1,6 +1,6 @@
 package com.tropicoss.guardian.model;
 
-import com.tropicoss.guardian.utils.PlayerInfoFetcher;
+import com.tropicoss.guardian.services.PlayerInfoFetcher;
 
 public class Member {
     private String discordId;

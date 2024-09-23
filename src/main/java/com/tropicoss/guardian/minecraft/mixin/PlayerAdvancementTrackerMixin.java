@@ -18,9 +18,10 @@ import java.io.FileNotFoundException;
 @Mixin(PlayerAdvancementTracker.class)
 public abstract class PlayerAdvancementTrackerMixin {
     @Shadow
+    @Final
+    private static Logger LOGGER;
+    @Shadow
     private ServerPlayerEntity owner;
-
-    @Shadow @Final private static Logger LOGGER;
 
     @Inject(method = "grantCriterion", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/advancement/"
             + "AdvancementRewards;apply(Lnet/minecraft/server/network/ServerPlayerEntity;)V"))

@@ -3,7 +3,7 @@ package com.tropicoss.guardian.minecraft.command;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.text.Text;
 
-import static com.tropicoss.guardian.Guardian.SOCKET_CLIENT;
+import static com.tropicoss.guardian.Mod.SOCKET_CLIENT;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class Commands {

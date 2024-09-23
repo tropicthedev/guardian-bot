@@ -6,14 +6,14 @@
   "description": "",
   "authors": [],
   "contact": {
-    "repo": "https://github.com/jordan/Guardian"
+    "repo": "https://github.com/tropicthedev/guardian-bot"
   },
   "license": "GPL-3.0",
   "icon": "assets/guardian/icon.png",
   "environment": "server",
   "entrypoints": {
     "server": [
-      "com.tropicoss.guardian.Guardian"
+      "com.tropicoss.guardian.Mod"
     ]
   },
   "mixins": [

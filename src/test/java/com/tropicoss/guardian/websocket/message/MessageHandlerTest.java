@@ -2,7 +2,7 @@
 //
 //import com.mojang.authlib.GameProfile;
 //import com.tropicoss.guardian.discord.Bot;
-//import com.tropicoss.guardian.utils.PlayerInfoFetcher;
+//import com.tropicoss.guardian.services.PlayerInfoFetcher;
 //import net.minecraft.server.MinecraftServer;
 //import net.minecraft.server.PlayerManager;
 //import net.minecraft.server.network.ServerPlayerEntity;
