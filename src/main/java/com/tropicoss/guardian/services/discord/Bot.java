@@ -69,13 +69,13 @@ public class Bot {
             consoleChannel = bot.getTextChannelById(config.getConfig().getBot().getConsoleChannel());
 
             for (Webhook webhook : textChannel.getGuild().retrieveWebhooks().complete()) {
-                if ("Alfred".equals(webhook.getName())) {
+                if ("Guardian".equals(webhook.getName())) {
                     this.webhook = webhook;
                 }
             }
 
             if (webhook == null) {
-                webhook = textChannel.createWebhook("Alfred").complete();
+                webhook = textChannel.createWebhook("Guardian").complete();
             }
 
             Guild guild = bot.getGuildById(config.getConfig().getBot().getGuild());

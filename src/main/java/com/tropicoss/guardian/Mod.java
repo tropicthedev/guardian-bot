@@ -365,7 +365,7 @@ public class Mod implements DedicatedServerModInitializer {
                 }
 
                 case "standalone" ->
-                        Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), (config.getConfig().getGeneric().getName()));
+                        Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), config.getConfig().getGeneric().getName());
 
                 case "client" -> {
                     if (SOCKET_CLIENT.isOpen()) {
