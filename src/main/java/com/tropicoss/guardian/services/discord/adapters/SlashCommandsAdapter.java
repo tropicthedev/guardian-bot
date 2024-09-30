@@ -1,6 +1,7 @@
 package com.tropicoss.guardian.services.discord.adapters;
 
 import com.google.gson.Gson;
+import com.mojang.authlib.GameProfile;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.model.ButtonId;
@@ -20,6 +21,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.minecraft.server.Whitelist;
+import net.minecraft.server.WhitelistEntry;
 
 import java.awt.*;
 import java.sql.SQLException;
@@ -27,8 +30,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.tropicoss.guardian.Mod.LOGGER;
-import static com.tropicoss.guardian.Mod.socketServer;
+import static com.tropicoss.guardian.Mod.*;
 
 public class SlashCommandsAdapter extends ListenerAdapter {
     private final DatabaseManager databaseManager;
@@ -197,12 +199,45 @@ public class SlashCommandsAdapter extends ListenerAdapter {
 
             guild.addRoleToMember(member.getUser(), role).queue();
 
+            String newName = String.format("%s (%s)", member.getUser().getName(), playerProfile.data.player.username);
+
+            if (newName.length() > 32 ) {
+                member.modifyNickname(playerProfile.data.player.username).queue();
+            }
+            else {
+                member.modifyNickname(newName).queue();
+            }
+
             channel.sendMessage(config.getConfig().getMember().getMessage().replace("{member}", member.getAsMention())).queue();
 
             databaseManager.addInterviewResponse(UUID.randomUUID().toString(), event.getMember().getId(), event.getChannelId(),
                     "Member Accepted", Status.ACCEPTED);
 
             databaseManager.addMember(memberId, playerProfile.data.player.id, false);
+
+            GameProfile profile = new GameProfile(UUID.fromString(playerProfile.data.player.raw_id), playerProfile.data.player.username);
+
+            try {
+
+                Whitelist whitelist = MINECRAFT_SERVER.getPlayerManager().getWhitelist();
+
+                if (whitelist.isAllowed(profile)) {
+                    LOGGER.error("Member {} could not be added to the whitelist", profile.getName());
+
+                    throw new Exception("Member " + profile.getName() + " could not be added to the whitelist");
+                }
+
+                WhitelistEntry whitelistEntry = new WhitelistEntry(profile);
+
+                whitelist.add(whitelistEntry);
+
+                LOGGER.info("Member {} has been added to the whitelist", profile.getName());
+
+            } catch (Exception e) {
+
+                LOGGER.error("{} could not be added to the whitelist: {}", profile.getName(), e.getMessage());
+
+            }
 
             CommandMessage commandMessage = new CommandMessage(playerProfile.data.player.id, playerProfile.data.player.username, "add");
 
