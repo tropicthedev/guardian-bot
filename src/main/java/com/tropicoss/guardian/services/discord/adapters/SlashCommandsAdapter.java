@@ -44,7 +44,7 @@ public class SlashCommandsAdapter extends ListenerAdapter {
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (Objects.requireNonNull(event.getUser()).isBot()) return;
 
-        if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+        if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.ADMINISTRATOR)) {
             event.reply("Insufficient Permissions").setEphemeral(true).queue();
             return;
         }
@@ -53,23 +53,18 @@ public class SlashCommandsAdapter extends ListenerAdapter {
             switch (event.getName()) {
                 case "change" -> {
                     onChangeCommand(event);
-                    break;
                 }
                 case "reset" -> {
                     onResetCommand(event);
-                    break;
                 }
                 case "accept" -> {
                     onAcceptCommand(event);
-                    break;
                 }
                 case "deny" -> {
                     onDenyCommand(event);
-                    break;
                 }
                 case "welcome" -> {
                     onWelcomeCommand(event);
-                    break;
                 }
             }
         } catch (SQLException e) {
