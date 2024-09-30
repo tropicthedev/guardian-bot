@@ -1,12 +1,12 @@
-package com.tropicoss.guardian.services.websocket.message;
+package com.tropicoss.guardian.services.chatsync.message;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import com.tropicoss.guardian.config.Config;
+import com.tropicoss.guardian.services.chatsync.Client;
 import com.tropicoss.guardian.services.discord.Bot;
-import com.tropicoss.guardian.services.websocket.Client;
 import net.minecraft.server.*;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -15,8 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.UUID;
-
-import static com.tropicoss.guardian.Mod.LOGGER;
 
 public class MessageHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageHandler.class);

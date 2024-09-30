@@ -5,13 +5,13 @@ import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.model.Member;
 import com.tropicoss.guardian.services.discord.Bot;
-import com.tropicoss.guardian.services.websocket.message.CommandMessage;
+import com.tropicoss.guardian.services.chatsync.message.CommandMessage;
 import com.tropicoss.guardian.services.PlayerInfoFetcher;
 
 import java.util.List;
 
 import static com.tropicoss.guardian.Mod.LOGGER;
-import static com.tropicoss.guardian.Mod.SOCKET_SERVER;
+import static com.tropicoss.guardian.Mod.socketServer;
 
 public class PurgeTask implements CronTask {
     @Override
@@ -38,7 +38,7 @@ public class PurgeTask implements CronTask {
                     );
 
                     String commandMesssageString = new Gson().toJson(commandMessage);
-                    SOCKET_SERVER.broadcast(commandMesssageString);
+                    socketServer.broadcast(commandMesssageString);
 
                 }
 

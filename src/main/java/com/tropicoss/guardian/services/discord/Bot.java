@@ -3,9 +3,8 @@ package com.tropicoss.guardian.services.discord;
 import com.google.gson.JsonObject;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
-import com.tropicoss.guardian.services.discord.commands.ChangeCommand;
-import com.tropicoss.guardian.services.discord.commands.Onboarding;
-import com.tropicoss.guardian.services.discord.commands.ResetCommand;
+import com.tropicoss.guardian.services.discord.adapters.OnboardingAdapter;
+import com.tropicoss.guardian.services.discord.adapters.SlashCommandsAdapter;
 import com.tropicoss.guardian.services.discord.events.ChatAdapter;
 import com.tropicoss.guardian.services.discord.events.UserAdapter;
 import com.tropicoss.guardian.services.PlayerInfoFetcher;
@@ -52,9 +51,8 @@ public class Bot {
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
                     .addEventListeners(
-                            new Onboarding(databaseManager),
-                            new ChangeCommand(databaseManager),
-                            new ResetCommand(),
+                            new OnboardingAdapter(databaseManager),
+                            new SlashCommandsAdapter(databaseManager),
                             new UserAdapter(),
                             new ChatAdapter(
                                     config.getConfig().getGeneric().getMode(),
@@ -67,6 +65,11 @@ public class Bot {
 
             textChannel = bot.getTextChannelById(config.getConfig().getBot().getChannel());
             consoleChannel = bot.getTextChannelById(config.getConfig().getBot().getConsoleChannel());
+
+            if(textChannel == null) {
+                LOGGER.error("Text channel could not be found, are you sure you set the right one for in game chat messages ?");
+                return;
+            }
 
             for (Webhook webhook : textChannel.getGuild().retrieveWebhooks().complete()) {
                 if ("Guardian".equals(webhook.getName())) {
@@ -157,100 +160,98 @@ public class Bot {
     }
 
     public void sendServerStartingMessage(String serverName) {
+
+        String description = String.format("%s is booting up! Get ready!", serverName);
+
         textChannel
                 .sendMessageEmbeds(
                         new EmbedBuilder()
-                                .setAuthor(serverName, null, iconUrl)
-                                .setDescription("Server is starting...")
-                                .setTimestamp(Instant.now())
-                                .setFooter(serverName, iconUrl)
-                                .setColor(Color.ORANGE)
+                                .setTitle(":rocket: Server is Starting!")
+                                .setDescription(description)
+                                .setColor(3447003)
                                 .build())
                 .queue();
     }
 
-    public void sendServerStartedMessage(String serverName, Long uptime) {
-        String description = String.format("Server started in %sS 🕛", uptime / 1000);
+    public void sendServerStartedMessage(String serverName, long uptime) {
+        String description = String.format("%s has started successfully. Players can now join the game", serverName);
+
+        String footer = String.format("Server started in %sS 🕛", uptime / 1000);
 
         textChannel
                 .sendMessageEmbeds(
                         new EmbedBuilder()
-                                .setAuthor(serverName, null, iconUrl)
+                                .setTitle(":rocket: Server is Online!")
                                 .setDescription(description)
-                                .setTimestamp(Instant.now())
-                                .setFooter(serverName, iconUrl)
-                                .setColor(Color.GREEN)
+                                .setFooter(footer)
+                                .setColor(65280)
                                 .build())
                 .queue();
     }
 
     public void sendServerStoppingMessage(String serverName) {
+        String description = String.format("%s is shutting down.", serverName);
+
+
         textChannel
                 .sendMessageEmbeds(
                         new EmbedBuilder()
-                                .setAuthor(serverName, null, "https://cdn2.iconfinder.com/data/icons/whcompare-isometric-web-hosting-servers/50/value-server-512.png")
-                                .setTitle("Server is stopping...")
-                                .setTimestamp(Instant.now())
-                                .setFooter(serverName, iconUrl)
-                                .setColor(Color.ORANGE)
+                                .setTitle(":stop_sign: Server is Shutting Down!")
+                                .setDescription(description)
+                                .setColor(10038562)
                                 .build())
                 .queue();
     }
 
     public void sendServerStoppedMessage(String serverName) {
+        String title = String.format(":stop_sign: %s is Offline.", serverName);
+
         textChannel
                 .sendMessageEmbeds(
                         new EmbedBuilder()
-                                .setAuthor(serverName, null, "https://cdn2.iconfinder.com/data/icons/whcompare-isometric-web-hosting-servers/50/value-server-512.png")
-                                .setTitle("Server stopped!")
-                                .setTimestamp(Instant.now())
-                                .setFooter(serverName, iconUrl)
-                                .setColor(Color.RED)
+                                .setTitle(title)
+                                .setColor(16711680)
                                 .build())
                 .queue();
     }
 
     public void sendJoinMessage(PlayerInfoFetcher.Profile profile, String serverName) {
 
-        String nameMCProfile = String.format("https://namemc.com/profile/%s", profile.data.player.username);
+        String description = String.format("**%s** has entered the server. Welcome!", profile.data.player.username);
+
 
         textChannel.sendMessageEmbeds(
                 new EmbedBuilder()
-                        .setAuthor(profile.data.player.username, nameMCProfile, profile.data.player.avatar)
-                        .setTitle("Joined the server")
-                        .setTimestamp(Instant.now())
-                        .setFooter(serverName, iconUrl)
-                        .setColor(Color.BLUE)
+                        .setTitle("Player Joined " + serverName)
+                        .setDescription(description)
+                        .setThumbnail(profile.data.player.avatar + "/50")
+                        .setColor(3066993)
                         .build()
         ).queue();
     }
 
     public void sendLeaveMessage(PlayerInfoFetcher.Profile profile, String serverName) {
-        String nameMCProfile = String.format("https://namemc.com/profile/%s", profile.data.player.username);
+
+        String description = String.format("**%s** has left the server.", profile.data.player.username);
 
         textChannel.sendMessageEmbeds(
                 new EmbedBuilder()
-                        .setAuthor(profile.data.player.username, nameMCProfile, profile.data.player.avatar)
-                        .setTitle("Left the server")
-                        .setTimestamp(Instant.now())
-                        .setFooter(serverName, iconUrl)
-                        .setColor(Color.orange)
+                        .setTitle("Player Left " + serverName)
+                        .setDescription(description)
+                        .setThumbnail(profile.data.player.avatar + "/50")
+                        .setColor(15158332)
                         .build()
         ).queue();
     }
 
     public void sendAchievementMessage(PlayerInfoFetcher.Profile profile, String serverName, String title, String description) {
-        String nameMCProfile = String.format("https://namemc.com/profile/%s", profile.data.player.username);
 
         textChannel.sendMessageEmbeds(
                 new EmbedBuilder()
-                        .setAuthor(profile.data.player.username, nameMCProfile, profile.data.player.avatar)
-                        .setTitle("Got An Advancement")
+                        .setTitle("trophy: Achievement Unlocked!")
                         .addField("Advancement", title, false)
                         .addField("Description", description, false)
-                        .setTimestamp(Instant.now())
-                        .setFooter(serverName, iconUrl)
-                        .setColor(Color.BLUE)
+                        .setColor(15844367)
                         .build()
         ).queue();
     }
@@ -261,11 +262,9 @@ public class Bot {
 
         textChannel.sendMessageEmbeds(
                 new EmbedBuilder()
-                        .setAuthor(origin, null, iconUrl)
+                        .setTitle(":skull_crossbones: Player Died!")
                         .setDescription(description)
-                        .setTimestamp(Instant.now())
-                        .setFooter(origin, iconUrl)
-                        .setColor(Color.BLUE)
+                        .setColor(0)
                         .build()
         ).queue();
     }

@@ -6,11 +6,11 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 @FunctionalInterface
-public interface PlayerDeathEvents {
+public interface PlayerDeathCallback {
 
-    Event<PlayerDeathEvents> EVENT =
-            EventFactory.createArrayBacked(PlayerDeathEvents.class, callbacks -> (player, source) -> {
-                for (PlayerDeathEvents callback : callbacks) {
+    Event<PlayerDeathCallback> EVENT =
+            EventFactory.createArrayBacked(PlayerDeathCallback.class, callbacks -> (player, source) -> {
+                for (PlayerDeathCallback callback : callbacks) {
                     callback.onPlayerDeath(player, source);
                 }
             });

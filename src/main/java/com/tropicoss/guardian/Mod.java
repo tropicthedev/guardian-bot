@@ -4,17 +4,16 @@ package com.tropicoss.guardian;
 import com.google.gson.Gson;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
-import com.tropicoss.guardian.minecraft.Commands;
-import com.tropicoss.guardian.minecraft.event.AdvancementEvent;
-import com.tropicoss.guardian.minecraft.event.EntityDeathEvents;
-import com.tropicoss.guardian.minecraft.event.PlayerDeathEvents;
+import com.tropicoss.guardian.minecraft.event.AdvancementCallback;
+import com.tropicoss.guardian.minecraft.event.EntityDeathCallback;
+import com.tropicoss.guardian.minecraft.event.PlayerDeathCallback;
 import com.tropicoss.guardian.services.api.JavalinServer;
+import com.tropicoss.guardian.services.chatsync.Client;
 import com.tropicoss.guardian.services.cron.CronManager;
 import com.tropicoss.guardian.services.cron.tasks.PurgeTask;
 import com.tropicoss.guardian.services.discord.Bot;
-import com.tropicoss.guardian.services.websocket.Client;
-import com.tropicoss.guardian.services.websocket.Server;
-import com.tropicoss.guardian.services.websocket.message.*;
+import com.tropicoss.guardian.services.chatsync.Server;
+import com.tropicoss.guardian.services.chatsync.message.*;
 import com.tropicoss.guardian.services.PlayerInfoFetcher;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -48,8 +47,8 @@ import java.util.concurrent.TimeUnit;
 public class Mod implements DedicatedServerModInitializer {
     private static final String MOD_ID = "Guardian";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static Server SOCKET_SERVER;
-    public static Client SOCKET_CLIENT;
+    public static Server socketServer;
+    public static Client socketClient;
     public static MinecraftServer MINECRAFT_SERVER;
     private final Gson gson = new Gson();
     private final Path guardianConfigPath = FabricLoader.getInstance().getConfigDir().resolve("guardian");
@@ -89,13 +88,11 @@ public class Mod implements DedicatedServerModInitializer {
 
             ServerMessageEvents.CHAT_MESSAGE.register(this::onChatMessage);
 
-            PlayerDeathEvents.EVENT.register(this::onPlayerDeath);
+            PlayerDeathCallback.EVENT.register(this::onPlayerDeath);
 
-            EntityDeathEvents.EVENT.register(this::onEntityDeath);
+            EntityDeathCallback.EVENT.register(this::onEntityDeath);
 
-            AdvancementEvent.EVENT.register(this::onGrantCriterion);
-
-            Commands.register();
+            AdvancementCallback.EVENT.register(this::onGrantCriterion);
 
             LOGGER.info("Guardian Has Started");
 
@@ -127,11 +124,11 @@ public class Mod implements DedicatedServerModInitializer {
 
                     javalinServer = new JavalinServer();
 
-                    Bot.getBotInstance().sendServerStartingMessage(config.getConfig().getGeneric().getMode());
+                    Bot.getBotInstance().sendServerStartingMessage(config.getConfig().getGeneric().getName());
 
-                    SOCKET_SERVER = new Server(new InetSocketAddress(config.getConfig().getServer().getWebsocketPort()));
+                    socketServer = new Server(new InetSocketAddress(config.getConfig().getServer().getWebsocketPort()));
 
-                    SOCKET_SERVER.start();
+                    socketServer.start();
 
                     LOGGER.info("Running in Server Mode");
 
@@ -139,27 +136,25 @@ public class Mod implements DedicatedServerModInitializer {
                 }
 
                 case "client" -> {
-                    Commands.register();
-
                     String uri = String.format("ws://%s:%s", config.getConfig().getServer().getHost(), config.getConfig().getServer().getWebsocketPort());
 
-                    SOCKET_CLIENT = new Client(URI.create(uri));
+                    socketClient = new Client(URI.create(uri));
 
                     try {
-                        SOCKET_CLIENT.connectBlocking(10, TimeUnit.SECONDS);
+                        socketClient.connectBlocking(10, TimeUnit.SECONDS);
 
                         StartingMessage message = new StartingMessage(config.getConfig().getGeneric().getName());
 
                         String json = new Gson().toJson(message);
 
-                        if (SOCKET_CLIENT.isOpen()) {
-                            SOCKET_CLIENT.send(json);
+                        if (socketClient.isOpen()) {
+                            socketClient.send(json);
                         }
                     } catch (InterruptedException e) {
                         LOGGER.error("There was an error connecting to Alfred Server is it running ?");
                     }
 
-                    LOGGER.info("Running in Client Mode");
+                    LOGGER.info("Running in SyncClient Mode");
                 }
 
                 case "standalone" -> {
@@ -207,8 +202,8 @@ public class Mod implements DedicatedServerModInitializer {
 
                     String json = new Gson().toJson(message);
 
-                    if (SOCKET_CLIENT.isOpen()) {
-                        SOCKET_CLIENT.send(json);
+                    if (socketClient.isOpen()) {
+                        socketClient.send(json);
                     }
                 }
             }
@@ -227,13 +222,13 @@ public class Mod implements DedicatedServerModInitializer {
                 case "server" -> {
                     Bot.getBotInstance().sendServerStoppingMessage(config.getConfig().getGeneric().getName());
 
-                    SOCKET_SERVER.broadcast(json);
+                    socketServer.broadcast(json);
                     javalinServer.stopServer();
                 }
 
                 case "client" -> {
-                    if (SOCKET_CLIENT.isOpen()) {
-                        SOCKET_CLIENT.send(json);
+                    if (socketClient.isOpen()) {
+                        socketClient.send(json);
                     }
                 }
 
@@ -261,9 +256,9 @@ public class Mod implements DedicatedServerModInitializer {
 
                         Bot.getBotInstance().shutdown();
 
-                        SOCKET_SERVER.broadcast(json);
+                        socketServer.broadcast(json);
 
-                        SOCKET_SERVER.stop(100);
+                        socketServer.stop(100);
                     } catch (InterruptedException e) {
                         LOGGER.error("Error closing server: {}", e.getMessage());
                     }
@@ -271,11 +266,11 @@ public class Mod implements DedicatedServerModInitializer {
 
                 case "client" -> {
 
-                    if (SOCKET_CLIENT.isOpen()) {
-                        SOCKET_CLIENT.send(json);
+                    if (socketClient.isOpen()) {
+                        socketClient.send(json);
                     }
 
-                    SOCKET_CLIENT.closeBlocking();
+                    socketClient.closeBlocking();
                 }
 
                 case "standalone" -> {
@@ -304,12 +299,12 @@ public class Mod implements DedicatedServerModInitializer {
                     Bot.getBotInstance().sendJoinMessage(profile, (config.getConfig().getGeneric().getName()));
                 }
 
-                SOCKET_SERVER.broadcast(json);
+                socketServer.broadcast(json);
             }
 
             case "client" -> {
-                if (SOCKET_CLIENT.isOpen()) {
-                    SOCKET_CLIENT.send(json);
+                if (socketClient.isOpen()) {
+                    socketClient.send(json);
                 }
             }
 
@@ -334,12 +329,12 @@ public class Mod implements DedicatedServerModInitializer {
                     Bot.getBotInstance().sendLeaveMessage(profile, (config.getConfig().getGeneric().getName()));
                 }
 
-                SOCKET_SERVER.broadcast(json);
+                socketServer.broadcast(json);
             }
 
             case "client" -> {
-                if (SOCKET_CLIENT.isOpen()) {
-                    SOCKET_CLIENT.send(json);
+                if (socketClient.isOpen()) {
+                    socketClient.send(json);
                 }
             }
 
@@ -353,26 +348,36 @@ public class Mod implements DedicatedServerModInitializer {
 
     public void onChatMessage(SignedMessage message, ServerPlayerEntity sender, MessageType.Parameters params) {
         try {
-            ChatMessage msg = new ChatMessage((config.getConfig().getGeneric().getName()), sender.getUuid().toString(), message.getContent().getString());
+
+            String originalMessage = message.getContent().getString();
+
+            String formattedMessage = formatMessage(originalMessage);
+
+            message = SignedMessage.ofUnsigned(formattedMessage);
+
+            MINECRAFT_SERVER.getPlayerManager().broadcast(message, sender, params);
+
+            ChatMessage msg = new ChatMessage((config.getConfig().getGeneric().getName()), sender.getUuid().toString(), originalMessage);
 
             String json = new Gson().toJson(msg);
 
             switch (config.getConfig().getGeneric().getMode()) {
                 case "server" -> {
-                    Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), (config.getConfig().getGeneric().getName()));
+                    Bot.getBotInstance().sendWebhook(originalMessage, msg.getProfile(), (config.getConfig().getGeneric().getName()));
 
-                    SOCKET_SERVER.broadcast(json);
+                    socketServer.broadcast(json);
                 }
 
                 case "standalone" ->
-                        Bot.getBotInstance().sendWebhook(message.getContent().getString(), msg.getProfile(), config.getConfig().getGeneric().getName());
+                        Bot.getBotInstance().sendWebhook(originalMessage, msg.getProfile(), config.getConfig().getGeneric().getName());
 
                 case "client" -> {
-                    if (SOCKET_CLIENT.isOpen()) {
-                        SOCKET_CLIENT.send(json);
+                    if (socketClient.isOpen()) {
+                        socketClient.send(json);
                     }
                 }
             }
+
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
@@ -412,14 +417,14 @@ public class Mod implements DedicatedServerModInitializer {
 
         switch (config.getConfig().getGeneric().getMode()) {
             case "server" -> {
-                SOCKET_SERVER.broadcast(json);
+                socketServer.broadcast(json);
 
                 Bot.getBotInstance().sendDeathMessage(config.getConfig().getGeneric().getName(), message, coordinates);
             }
 
             case "client" -> {
-                if (SOCKET_CLIENT.isOpen()) {
-                    SOCKET_CLIENT.send(json);
+                if (socketClient.isOpen()) {
+                    socketClient.send(json);
                 }
             }
 
@@ -445,14 +450,14 @@ public class Mod implements DedicatedServerModInitializer {
 
         switch (config.getConfig().getGeneric().getMode()) {
             case "server" -> {
-                SOCKET_SERVER.broadcast(json);
+                socketServer.broadcast(json);
 
                 Bot.getBotInstance().sendDeathMessage(config.getConfig().getGeneric().getName(), message, coordinates);
             }
 
             case "client" -> {
-                if (SOCKET_CLIENT.isOpen()) {
-                    SOCKET_CLIENT.send(json);
+                if (socketClient.isOpen()) {
+                    socketClient.send(json);
                 }
             }
 
@@ -474,19 +479,28 @@ public class Mod implements DedicatedServerModInitializer {
 
         switch (config.getConfig().getGeneric().getName()) {
             case "server" -> {
-                SOCKET_SERVER.broadcast(json);
+                socketServer.broadcast(json);
 
                 Bot.getBotInstance().sendAchievementMessage(advancementMessage.getProfile(), advancementMessage.origin, advancementMessage.title, advancementMessage.description);
             }
 
             case "client" -> {
-                if (SOCKET_CLIENT.isOpen()) {
-                    SOCKET_CLIENT.send(json);
+                if (socketClient.isOpen()) {
+                    socketClient.send(json);
                 }
             }
 
             case "standalone" ->
                     Bot.getBotInstance().sendAchievementMessage(advancementMessage.getProfile(), advancementMessage.origin, advancementMessage.title, advancementMessage.description);
         }
+    }
+
+    private static String formatMessage(String message) {
+        return message
+                .replace("**", "§l")  // Bold
+                .replace("__", "§n")   // Underline
+                .replace("*", "§o")    // Italics
+                .replace("~~", "§m")   // Strikethrough
+                .replace("`", "§k");   // Obfuscated (similar to code block)
     }
 }

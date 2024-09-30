@@ -1,6 +1,6 @@
 package com.tropicoss.guardian.minecraft.mixin;
 
-import com.tropicoss.guardian.minecraft.event.AdvancementEvent;
+import com.tropicoss.guardian.minecraft.event.AdvancementCallback;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementEntry;
 import net.minecraft.advancement.PlayerAdvancementTracker;
@@ -32,7 +32,7 @@ public abstract class PlayerAdvancementTrackerMixin {
         advancement.display().ifPresent(display -> {
             if (display.shouldAnnounceToChat()) {
                 try {
-                    AdvancementEvent.EVENT.invoker().onGrantCriterion(owner, advancementEntry, criterionName);
+                    AdvancementCallback.EVENT.invoker().onGrantCriterion(owner, advancementEntry, criterionName);
                 } catch (FileNotFoundException e) {
                     LOGGER.error("An exception has been thrown  {}", e.getMessage());
                 }

@@ -1,4 +1,4 @@
-package com.tropicoss.guardian.services.websocket.message;
+package com.tropicoss.guardian.services.chatsync.message;
 
 import net.minecraft.text.Text;
 
@@ -21,6 +21,10 @@ public class DiscordMessage implements Message {
     @Override
     public Text toChatText() {
         return Text.of(String.format("§9[Discord] §b%s: §f%s", this.member,
-                this.message));
+                this.message).replace("**", "§l")  // Bold
+                .replace("__", "§n") //Underline
+                .replace("*", "§o") // Italics
+                .replace("~~", "§m") //Strikethrough
+                .replace("`", "§k")); // Obfuscate
     }
 }

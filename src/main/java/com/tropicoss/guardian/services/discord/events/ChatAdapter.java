@@ -1,7 +1,7 @@
 package com.tropicoss.guardian.services.discord.events;
 
 import com.google.gson.Gson;
-import com.tropicoss.guardian.services.websocket.message.DiscordMessage;
+import com.tropicoss.guardian.services.chatsync.message.DiscordMessage;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.minecraft.server.MinecraftServer;
@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 import static com.tropicoss.guardian.Mod.LOGGER;
-import static com.tropicoss.guardian.Mod.SOCKET_SERVER;
+import static com.tropicoss.guardian.Mod.socketServer;
 
 public class ChatAdapter extends ListenerAdapter {
 
@@ -49,7 +49,7 @@ public class ChatAdapter extends ListenerAdapter {
             String json = new Gson().toJson(msg);
 
             if (isServer()) {
-                SOCKET_SERVER.broadcast(json);
+                socketServer.broadcast(json);
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage());

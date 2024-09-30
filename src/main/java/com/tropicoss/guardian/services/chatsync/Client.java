@@ -1,7 +1,7 @@
-package com.tropicoss.guardian.services.websocket;
+package com.tropicoss.guardian.services.chatsync;
 
 import com.google.gson.Gson;
-import com.tropicoss.guardian.services.websocket.message.MessageHandler;
+import com.tropicoss.guardian.services.chatsync.message.MessageHandler;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
@@ -71,7 +71,7 @@ public class Client extends WebSocketClient {
                 try {
                     reconnect();
                 } catch (Exception e) {
-                    LOGGER.error("Error during reconnection attempt: " + e.getMessage());
+                    LOGGER.error("Error during reconnection attempt: {}", e.getMessage());
                 }
             }
         }, RETRY_INTERVAL_MS);
@@ -82,7 +82,7 @@ public class Client extends WebSocketClient {
             closeBlocking();
             reconnect();
         } catch (InterruptedException e) {
-            LOGGER.error("Error reloading connection: " + e.getMessage());
+            LOGGER.error("Error reloading connection: {}", e.getMessage());
         }
     }
 }

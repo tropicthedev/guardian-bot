@@ -1,4 +1,4 @@
-package com.tropicoss.guardian.services.websocket.message;
+package com.tropicoss.guardian.services.chatsync.message;
 
 import com.tropicoss.guardian.services.PlayerInfoFetcher;
 import net.fabricmc.loader.api.FabricLoader;

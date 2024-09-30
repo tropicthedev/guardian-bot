@@ -1,14 +1,13 @@
-package com.tropicoss.guardian.services.websocket.message;
+package com.tropicoss.guardian.services.chatsync.message;
 
 import net.minecraft.text.Text;
 
-public class StoppingMessage implements Message {
+public class StoppedMessage implements Message {
 
-    private final String type = "stopping";
+    private final String type = "stopped";
     public String server;
 
-
-    public StoppingMessage(String server) {
+    public StoppedMessage(String server) {
         this.server = server;
     }
 

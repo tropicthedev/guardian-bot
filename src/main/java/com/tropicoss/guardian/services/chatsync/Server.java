@@ -1,9 +1,9 @@
-package com.tropicoss.guardian.services.websocket;
+package com.tropicoss.guardian.services.chatsync;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.tropicoss.guardian.config.Config;
-import com.tropicoss.guardian.services.websocket.message.MessageHandler;
+import com.tropicoss.guardian.services.chatsync.message.MessageHandler;
 import net.fabricmc.loader.api.FabricLoader;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -27,7 +27,6 @@ public class Server extends WebSocketServer {
 
     public Server(InetSocketAddress address) throws FileNotFoundException {
         super(address);
-        String filePath = FabricLoader.getInstance().getConfigDir().resolve("guardian").resolve("config.json").toString();
     }
 
     @Override

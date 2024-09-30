@@ -1,16 +1,12 @@
-package com.tropicoss.guardian.services.discord.commands;
+package com.tropicoss.guardian.services.discord.adapters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.gson.Gson;
 import com.tropicoss.guardian.config.Config;
 import com.tropicoss.guardian.database.DatabaseManager;
 import com.tropicoss.guardian.model.*;
-import com.tropicoss.guardian.services.websocket.message.CommandMessage;
 import com.tropicoss.guardian.services.Cache;
-import com.tropicoss.guardian.services.PlayerInfoFetcher;
-import com.tropicoss.guardian.services.PlayerInfoFetcher.Profile;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
@@ -20,12 +16,10 @@ import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
@@ -47,187 +41,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.tropicoss.guardian.Mod.LOGGER;
-import static com.tropicoss.guardian.Mod.SOCKET_SERVER;
 
-public class Onboarding extends ListenerAdapter {
+public class OnboardingAdapter extends ListenerAdapter {
     private final Config config = Config.getInstance();
     private final DatabaseManager databaseManager;
     private final Map<String, List<QuestionAnswers>> conversationState = new ConcurrentHashMap<>();
 
-    public Onboarding(DatabaseManager databaseManager) {
+    public OnboardingAdapter(DatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
-    }
-
-    @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-
-        try {
-            if (Objects.requireNonNull(event.getUser()).isBot()) return;
-
-            if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-                event.reply("Insufficient Permissions").setEphemeral(true).queue();
-                return;
-            }
-
-            if (event.getName().equals("welcome")) {
-                handleWelcomeCommand(event);
-            }
-
-            if (event.getName().equals("accept")) {
-                handleAcceptCommand(event);
-            }
-
-            if (event.getName().equals("deny")) {
-                handleDenyCommand(event);
-            }
-        } catch (RuntimeException e) {
-            LOGGER.error("An error occurred while running command {} {}", event.getName(), e.getMessage());
-
-            event.reply("An error occurred while running command, please try again")
-                    .setEphemeral(true)
-                    .queue();
-        }
-    }
-
-    private void handleAcceptCommand(SlashCommandInteractionEvent event) {
-
-        if (event.getChannel().getType() != ChannelType.GUILD_PRIVATE_THREAD) {
-            event.reply("This can only be ran in a private guild thread (Interview Thread)")
-                    .setEphemeral(true)
-                    .queue();
-            return;
-        }
-
-        OptionMapping optionMapping = event.getOption("ign");
-
-        if (optionMapping == null) return;
-
-        try {
-
-            Profile playerProfile = PlayerInfoFetcher.getProfile(optionMapping.getAsString());
-
-            if (playerProfile == null) {
-                event.reply("Member could not be found, is the IGN correct ?").setEphemeral(true).queue();
-                return;
-            }
-
-            Guild guild = event.getGuild();
-
-            String memberId = databaseManager.getMemberFromChannelId(event.getChannelId());
-
-            Member member = event.getGuild().getMemberById(memberId);
-
-            if (member == null) {
-                event.reply("Member could not be found, are they still in the server ?").setEphemeral(true).queue();
-                return;
-            }
-
-            TextChannel channel = guild.getChannelById(TextChannel.class, config.getConfig().getMember().getChannel());
-
-            if (channel == null) {
-                event.reply("The guild channel could not be found, ensure it exists and the correct id is present in the config file")
-                        .setEphemeral(true)
-                        .queue();
-                return;
-            }
-
-            Role role = guild.getRoleById(config.getConfig().getMember().getRole());
-
-            if (role == null) {
-                event.reply("The member role could not be found, ensure it exists and the correct id is present in the config file")
-                        .setEphemeral(true)
-                        .queue();
-                return;
-            }
-
-            guild.addRoleToMember(member.getUser(), role).queue();
-
-            channel.sendMessage(config.getConfig().getMember().getMessage().replace("{member}", member.getAsMention())).queue();
-
-            databaseManager.addInterviewResponse(UUID.randomUUID().toString(), event.getMember().getId(), event.getChannelId(),
-                    "Member Accepted", Status.ACCEPTED);
-
-            databaseManager.addMember(memberId, playerProfile.data.player.id, false);
-
-            CommandMessage commandMessage = new CommandMessage(playerProfile.data.player.id, playerProfile.data.player.username, "add");
-
-            String json = new Gson().toJson(commandMessage);
-
-            if (SOCKET_SERVER != null) {
-                SOCKET_SERVER.broadcast(json);
-            }
-
-            event.reply("Member Accepted").setEphemeral(true).queue();
-        } catch (Exception e) {
-            LOGGER.error("There was an error trying to accept member: {}", e.getMessage());
-            event.reply("There was an error trying to accept member please try again. If the problem persists check the console for any errors that may occur.").setEphemeral(true).queue();
-        }
-    }
-
-    private void handleWelcomeCommand(SlashCommandInteractionEvent event) {
-
-        EmbedBuilder embedBuilder = new EmbedBuilder();
-
-        embedBuilder
-                .setTitle("Beep Boop")
-                .setColor(Color.BLUE)
-                .setDescription(config.getConfig().getWelcome().getMessage())
-                .setTimestamp(Instant.now());
-
-        TextChannel textChannel = event.getJDA().getTextChannelById(config.getConfig().getWelcome().getChannel());
-
-        if (textChannel == null) {
-            event.reply("Welcome channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL").setEphemeral(true).queue();
-
-            LOGGER.error("Welcome channel could not be found, ensure that the channel id is correct and that it is a TEXT CHANNEL");
-
-            return;
-        }
-
-        textChannel.sendMessageEmbeds(embedBuilder.build())
-                .addActionRow(
-                        Button.primary(
-                                ButtonId.APPLY,
-                                "Apply"
-                        ).withEmoji(Emoji.fromFormatted("\uD83D\uDCDC"))
-                )
-                .queue();
-    }
-
-    private void handleDenyCommand(SlashCommandInteractionEvent event) {
-        if (event.getChannel().getType() != ChannelType.GUILD_PRIVATE_THREAD) {
-            event.reply("This can only be ran in a private guild thread (Interview Thread)").queue();
-            return;
-        }
-        OptionMapping reasonMapping = event.getOption("reason");
-
-        if (reasonMapping == null) return;
-
-        try {
-
-            String memberId = databaseManager.getMemberFromChannelId(event.getChannelId());
-
-            Member member = event.getGuild().getMemberById(memberId);
-
-            if (member == null) {
-                event.reply("User could not be found, are they still in the server ?").setEphemeral(true).queue();
-                return;
-            }
-
-            Objects.requireNonNull(event.getMember()).getUser().openPrivateChannel().flatMap(channel ->
-                    channel.sendMessage("You have been denied for the reason: " + reasonMapping.getAsString())
-            ).queue();
-
-            databaseManager.addInterviewResponse(UUID.randomUUID().toString(),
-                    event.getMember().getId(),
-                    event.getChannelId(),
-                    "Member Denied", Status.DENIED);
-
-            event.reply("Member Denied").setEphemeral(true).queue();
-        } catch (Exception e) {
-            LOGGER.error("There was an error trying to deny member: {}", e.getMessage());
-            event.reply("There was an error trying to deny member please try again. If the problem persists check the console for any errors that may occur.").setEphemeral(true).queue();
-        }
     }
 
     @Override
@@ -247,6 +68,10 @@ public class Onboarding extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot()) return;
+
+        if (event.getChannel().getType() != ChannelType.PRIVATE) {
+            return;
+        }
 
         String userId = event.getAuthor().getId();
 

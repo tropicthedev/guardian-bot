@@ -8,11 +8,11 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import java.io.FileNotFoundException;
 
 @FunctionalInterface
-public interface AdvancementEvent {
+public interface AdvancementCallback {
 
-    Event<AdvancementEvent> EVENT =
-            EventFactory.createArrayBacked(AdvancementEvent.class, callbacks -> (player, advancement, criterion) -> {
-                for (AdvancementEvent callback : callbacks) {
+    Event<AdvancementCallback> EVENT =
+            EventFactory.createArrayBacked(AdvancementCallback.class, callbacks -> (player, advancement, criterion) -> {
+                for (AdvancementCallback callback : callbacks) {
                     callback.onGrantCriterion(player, advancement, criterion);
                 }
             });

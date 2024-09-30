@@ -1,6 +1,6 @@
 package com.tropicoss.guardian.minecraft.mixin;
 
-import com.tropicoss.guardian.minecraft.event.EntityDeathEvents;
+import com.tropicoss.guardian.minecraft.event.EntityDeathCallback;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,6 +14,6 @@ public abstract class EntityDeathMixin {
     @Inject(method = "onDeath", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;sendEntityStatus("
             + "Lnet/minecraft/entity/Entity;B)V"))
     public void onDeath(DamageSource source, CallbackInfo ci) {
-        EntityDeathEvents.EVENT.invoker().onEntityDeath((LivingEntity) (Object) this, source);
+        EntityDeathCallback.EVENT.invoker().onEntityDeath((LivingEntity) (Object) this, source);
     }
 }
