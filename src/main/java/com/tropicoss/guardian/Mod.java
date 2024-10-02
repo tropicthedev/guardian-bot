@@ -351,12 +351,6 @@ public class Mod implements DedicatedServerModInitializer {
 
             String originalMessage = message.getContent().getString();
 
-            String formattedMessage = formatMessage(originalMessage);
-
-            message = SignedMessage.ofUnsigned(formattedMessage);
-
-            MINECRAFT_SERVER.getPlayerManager().broadcast(message, sender, params);
-
             ChatMessage msg = new ChatMessage((config.getConfig().getGeneric().getName()), sender.getUuid().toString(), originalMessage);
 
             String json = new Gson().toJson(msg);
